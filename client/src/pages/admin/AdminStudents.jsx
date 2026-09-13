@@ -1,0 +1,296 @@
+import { useState, useEffect } from "react";
+import api from "../../config/api";
+import {
+  Users, Search, Plus, Filter, ChevronRight, BadgeCheck,
+  Phone, Mail, MapPin, GraduationCap, MoreVertical, UserX, UserCheck, Eye
+} from "lucide-react";
+import toast from "react-hot-toast";
+
+const typeColors = {
+  REGULAR_OFFLINE: "bg-green-100 text-green-700",
+  REGULAR_ONLINE: "bg-blue-100 text-blue-700",
+  HYBRID: "bg-purple-100 text-purple-700",
+  EXAM_ONLY: "bg-orange-100 text-orange-700",
+  GUEST: "bg-slate-100 text-slate-600",
+};
+
+export default function AdminStudents() {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    name: "", email: "", phone: "", currentClass: "DROPPER",
+    studentType: "REGULAR_OFFLINE", city: "", parentName: "", parentPhone: "", school: ""
+  });
+
+  const limit = 15;
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get(`/students?page=${page}&limit=${limit}&search=${search}`);
+      setStudents(data.data?.students || []);
+      setTotal(data.data?.total || 0);
+    } catch {
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchStudents(); }, [page, search]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const { data } = await api.post("/auth/admin/create-student", form);
+      toast.success(`Student created! ID: ${data.data.studentId}, Password: ${data.data.tempPassword}`);
+      setShowCreate(false);
+      setForm({ name: "", email: "", phone: "", currentClass: "DROPPER", studentType: "REGULAR_OFFLINE", city: "", parentName: "", parentPhone: "", school: "" });
+      fetchStudents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create student");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const toggleActive = async (studentId, isActive) => {
+    try {
+      await api.put(`/students/${studentId}`, { isActive: !isActive });
+      toast.success(isActive ? "Student deactivated" : "Student activated");
+      fetchStudents();
+    } catch {
+      toast.error("Failed to update student");
+    }
+  };
+
+  const totalPages = Math.ceil(total / limit);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-extrabold text-2xl text-slate-900">Students</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {total} total students enrolled
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
+        >
+          <Plus className="w-4 h-4" /> Add Student
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="Search by name, email or student ID..."
+          className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+        />
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="w-9 h-9 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : students.length === 0 ? (
+        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+          <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <h3 className="font-bold text-slate-600 mb-1">No students found</h3>
+          <p className="text-slate-400 text-sm">Add your first student or run the seed command.</p>
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Student ID</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Class</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Type</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">City</th>
+                  <th className="text-left py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3.5 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {students.map((s) => (
+                  <tr key={s._id} className="hover:bg-slate-50/50 transition group">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          {s.user?.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800">{s.user?.name}</div>
+                          <div className="text-xs text-slate-400">{s.user?.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 hidden sm:table-cell">
+                      <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                        {s.studentId || "—"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 hidden md:table-cell">
+                      <span className="text-sm text-slate-600">{s.currentClass || "—"}</span>
+                    </td>
+                    <td className="py-3.5 px-4 hidden lg:table-cell">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${typeColors[s.studentType] || "bg-slate-100 text-slate-600"}`}>
+                        {s.studentType?.replace(/_/g, " ") || "—"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 hidden lg:table-cell">
+                      <span className="text-sm text-slate-600">{s.city || "—"}</span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${s.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${s.isActive ? "bg-green-500" : "bg-red-500"}`} />
+                        {s.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition" title="View">
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => toggleActive(s._id, s.isActive)}
+                          className={`p-1.5 rounded-lg transition ${s.isActive ? "hover:bg-red-50 text-red-500" : "hover:bg-green-50 text-green-600"}`}
+                          title={s.isActive ? "Deactivate" : "Activate"}
+                        >
+                          {s.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="border-t border-slate-100 px-4 py-3 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Student Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100">
+              <h2 className="font-extrabold text-xl text-slate-900">Add New Student</h2>
+              <p className="text-slate-500 text-sm mt-1">A student ID and temporary password will be auto-generated and emailed.</p>
+            </div>
+            <form onSubmit={handleCreate} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Full Name *</label>
+                  <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="Student's full name" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Email *</label>
+                  <input required type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="email@example.com" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Phone</label>
+                  <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="+91 XXXXX XXXXX" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Current Class</label>
+                  <select value={form.currentClass} onChange={(e) => setForm((f) => ({ ...f, currentClass: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white">
+                    {["XI", "XII", "DROPPER", "REPEATER"].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Student Type</label>
+                  <select value={form.studentType} onChange={(e) => setForm((f) => ({ ...f, studentType: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white">
+                    {["REGULAR_OFFLINE", "REGULAR_ONLINE", "HYBRID", "EXAM_ONLY", "GUEST"].map((t) => (
+                      <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">City</label>
+                  <input value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="City" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Parent Name</label>
+                  <input value={form.parentName} onChange={(e) => setForm((f) => ({ ...f, parentName: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="Parent's name" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Parent Phone</label>
+                  <input value={form.parentPhone} onChange={(e) => setForm((f) => ({ ...f, parentPhone: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="+91 XXXXX XXXXX" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">School/College</label>
+                  <input value={form.school} onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="School or college name" />
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+                ⚡ A unique Student ID and temporary password will be auto-generated and sent to the student's email.
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowCreate(false)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+                  Cancel
+                </button>
+                <button type="submit" disabled={creating}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm">
+                  {creating ? "Creating..." : "Create Student"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body text-brand-dark bg-white antialiased selection:bg-brand-lime selection:text-brand-dark;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-green text-white px-6 py-2.5 rounded-btn font-medium
+           hover:bg-emerald-700 active:scale-[0.98] transition-all duration-200 inline-flex
+           items-center justify-center gap-2 shadow-sm;
+  }
+  .btn-secondary {
+    @apply border-2 border-brand-green text-brand-green px-6 py-2.5 rounded-btn
+           font-medium hover:bg-brand-green hover:text-white active:scale-[0.98] transition-all duration-200
+           inline-flex items-center justify-center gap-2;
+  }
+  .btn-dark {
+    @apply bg-brand-black text-white px-6 py-2.5 rounded-btn font-medium
+           hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 inline-flex
+           items-center justify-center gap-2 shadow-sm;
+  }
+  .btn-lime {
+    @apply bg-brand-lime text-brand-black px-6 py-2.5 rounded-btn font-semibold
+           hover:brightness-105 active:scale-[0.98] transition-all duration-200 inline-flex
+           items-center justify-center gap-2 shadow-sm;
+  }
+  .card {
+    @apply bg-white rounded-card border border-gray-100 p-6 shadow-sm;
+  }
+  .card-hover {
+    @apply hover:-translate-y-1 hover:shadow-lg transition-all duration-300;
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-200 rounded-btn text-sm
+           focus:outline-none focus:ring-2 focus:ring-brand-green/30
+           focus:border-brand-green transition-all bg-white;
+  }
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+           text-xs font-semibold tracking-wide uppercase;
+  }
+}

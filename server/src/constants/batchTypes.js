@@ -1,0 +1,7 @@
+module.exports = {
+  OFFLINE: "OFFLINE",
+  ONLINE: "ONLINE",
+  HYBRID: "HYBRID",
+  EXAM_ONLY: "EXAM_ONLY",
+  CRASH_COURSE: "CRASH_COURSE",
+};
