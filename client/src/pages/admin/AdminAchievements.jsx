@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { Trophy, Plus, Search, Star, Pencil, Trash2, Award } from "lucide-react";
+import { Trophy, Plus, Search, Star, Pencil, Trash2, Award, X, Save } from "lucide-react";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const categoryColors = {
   STUDENT_RESULT: "bg-green-100 text-green-700",
@@ -18,6 +19,9 @@ export default function AdminAchievements() {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingAchievement, setEditingAchievement] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [achievementToDelete, setAchievementToDelete] = useState(null);
   const [form, setForm] = useState({
     title: "", description: "", category: "STUDENT_RESULT",
     studentName: "", studentBatch: "", score: "", year: new Date().getFullYear(), featured: false,
@@ -53,11 +57,38 @@ export default function AdminAchievements() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Delete this achievement?")) return;
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingAchievement) return;
+    setSavingEdit(true);
     try {
-      await api.delete(`/achievements/${id}`);
+      await api.put(`/achievements/${editingAchievement._id}`, editingAchievement);
+      toast.success("Achievement updated");
+      setEditingAchievement(null);
+      fetchAchievements();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update achievement");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const toggleFeatured = async (achievement) => {
+    try {
+      await api.put(`/achievements/${achievement._id}`, { featured: !achievement.featured });
+      toast.success(achievement.featured ? "Unmarked from featured" : "Marked as featured");
+      fetchAchievements();
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!achievementToDelete) return;
+    try {
+      await api.delete(`/achievements/${achievementToDelete._id}`);
       toast.success("Achievement deleted");
+      setAchievementToDelete(null);
       fetchAchievements();
     } catch {
       toast.error("Failed to delete");
@@ -117,11 +148,18 @@ export default function AdminAchievements() {
                     <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${categoryColors[a.category] || "bg-slate-100 text-slate-600"}`}>
                       {a.category?.replace(/_/g, " ")}
                     </span>
-                    {a.featured && (
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-1">
-                        <Star className="w-3 h-3" /> Featured
-                      </span>
-                    )}
+                    <button
+                      onClick={() => toggleFeatured(a)}
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 transition ${
+                        a.featured
+                          ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                          : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                      }`}
+                      title="Toggle Featured"
+                    >
+                      <Star className={`w-3 h-3 ${a.featured ? "fill-amber-500 text-amber-500" : ""}`} />
+                      {a.featured ? "Featured" : "Set Featured"}
+                    </button>
                     {a.year && <span className="text-xs text-slate-400">{a.year}</span>}
                   </div>
                   <h3 className="font-bold text-slate-800 mb-1">{a.title}</h3>
@@ -135,10 +173,18 @@ export default function AdminAchievements() {
                   )}
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition flex-shrink-0">
-                  <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition">
+                  <button
+                    onClick={() => setEditingAchievement(a)}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition"
+                    title="Edit Achievement"
+                  >
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(a._id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition">
+                  <button
+                    onClick={() => setAchievementToDelete(a)}
+                    className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
+                    title="Delete Achievement"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -222,6 +268,132 @@ export default function AdminAchievements() {
           </div>
         </div>
       )}
+
+      {/* Edit Achievement Modal */}
+      {editingAchievement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+              <h2 className="font-extrabold text-xl text-slate-900">Edit Achievement</h2>
+              <button
+                onClick={() => setEditingAchievement(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Title *</label>
+                <input
+                  required
+                  value={editingAchievement.title || ""}
+                  onChange={(e) => setEditingAchievement((prev) => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Category</label>
+                <select
+                  value={editingAchievement.category}
+                  onChange={(e) => setEditingAchievement((prev) => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                >
+                  {["STUDENT_RESULT", "INSTITUTE_MILESTONE", "AWARD", "CERTIFICATION", "EVENT", "CUSTOM"].map((c) => (
+                    <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Description</label>
+                <textarea
+                  rows={3}
+                  value={editingAchievement.description || ""}
+                  onChange={(e) => setEditingAchievement((prev) => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Student Name</label>
+                  <input
+                    value={editingAchievement.studentName || ""}
+                    onChange={(e) => setEditingAchievement((prev) => ({ ...prev, studentName: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Score</label>
+                  <input
+                    value={editingAchievement.score || ""}
+                    onChange={(e) => setEditingAchievement((prev) => ({ ...prev, score: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch</label>
+                  <input
+                    value={editingAchievement.studentBatch || ""}
+                    onChange={(e) => setEditingAchievement((prev) => ({ ...prev, studentBatch: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Year</label>
+                  <input
+                    type="number"
+                    value={editingAchievement.year || 2024}
+                    onChange={(e) => setEditingAchievement((prev) => ({ ...prev, year: parseInt(e.target.value) || 2024 }))}
+                    className="w-28 px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div className="flex items-center gap-2 mt-5">
+                  <input
+                    type="checkbox"
+                    id="editFeatured"
+                    checked={editingAchievement.featured || false}
+                    onChange={(e) => setEditingAchievement((prev) => ({ ...prev, featured: e.target.checked }))}
+                    className="w-4 h-4 rounded accent-green-600"
+                  />
+                  <label htmlFor="editFeatured" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                    Feature on homepage
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingAchievement(null)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!achievementToDelete}
+        onClose={() => setAchievementToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Achievement"
+        message={`Are you sure you want to delete "${achievementToDelete?.title}"?`}
+        confirmLabel="Delete Achievement"
+        danger={true}
+      />
     </div>
   );
 }

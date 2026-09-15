@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { MessageSquare, Search, CheckCircle, XCircle, Clock, Phone, Mail, Eye } from "lucide-react";
+import { MessageSquare, Search, CheckCircle, XCircle, Clock, Phone, Mail, Eye, Trash2, Download } from "lucide-react";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const statusColors = {
   NEW: "bg-blue-100 text-blue-700 border-blue-200",
@@ -16,6 +17,7 @@ export default function AdminEnquiries() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [enquiryToDelete, setEnquiryToDelete] = useState(null);
 
   const fetchEnquiries = async () => {
     setLoading(true);
@@ -42,6 +44,45 @@ export default function AdminEnquiries() {
     }
   };
 
+  const confirmDeleteEnquiry = async () => {
+    if (!enquiryToDelete) return;
+    try {
+      await api.delete(`/enquiries/${enquiryToDelete._id}`);
+      toast.success("Enquiry deleted");
+      if (selected?._id === enquiryToDelete._id) setSelected(null);
+      setEnquiryToDelete(null);
+      fetchEnquiries();
+    } catch {
+      toast.error("Failed to delete enquiry");
+    }
+  };
+
+  const exportToCSV = () => {
+    if (filtered.length === 0) {
+      toast.error("No enquiries to export");
+      return;
+    }
+    const headers = ["Name", "Email", "Phone", "Course Interest", "Message", "Status", "Date"];
+    const rows = filtered.map((e) => [
+      `"${e.name || ""}"`,
+      `"${e.email || ""}"`,
+      `"${e.phone || ""}"`,
+      `"${e.courseInterest || ""}"`,
+      `"${(e.message || "").replace(/"/g, '""')}"`,
+      `"${e.status || "NEW"}"`,
+      `"${e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-IN") : ""}"`,
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `neetvidya_enquiries_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Enquiries exported to CSV");
+  };
+
   const filtered = enquiries.filter((e) => {
     const matchSearch =
       e.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -59,6 +100,12 @@ export default function AdminEnquiries() {
           <p className="text-slate-500 text-sm mt-1">{enquiries.length} total enquiries</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={exportToCSV}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-sm transition"
+          >
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </button>
           <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
             {enquiries.filter((e) => e.status === "NEW").length} New
           </span>
@@ -145,12 +192,22 @@ export default function AdminEnquiries() {
                       {e.createdAt ? new Date(e.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => setSelected(e)}
-                        className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition opacity-0 group-hover:opacity-100"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => setSelected(e)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition"
+                          title="View Message"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setEnquiryToDelete(e)}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition"
+                          title="Delete Enquiry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -181,6 +238,12 @@ export default function AdminEnquiries() {
               </div>
             </div>
             <div className="p-6 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setEnquiryToDelete(selected)}
+                className="px-4 py-2.5 border border-red-200 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition inline-flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
               <button onClick={() => setSelected(null)}
                 className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
                 Close
@@ -193,6 +256,17 @@ export default function AdminEnquiries() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!enquiryToDelete}
+        onClose={() => setEnquiryToDelete(null)}
+        onConfirm={confirmDeleteEnquiry}
+        title="Delete Enquiry"
+        message={`Are you sure you want to delete the enquiry from "${enquiryToDelete?.name}"?`}
+        confirmLabel="Delete Enquiry"
+        danger={true}
+      />
     </div>
   );
 }

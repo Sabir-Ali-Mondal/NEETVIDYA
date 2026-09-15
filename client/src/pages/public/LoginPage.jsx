@@ -54,9 +54,9 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             {[
-              "Daily Practice Papers & Mock Tests",
-              "AI-driven Performance Analytics",
-              "Live Lecture Recordings",
+              "Practice Papers & Mock Tests",
+              "Performance Analytics",
+              "Lecture Recordings and Notes",
               "Chapter-wise DPPs & Doubt Sessions",
             ].map((feat) => (
               <div key={feat} className="flex items-center gap-3">
@@ -68,7 +68,7 @@ export default function LoginPage() {
 
           <div className="pt-4 border-t border-slate-800">
             <p className="text-slate-500 text-xs">
-              500+ students cleared NEET in 2023–24 through NEETVIDYA
+              Welcome to NEETVIDYA
             </p>
           </div>
         </div>

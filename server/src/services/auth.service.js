@@ -36,7 +36,7 @@ const register = async (name, email, password, phone) => {
     role: "student",
     emailVerified: false,
     emailVerificationToken: hashedToken,
-    emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000,
+    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
   });
 
   const studentId = await generateStudentId();
@@ -50,14 +50,27 @@ const register = async (name, email, password, phone) => {
 
 const verifyEmail = async (token) => {
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  const user = await User.findOne({
-    emailVerificationToken: hashedToken,
-    emailVerificationExpires: { $gt: Date.now() },
-  }).select("+emailVerificationToken +emailVerificationExpires");
+  const user = await User.findOne({ emailVerificationToken: hashedToken }).select(
+    "+emailVerificationToken +emailVerificationExpires +lastVerifiedToken"
+  );
 
-  if (!user) throw new ApiError(400, "Invalid or expired verification link. Please request a new one.");
+  if (!user || !user.emailVerificationExpires || new Date(user.emailVerificationExpires).getTime() <= Date.now()) {
+    // If the token was already used to verify this account, return idempotent success
+    const alreadyVerifiedUser = await User.findOne({ lastVerifiedToken: hashedToken });
+    if (alreadyVerifiedUser && alreadyVerifiedUser.emailVerified) {
+      return { message: "Email is already verified. You can now log in." };
+    }
+
+    if (user) {
+      user.emailVerificationToken = undefined;
+      user.emailVerificationExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
+    throw new ApiError(400, "Invalid or expired verification link. Please request a new one.");
+  }
 
   user.emailVerified = true;
+  user.lastVerifiedToken = hashedToken;
   user.emailVerificationToken = undefined;
   user.emailVerificationExpires = undefined;
   await user.save({ validateBeforeSave: false });
@@ -74,7 +87,7 @@ const resendVerification = async (email) => {
   const hashedToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
 
   user.emailVerificationToken = hashedToken;
-  user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+  user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save({ validateBeforeSave: false });
 
   await sendVerificationEmail(user, verificationToken);

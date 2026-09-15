@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { HelpCircle, Plus, Search, CheckCircle, XCircle, Filter, Pencil, Trash2 } from "lucide-react";
+import { HelpCircle, Plus, Search, CheckCircle, XCircle, Filter, Pencil, Trash2, X, Save } from "lucide-react";
+import toast from "react-hot-toast";
+import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const difficultyColors = {
   Easy: "bg-green-100 text-green-700",
@@ -10,23 +12,128 @@ const difficultyColors = {
 
 export default function TeacherQuestions() {
   const [questions, setQuestions] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [questionToDelete, setQuestionToDelete] = useState(null);
+  const [savingQuestion, setSavingQuestion] = useState(false);
+
+  const [form, setForm] = useState({
+    questionText: "",
+    subject: "",
+    difficulty: "Medium",
+    marks: 4,
+    negativeMarks: 1,
+    source: "",
+    year: "",
+    explanation: "",
+    options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
+    correctAnswer: 0,
+  });
+
+  const fetchQuestions = async () => {
+    try {
+      const { data } = await api.get("/questions");
+      setQuestions(data.data?.questions || []);
+    } catch {
+      setQuestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const { data } = await api.get("/academics/subjects");
+      setSubjects(data.data?.subjects || []);
+    } catch {
+      setSubjects([]);
+    }
+  };
+
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await api.get("/questions?createdByMe=true");
-        setQuestions(data.data?.questions || []);
-      } catch {
-        setQuestions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+    fetchQuestions();
+    fetchSubjects();
   }, []);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!form.subject) {
+      toast.error("Please select a subject");
+      return;
+    }
+    setSavingQuestion(true);
+    try {
+      await api.post("/questions", {
+        ...form,
+        marks: Number(form.marks || 4),
+        negativeMarks: Number(form.negativeMarks || 1),
+        year: form.year ? Number(form.year) : undefined,
+      });
+      toast.success("Question created and added to question bank");
+      setShowCreate(false);
+      setForm({
+        questionText: "",
+        subject: subjects[0]?._id || "",
+        difficulty: "Medium",
+        marks: 4,
+        negativeMarks: 1,
+        source: "",
+        year: "",
+        explanation: "",
+        options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
+        correctAnswer: 0,
+      });
+      fetchQuestions();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create question");
+    } finally {
+      setSavingQuestion(false);
+    }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingQuestion) return;
+    setSavingQuestion(true);
+    try {
+      await api.put(`/questions/${editingQuestion._id}`, {
+        questionText: editingQuestion.questionText,
+        subject: editingQuestion.subject?._id || editingQuestion.subject,
+        difficulty: editingQuestion.difficulty,
+        marks: Number(editingQuestion.marks || 4),
+        negativeMarks: Number(editingQuestion.negativeMarks || 1),
+        source: editingQuestion.source,
+        year: editingQuestion.year ? Number(editingQuestion.year) : undefined,
+        explanation: editingQuestion.explanation,
+        options: editingQuestion.options,
+        correctAnswer: Number(editingQuestion.correctAnswer ?? 0),
+      });
+      toast.success("Question updated successfully");
+      setEditingQuestion(null);
+      fetchQuestions();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update question");
+    } finally {
+      setSavingQuestion(false);
+    }
+  };
+
+  const confirmDeleteQuestion = async () => {
+    if (!questionToDelete) return;
+    try {
+      await api.delete(`/questions/${questionToDelete._id}`);
+      toast.success("Question deleted");
+      setQuestionToDelete(null);
+      fetchQuestions();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete question");
+    }
+  };
 
   const filtered = questions.filter((q) => {
     const matchSearch = q.questionText?.toLowerCase().includes(search.toLowerCase());
@@ -41,7 +148,15 @@ export default function TeacherQuestions() {
           <h1 className="font-extrabold text-2xl text-slate-900">Question Bank</h1>
           <p className="text-slate-500 text-sm mt-1">Create and manage MCQ questions for exams and DPPs</p>
         </div>
-        <button className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm">
+        <button
+          onClick={() => {
+            if (!form.subject && subjects.length > 0) {
+              setForm((prev) => ({ ...prev, subject: subjects[0]._id }));
+            }
+            setShowCreate(true);
+          }}
+          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
+        >
           <Plus className="w-4 h-4" /> Add Question
         </button>
       </div>
@@ -112,10 +227,18 @@ export default function TeacherQuestions() {
                   </div>
                 </div>
                 <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition">
+                  <button
+                    onClick={() => setEditingQuestion(q)}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition"
+                    title="Edit Question"
+                  >
                     <Pencil className="w-4 h-4" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition">
+                  <button
+                    onClick={() => setQuestionToDelete(q)}
+                    className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
+                    title="Delete Question"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -124,6 +247,279 @@ export default function TeacherQuestions() {
           ))}
         </div>
       )}
+
+      {/* Create Question Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+              <div>
+                <h2 className="font-extrabold text-xl text-slate-900">Author New MCQ</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Author a 4-option question for your subject.</p>
+              </div>
+              <button
+                onClick={() => setShowCreate(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={form.questionText}
+                  onChange={(e) => setForm((prev) => ({ ...prev, questionText: e.target.value }))}
+                  placeholder="Enter the complete question statement..."
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject *</label>
+                  <select
+                    required
+                    value={form.subject}
+                    onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    <option value="">Select subject</option>
+                    {subjects.map((s) => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Difficulty</label>
+                  <select
+                    value={form.difficulty}
+                    onChange={(e) => setForm((prev) => ({ ...prev, difficulty: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Source / Tag</label>
+                  <input
+                    value={form.source}
+                    onChange={(e) => setForm((prev) => ({ ...prev, source: e.target.value }))}
+                    placeholder="e.g. NCERT Exemplar"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                  Options (select radio for correct answer)
+                </label>
+                <div className="space-y-2">
+                  {form.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="correctAnswer"
+                        checked={form.correctAnswer === idx}
+                        onChange={() => setForm((prev) => ({ ...prev, correctAnswer: idx }))}
+                        className="w-4 h-4 text-green-600 focus:ring-green-500"
+                        title="Mark as correct answer"
+                      />
+                      <span className="w-6 text-xs font-bold text-slate-500 text-center">
+                        {String.fromCharCode(65 + idx)}.
+                      </span>
+                      <input
+                        required
+                        value={opt.text}
+                        onChange={(e) => {
+                          const newOpts = [...form.options];
+                          newOpts[idx] = { ...newOpts[idx], text: e.target.value };
+                          setForm((prev) => ({ ...prev, options: newOpts }));
+                        }}
+                        placeholder={`Option ${String.fromCharCode(65 + idx)} text`}
+                        className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
+                <textarea
+                  rows={2}
+                  value={form.explanation}
+                  onChange={(e) => setForm((prev) => ({ ...prev, explanation: e.target.value }))}
+                  placeholder="Solution steps, formula applied, or NCERT reference..."
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingQuestion}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingQuestion ? "Saving..." : "Save MCQ"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Question Modal */}
+      {editingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+              <div>
+                <h2 className="font-extrabold text-xl text-slate-900">Edit Question</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Update statement, answer options, or explanation.</p>
+              </div>
+              <button
+                onClick={() => setEditingQuestion(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={editingQuestion.questionText}
+                  onChange={(e) => setEditingQuestion((prev) => ({ ...prev, questionText: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject</label>
+                  <select
+                    value={editingQuestion.subject?._id || editingQuestion.subject}
+                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, subject: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    {subjects.map((s) => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Difficulty</label>
+                  <select
+                    value={editingQuestion.difficulty}
+                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, difficulty: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Source</label>
+                  <input
+                    value={editingQuestion.source || ""}
+                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, source: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                  Answer Options
+                </label>
+                <div className="space-y-2">
+                  {editingQuestion.options?.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="editTeacherCorrectAnswer"
+                        checked={Number(editingQuestion.correctAnswer) === idx}
+                        onChange={() => setEditingQuestion((prev) => ({ ...prev, correctAnswer: idx }))}
+                        className="w-4 h-4 text-green-600 focus:ring-green-500"
+                        title="Mark as correct answer"
+                      />
+                      <span className="w-6 text-xs font-bold text-slate-500 text-center">
+                        {String.fromCharCode(65 + idx)}.
+                      </span>
+                      <input
+                        required
+                        value={opt.text}
+                        onChange={(e) => {
+                          const newOpts = [...editingQuestion.options];
+                          newOpts[idx] = { ...newOpts[idx], text: e.target.value };
+                          setEditingQuestion((prev) => ({ ...prev, options: newOpts }));
+                        }}
+                        className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
+                <textarea
+                  rows={2}
+                  value={editingQuestion.explanation || ""}
+                  onChange={(e) => setEditingQuestion((prev) => ({ ...prev, explanation: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingQuestion(null)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingQuestion}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingQuestion ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      <ConfirmModal
+        isOpen={!!questionToDelete}
+        onClose={() => setQuestionToDelete(null)}
+        onConfirm={confirmDeleteQuestion}
+        title="Delete Question"
+        message="Are you sure you want to remove this question from your question bank?"
+        confirmLabel="Delete Question"
+        danger={true}
+      />
     </div>
   );
 }

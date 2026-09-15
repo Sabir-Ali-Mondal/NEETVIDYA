@@ -1,7 +1,14 @@
 const nodemailer = require("nodemailer");
 
-const createTransporter = () => {
-  if (process.env.NODE_ENV === "production") {
+// In development without real SMTP credentials we spin up a throwaway
+// Ethereal inbox so verification / reset links are actually deliverable
+// and a preview URL is printed to the console.
+let cachedDevTransporter = null;
+
+const createTransporter = async () => {
+  const hasRealCreds = process.env.SMTP_USER && process.env.SMTP_PASS;
+
+  if (process.env.NODE_ENV === "production" || hasRealCreds) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT) || 587,
@@ -12,15 +19,27 @@ const createTransporter = () => {
       },
     });
   }
-  // Development: use ethereal or local smtp
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.ethereal.email",
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    auth: {
-      user: process.env.SMTP_USER || "ethereal_user",
-      pass: process.env.SMTP_PASS || "ethereal_pass",
-    },
-  });
+
+  // Development with no credentials: use an ephemeral Ethereal test account.
+  if (!cachedDevTransporter) {
+    const testAccount = await nodemailer.createTestAccount();
+    cachedDevTransporter = nodemailer.createTransport({
+      host: testAccount.smtp.host,
+      port: testAccount.smtp.port,
+      secure: testAccount.smtp.secure,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+  }
+  return cachedDevTransporter;
+};
+
+const logSendResult = (label, info) => {
+  const preview = nodemailer.getTestMessageUrl(info);
+  if (preview) {
+    console.log(`📧 ${label} sent. Preview: ${preview}`);
+  } else {
+    console.log(`📧 ${label} sent to ${[].concat(info.accepted || []).join(", ") || "recipient"}`);
+  }
 };
 
 const baseTemplate = (content) => `
@@ -72,8 +91,8 @@ const baseTemplate = (content) => `
 `;
 
 const sendVerificationEmail = async (user, verificationToken) => {
-  const transporter = createTransporter();
-  const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify-email?token=${verificationToken}`;
+  const transporter = await createTransporter();
+  const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify-email?token=${encodeURIComponent(verificationToken)}`;
 
   const content = `
     <h2 style="color:#0f172a;font-size:24px;font-weight:800;margin:0 0 8px;">Verify Your Email Address</h2>
@@ -96,9 +115,7 @@ const sendVerificationEmail = async (user, verificationToken) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    if (process.env.NODE_ENV !== "production") {
-      console.log("📧 Verification email sent. Preview:", nodemailer.getTestMessageUrl(info));
-    }
+    logSendResult("Verification email", info);
     return info;
   } catch (err) {
     console.error("Email send error:", err.message);
@@ -107,8 +124,8 @@ const sendVerificationEmail = async (user, verificationToken) => {
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const transporter = createTransporter();
-  const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
+  const transporter = await createTransporter();
+  const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
   const content = `
     <h2 style="color:#0f172a;font-size:24px;font-weight:800;margin:0 0 8px;">Reset Your Password</h2>
@@ -132,9 +149,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    if (process.env.NODE_ENV !== "production") {
-      console.log("📧 Password reset email sent. Preview:", nodemailer.getTestMessageUrl(info));
-    }
+    logSendResult("Password reset email", info);
     return info;
   } catch (err) {
     console.error("Email send error:", err.message);
@@ -142,7 +157,7 @@ const sendPasswordResetEmail = async (user, resetToken) => {
 };
 
 const sendWelcomeEmail = async (user, tempPassword = null) => {
-  const transporter = createTransporter();
+  const transporter = await createTransporter();
   const loginUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/login`;
 
   const credSection = tempPassword
@@ -176,9 +191,7 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    if (process.env.NODE_ENV !== "production") {
-      console.log("📧 Welcome email sent. Preview:", nodemailer.getTestMessageUrl(info));
-    }
+    logSendResult("Welcome email", info);
   } catch (err) {
     console.error("Email send error:", err.message);
   }

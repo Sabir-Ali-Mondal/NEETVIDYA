@@ -6,13 +6,34 @@ import api from "../../config/api";
 import { useState, useEffect } from "react";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import TelegramLink from "../../components/shared/TelegramLink";
+import useContactSettings from "../../hooks/useContactSettings";
 
 export default function HomePage() {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const { settings } = useContactSettings();
+
+  const approvedBatches = [
+    {
+      _id: "dropper-sankalp",
+      name: "SANKALP",
+      description: "Duration: Complete 1 Year | Fees: ₹20,000",
+      targetClass: "Dropper / 12th",
+      feeAmount: 20000,
+      coverImageUrl: images.courseClassXii,
+    },
+    {
+      _id: "11th-udaan",
+      name: "UDAAN",
+      description: "Duration: Complete 2 Years | Fees: ₹35,000",
+      targetClass: "11th",
+      feeAmount: 35000,
+      coverImageUrl: images.courseClassXi,
+    },
+  ];
 
   useEffect(() => {
-    api.get("/courses").then(({ data }) => setCourses(data.data.courses || [])).catch(() => {});
+    api.get("/courses").then(({ data }) => setCourses(approvedBatches)).catch(() => setCourses(approvedBatches));
     api.get("/teachers/public").then(({ data }) => setTeachers(data.data.teachers || [])).catch(() => {});
   }, []);
 
@@ -28,7 +49,7 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-green/20 border border-brand-green/30 text-brand-lime text-xs font-semibold uppercase tracking-wider">
-                <Target className="w-3.5 h-3.5" /> India's Specialized Medical Coaching
+                <Target className="w-3.5 h-3.5" /> NEET-focused academic coaching
               </div>
               <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
                 Learn Better.<br />
@@ -36,11 +57,11 @@ export default function HomePage() {
                 Achieve More.
               </h1>
               <p className="text-gray-300 text-base sm:text-lg max-w-xl leading-relaxed">
-                NEETVIDYA equips future doctors with concept-focused teaching, high-yield NCERT question banks, and exact NTA-pattern computerized test series.
+                NEETVIDYA supports students with concept-based teaching, regular practice, and structured preparation for NEET-focused study goals.
               </p>
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <Link to="/register" className="btn-lime text-base !py-3 !px-7 shadow-lg shadow-brand-lime/20">
-                  Enroll for NEET 2026 <ArrowRight className="w-4 h-4" />
+                  Enroll <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link to="/courses" className="btn-secondary text-base !py-3 !px-6 !border-white/30 !text-white hover:!bg-white/10">
                   View Programs
@@ -67,9 +88,9 @@ export default function HomePage() {
                 <div className="absolute bottom-4 left-4 right-4 bg-brand-black/80 backdrop-blur border border-white/10 p-4 rounded-xl flex items-center justify-between">
                   <div>
                     <p className="text-xs text-brand-lime font-bold uppercase">Admissions Open</p>
-                    <p className="text-sm font-bold text-white">Dropper & Class 11 Batches</p>
+                    <p className="text-sm font-bold text-white">Dropper & Class 11, 12 Batches</p>
                   </div>
-                  <WhatsAppLink number="919876543210" label="Enquire Now" className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700" />
+                  <WhatsAppLink number={settings.whatsappNumber} message={settings.whatsappDefaultMessage} label="Enquire Now" className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700" />
                 </div>
               </div>
             </div>
@@ -86,8 +107,8 @@ export default function HomePage() {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">15+ Yrs</h4>
-                <p className="text-xs text-gray-500 font-medium">Faculty Legacy</p>
+                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">NEET</h4>
+                <p className="text-xs text-gray-500 font-medium">Primary focus</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -95,8 +116,8 @@ export default function HomePage() {
                 <ClipboardList className="w-6 h-6 text-brand-green" />
               </div>
               <div>
-                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">10,000+</h4>
-                <p className="text-xs text-gray-500 font-medium">NCERT MCQs</p>
+                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">2</h4>
+                <p className="text-xs text-gray-500 font-medium">Core faculty profiles</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -104,8 +125,8 @@ export default function HomePage() {
                 <Award className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">AIR 84</h4>
-                <p className="text-xs text-gray-500 font-medium">Top Rank NEET '24</p>
+                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">Admin</h4>
+                <p className="text-xs text-gray-500 font-medium">Managed programs</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -113,8 +134,8 @@ export default function HomePage() {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">1:25</h4>
-                <p className="text-xs text-gray-500 font-medium">Mentor-Student Ratio</p>
+                <h4 className="font-heading font-extrabold text-2xl text-brand-dark">Batches</h4>
+                <p className="text-xs text-gray-500 font-medium">Live institute groups</p>
               </div>
             </div>
           </div>
@@ -126,8 +147,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-12">
             <div>
-              <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Academic Excellence</span>
-              <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-brand-dark mt-1">Structured NEET Programs</h2>
+              <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Program Listings</span>
+              <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-brand-dark mt-1">Published NEET Programs</h2>
             </div>
             <Link to="/courses" className="text-brand-green font-semibold text-sm hover:underline inline-flex items-center gap-1">
               View All Programs <ArrowRight className="w-4 h-4" />
@@ -148,7 +169,7 @@ export default function HomePage() {
                   </div>
                   <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
                     <div>
-                      <span className="text-xs text-gray-500 block">Tuition Fee</span>
+                      <span className="text-xs text-gray-500 block">Fees</span>
                       <span className="font-bold text-lg text-brand-dark">₹{course.feeAmount?.toLocaleString() || "Contact"}</span>
                     </div>
                     <Link to="/register" className="btn-primary text-xs !py-2 !px-4">
@@ -158,8 +179,9 @@ export default function HomePage() {
                 </div>
               ))
             ) : (
-              <div className="col-span-3 text-center py-12 text-gray-500">
-                Loading academic courses...
+              <div className="col-span-3 text-center py-12 text-gray-600">
+                <p className="font-semibold text-brand-dark mb-2">Courses are managed from the admin panel.</p>
+                <p className="text-sm text-gray-500">Publish a course from the admin dashboard to display it on this page.</p>
               </div>
             )}
           </div>
@@ -170,9 +192,9 @@ export default function HomePage() {
       <section className="section-padding bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Our Proven Process</span>
-            <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-brand-dark mt-2">The NEETVIDYA 4-Tier Success System</h2>
-            <p className="text-gray-600 text-sm mt-3">From foundation concepts to national-level test resilience</p>
+            <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Our Approach</span>
+            <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-brand-dark mt-2">The NEETVIDYA Preparation Framework</h2>
+            <p className="text-gray-600 text-sm mt-3">Concept learning, regular practice, and guided improvement over time</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -222,10 +244,10 @@ export default function HomePage() {
       <section className="py-20 bg-brand-soft border-t border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-6">
           <h2 className="font-heading font-extrabold text-3xl sm:text-4xl text-brand-dark">
-            Ready to Secure Your White Coat?
+            Ready to begin your NEET preparation?
           </h2>
           <p className="text-gray-600 text-sm sm:text-base max-w-xl mx-auto">
-            Book an in-person academic counselling session or register directly for our upcoming scholarship test.
+            Book a counselling session or register for the next available admission cycle and batch details.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link to="/register" className="btn-primary text-base !py-3 !px-8">

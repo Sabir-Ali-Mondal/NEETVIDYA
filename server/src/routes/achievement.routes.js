@@ -1,26 +1,17 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
-const Achievement = require("../models/Achievement");
+const {
+  getAchievements,
+  createAchievement,
+  updateAchievement,
+  deleteAchievement,
+} = require("../controllers/achievement.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
-const apiResponse = require("../utils/apiResponse");
 
-router.get("/", async (req, res, next) => {
-  try {
-    const achievements = await Achievement.find({ isActive: true }).sort({ displayOrder: 1 });
-    return apiResponse(res, 200, "Achievements", { achievements });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post("/", protect, authorize("admin"), async (req, res, next) => {
-  try {
-    const achievement = await Achievement.create({ ...req.body, createdBy: req.user._id });
-    return apiResponse(res, 201, "Achievement created", { achievement });
-  } catch (error) {
-    next(error);
-  }
-});
+router.get("/", getAchievements);
+router.post("/", protect, authorize("admin"), createAchievement);
+router.put("/:id", protect, authorize("admin"), updateAchievement);
+router.delete("/:id", protect, authorize("admin"), deleteAchievement);
 
 module.exports = router;

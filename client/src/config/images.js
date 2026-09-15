@@ -32,6 +32,8 @@ import registerSideImage from "../assets/images/placeholders/register-side-image
 import emptyStateMaterials from "../assets/images/placeholders/empty-state-materials.jpg";
 import emptyStateTests from "../assets/images/placeholders/empty-state-tests.jpg";
 import emptyStateResults from "../assets/images/placeholders/empty-state-results.jpg";
+import logo from "../assets/images/placeholders/logo.jpg";
+import logoRoundedTransparent from "../assets/images/placeholders/logo-rounded-transparent.png";
 
 const images = {
   heroSlide1, heroSlide2, heroSlide3,
@@ -45,6 +47,7 @@ const images = {
   studentAvatarDefault, ogImage,
   loginSideImage, registerSideImage,
   emptyStateMaterials, emptyStateTests, emptyStateResults,
+  logo, logoRoundedTransparent,
 };
 
 export default images;

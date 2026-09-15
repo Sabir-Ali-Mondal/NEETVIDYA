@@ -22,8 +22,8 @@ router.use("/testimonials", require("./testimonial.routes"));
 router.use("/enquiries", require("./enquiry.routes"));
 router.use("/website", require("./website.routes"));
 router.use("/upload", require("./upload.routes"));
-router.use("/telegram", require("./telegram.routes"));
 router.use("/admin", require("./admin.routes"));
 router.use("/dashboard", require("./dashboard.routes"));
+router.use("/contact-settings", require("./contactSettings.routes"));
 
 module.exports = router;

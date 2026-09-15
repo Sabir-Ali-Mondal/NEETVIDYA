@@ -2,6 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, Video, HelpCircle, ClipboardList, Link, BarChart3, User, LogOut, Menu, X } from "lucide-react";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import NotificationBell from "../components/shared/NotificationBell";
 
 const navItems = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard, end: true },
@@ -82,6 +83,7 @@ export default function TeacherLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="ml-auto flex items-center gap-2">
+            <NotificationBell />
             <span className="text-sm font-semibold text-brand-dark">{user?.name} (Faculty)</span>
           </div>
         </header>

@@ -15,10 +15,10 @@ export default function TestSeriesPage() {
     <div className="section-padding bg-brand-soft min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold text-brand-green uppercase tracking-widest">National Benchmarking</span>
-          <h1 className="font-heading font-extrabold text-3xl sm:text-5xl text-brand-dark mt-2">NEET Computerized Test Series</h1>
+          <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Assessment Support</span>
+          <h1 className="font-heading font-extrabold text-3xl sm:text-5xl text-brand-dark mt-2">NEET Practice & Test Series</h1>
           <p className="text-gray-600 text-sm sm:text-base mt-3">
-            Simulate the exact NTA computer-based environment with negative marking, accuracy heatmaps, and chapter breakdowns.
+            Students can access exam-style practice assessments and structured tests that are created and managed through the admin panel.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ export default function TestSeriesPage() {
               </div>
 
               <Link to="/register" className="btn-primary w-full text-center text-sm !py-2.5">
-                Register to Attempt <ArrowRight className="w-4 h-4" />
+                Register for Access <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ))}

@@ -28,6 +28,7 @@ import TestsPage from "./pages/student/TestsPage";
 import StudentResults from "./pages/student/ResultPage";
 import PerformancePage from "./pages/student/PerformancePage";
 import StudentProfile from "./pages/student/ProfilePage";
+import ExamInstructions from "./pages/student/ExamInstructions";
 import ExamPage from "./pages/student/ExamPage";
 
 // Teacher Pages
@@ -48,6 +49,7 @@ import AdminQuestions from "./pages/admin/AdminQuestions";
 import AdminExams from "./pages/admin/AdminExams";
 import AdminEnquiries from "./pages/admin/AdminEnquiries";
 import AdminAchievements from "./pages/admin/AdminAchievements";
+import AdminContactSettings from "./pages/admin/AdminContactSettings";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 // Error Pages
@@ -85,6 +87,16 @@ export default function App() {
         <Route path="profile" element={<StudentProfile />} />
       </Route>
 
+      {/* Exam instructions (pre-exam briefing) */}
+      <Route
+        path="/exam/:examId/instructions"
+        element={
+          <ProtectedRoute role="student">
+            <ExamInstructions />
+          </ProtectedRoute>
+        }
+      />
+
       {/* CBT Exam (dedicated distraction-free interface) */}
       <Route path="/exam/:examId" element={<ProtectedRoute role="student"><ExamLayout /></ProtectedRoute>}>
         <Route path="attempt" element={<ExamPage />} />
@@ -111,6 +123,7 @@ export default function App() {
         <Route path="exams" element={<AdminExams />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="achievements" element={<AdminAchievements />} />
+        <Route path="contact-settings" element={<AdminContactSettings />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 

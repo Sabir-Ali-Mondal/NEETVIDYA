@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import { UserPlus, Eye, EyeOff, ArrowLeft, CheckCircle, MailCheck } from "lucide-react";
+import { UserPlus, Eye, EyeOff, ArrowLeft, CheckCircle, MailCheck, BadgeCheck, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "" });
@@ -97,16 +97,21 @@ export default function RegisterPage() {
 
           <div className="space-y-4">
             {[
-              { icon: "✅", text: "Instant student ID on registration" },
-              { icon: "📧", text: "Email verification for security" },
-              { icon: "🔒", text: "Secure & private data handling" },
-              { icon: "📱", text: "Access from any device, anytime" },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-3">
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-slate-300 text-sm">{item.text}</span>
-              </div>
-            ))}
+              { icon: BadgeCheck, text: "Instant student ID on registration" },
+              { icon: MailCheck, text: "Email verification for security" },
+              { icon: ShieldCheck, text: "Secure & private data handling" },
+              { icon: Smartphone, text: "Access from any device, anytime" },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.text} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-slate-300 text-sm">{item.text}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -114,15 +119,23 @@ export default function RegisterPage() {
       {/* Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-6">
-          <div>
-            <span className="font-extrabold text-xl text-green-600">NEETVIDYA</span>
-            <h1 className="font-extrabold text-3xl text-slate-900 mt-2">Create Account</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              Already have an account?{" "}
-              <Link to="/login" className="text-green-600 font-semibold hover:text-green-700">
-                Sign In
-              </Link>
-            </p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <span className="font-extrabold text-xl text-green-600">NEETVIDYA</span>
+              <h1 className="font-extrabold text-3xl text-slate-900 mt-2">Create Account</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Already have an account?{" "}
+                <Link to="/login" className="text-green-600 font-semibold hover:text-green-700">
+                  Sign In
+                </Link>
+              </p>
+            </div>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition"
+            >
+              <ArrowLeft className="w-4 h-4" /> Login
+            </Link>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

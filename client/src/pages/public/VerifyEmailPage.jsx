@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../config/api";
 import { CheckCircle, XCircle, Loader2, MailCheck, RefreshCw } from "lucide-react";
@@ -6,22 +6,31 @@ import { CheckCircle, XCircle, Loader2, MailCheck, RefreshCw } from "lucide-reac
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState("loading"); // loading | success | error | resend
+  const [status, setStatus] = useState("loading"); // loading | success | error | resend | already-verified
   const [resendEmail, setResendEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
+  const requestedRef = useRef(false);
 
   useEffect(() => {
     if (!token) {
       setStatus("no-token");
       return;
     }
+
+    if (requestedRef.current) return;
+    requestedRef.current = true;
+
     const verify = async () => {
       try {
         await api.get(`/auth/verify-email?token=${token}`);
         setStatus("success");
       } catch (err) {
-        setStatus("error");
+        if (err.response?.data?.message?.includes("already verified")) {
+          setStatus("already-verified");
+        } else {
+          setStatus("error");
+        }
       }
     };
     verify();
@@ -55,12 +64,16 @@ export default function VerifyEmailPage() {
           </>
         )}
 
-        {status === "success" && (
+        {(status === "success" || status === "already-verified") && (
           <>
             <CheckCircle className="w-14 h-14 text-green-500 mx-auto" />
-            <h1 className="font-extrabold text-2xl text-slate-900">Email Verified!</h1>
+            <h1 className="font-extrabold text-2xl text-slate-900">
+              {status === "already-verified" ? "Email Already Verified!" : "Email Verified!"}
+            </h1>
             <p className="text-slate-500 text-sm">
-              Your email has been successfully verified. You can now sign in to your NEETVIDYA account.
+              {status === "already-verified"
+                ? "Your email address is already verified. You can sign in to your NEETVIDYA account."
+                : "Your email has been successfully verified. You can now sign in to your NEETVIDYA account."}
             </p>
             <Link
               to="/login"

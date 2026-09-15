@@ -3,6 +3,8 @@ import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import TelegramLink from "../components/shared/TelegramLink";
+import NotificationBell from "../components/shared/NotificationBell";
+import useContactSettings from "../hooks/useContactSettings";
 
 const navItems = [
   { label: "Dashboard", path: "/student", icon: LayoutDashboard, end: true },
@@ -17,6 +19,7 @@ export default function StudentLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { settings } = useContactSettings();
 
   const handleLogout = () => {
     logout();
@@ -68,7 +71,7 @@ export default function StudentLayout() {
         <div className="p-4 border-t border-white/10 space-y-3">
           <div className="bg-white/5 rounded-lg p-3 text-xs text-gray-400">
             <p className="font-semibold text-gray-200 mb-1">Doubt Assistance</p>
-            <TelegramLink username="neetvidya_support" label="Ask via Telegram" className="text-xs text-sky-400" />
+            <TelegramLink url={settings.telegramChannelLink} label="Telegram Channel" className="text-xs text-sky-400" />
           </div>
           <button
             onClick={handleLogout}
@@ -90,6 +93,7 @@ export default function StudentLayout() {
           </button>
 
           <div className="flex items-center gap-2 ml-auto">
+            <NotificationBell />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-brand-dark leading-tight">{user?.name}</p>
               <p className="text-xs text-gray-400 capitalize">{user?.role} Account</p>

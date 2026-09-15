@@ -1,10 +1,11 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, GraduationCap, Layers, BookOpen,
-  HelpCircle, ClipboardList, BarChart3, Trophy, Bell, Globe, Settings, LogOut, Menu, X, MessageSquare
+  HelpCircle, ClipboardList, Trophy, Settings, Globe, LogOut, Menu, X, MessageSquare
 } from "lucide-react";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import NotificationBell from "../components/shared/NotificationBell";
 
 const navItems = [
   { label: "Overview", path: "/admin", icon: LayoutDashboard, end: true },
@@ -16,8 +17,8 @@ const navItems = [
   { label: "Exams & Tests", path: "/admin/exams", icon: ClipboardList },
   { label: "Enquiries", path: "/admin/enquiries", icon: MessageSquare },
   { label: "Achievements", path: "/admin/achievements", icon: Trophy },
-  { label: "Telegram Bot", path: "/admin/telegram", icon: Globe },
-  { label: "System Logs", path: "/admin/logs", icon: Settings },
+  { label: "Contact & Links", path: "/admin/contact-settings", icon: Globe },
+  { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
 export default function AdminLayout() {
@@ -90,10 +91,17 @@ export default function AdminLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="ml-auto flex items-center gap-3">
+            <NotificationBell />
             <span className="text-xs font-semibold px-2.5 py-1 bg-brand-green/10 text-brand-green rounded-full border border-brand-green/20">
               Super Admin Active
             </span>
-            <span className="text-sm font-semibold text-brand-dark">{user?.name}</span>
+            <span
+              onClick={() => navigate("/admin/settings")}
+              className="text-sm font-semibold text-brand-dark cursor-pointer hover:text-green-700 transition"
+              title="Admin Settings"
+            >
+              {user?.name}
+            </span>
           </div>
         </header>
 

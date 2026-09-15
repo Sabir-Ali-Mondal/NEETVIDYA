@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import api from "../../config/api";
 import {
   Users, Search, Plus, Filter, ChevronRight, BadgeCheck,
-  Phone, Mail, MapPin, GraduationCap, MoreVertical, UserX, UserCheck, Eye
+  Phone, Mail, MapPin, GraduationCap, MoreVertical, UserX, UserCheck, Eye,
+  Pencil, Trash2, X, Building2, BookOpen, Save
 } from "lucide-react";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const typeColors = {
   REGULAR_OFFLINE: "bg-green-100 text-green-700",
@@ -16,12 +18,17 @@ const typeColors = {
 
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [viewingStudent, setViewingStudent] = useState(null);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [studentToDelete, setStudentToDelete] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", currentClass: "DROPPER",
     studentType: "REGULAR_OFFLINE", city: "", parentName: "", parentPhone: "", school: ""
@@ -42,7 +49,19 @@ export default function AdminStudents() {
     }
   };
 
-  useEffect(() => { fetchStudents(); }, [page, search]);
+  const fetchBatches = async () => {
+    try {
+      const { data } = await api.get("/batches");
+      setBatches(data.data?.batches || []);
+    } catch {
+      setBatches([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+    fetchBatches();
+  }, [page, search]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -62,11 +81,49 @@ export default function AdminStudents() {
 
   const toggleActive = async (studentId, isActive) => {
     try {
-      await api.put(`/students/${studentId}`, { isActive: !isActive });
+      await api.put(`/students/${studentId}/toggle-active`);
       toast.success(isActive ? "Student deactivated" : "Student activated");
       fetchStudents();
     } catch {
       toast.error("Failed to update student");
+    }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setSavingEdit(true);
+    try {
+      await api.put(`/students/${editingStudent._id}`, {
+        name: editingStudent.name,
+        phone: editingStudent.phone,
+        currentClass: editingStudent.currentClass,
+        studentType: editingStudent.studentType,
+        city: editingStudent.city,
+        school: editingStudent.school,
+        parentName: editingStudent.parentName,
+        parentPhone: editingStudent.parentPhone,
+        batches: editingStudent.batches?.map((b) => (typeof b === "object" ? b._id : b)) || [],
+      });
+      toast.success("Student updated successfully");
+      setEditingStudent(null);
+      fetchStudents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update student");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const confirmDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    try {
+      await api.delete(`/students/${studentToDelete._id}`);
+      toast.success("Student deleted successfully");
+      setStudentToDelete(null);
+      fetchStudents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to delete student");
     }
   };
 
@@ -165,8 +222,26 @@ export default function AdminStudents() {
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <button className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition" title="View">
+                        <button
+                          onClick={() => setViewingStudent(s)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition"
+                          title="View Details"
+                        >
                           <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setEditingStudent({
+                              ...s,
+                              name: s.user?.name || "",
+                              phone: s.user?.phone || s.phone || "",
+                              batches: s.batches || [],
+                            })
+                          }
+                          className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition"
+                          title="Edit Student"
+                        >
+                          <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => toggleActive(s._id, s.isActive)}
@@ -174,6 +249,13 @@ export default function AdminStudents() {
                           title={s.isActive ? "Deactivate" : "Activate"}
                         >
                           {s.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => setStudentToDelete(s)}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition"
+                          title="Delete Student"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -291,6 +373,263 @@ export default function AdminStudents() {
           </div>
         </div>
       )}
+
+      {/* View Student Modal */}
+      {viewingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                  {viewingStudent.user?.name?.charAt(0)?.toUpperCase() || "S"}
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-slate-900">{viewingStudent.user?.name}</h3>
+                  <p className="text-xs font-mono text-slate-400">ID: {viewingStudent.studentId || "—"}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingStudent(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="text-xs text-slate-400 font-medium">Class</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{viewingStudent.currentClass || "—"}</div>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="text-xs text-slate-400 font-medium">Student Type</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{viewingStudent.studentType?.replace(/_/g, " ") || "—"}</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span>{viewingStudent.user?.email || "No email"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span>{viewingStudent.user?.phone || viewingStudent.phone || "No phone"}</span>
+                </div>
+                {viewingStudent.city && (
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span>City: {viewingStudent.city}</span>
+                  </div>
+                )}
+                {viewingStudent.school && (
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <BookOpen className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span>School/College: {viewingStudent.school}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Guardian Information</div>
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-1">
+                  <div className="text-slate-800 font-semibold">{viewingStudent.parentName || "Not specified"}</div>
+                  {viewingStudent.parentPhone && (
+                    <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <Phone className="w-3 h-3 text-slate-400" /> {viewingStudent.parentPhone}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Enrolled Batches</div>
+                {viewingStudent.batches?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {viewingStudent.batches.map((b) => (
+                      <span key={b._id || b} className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-lg border border-green-200">
+                        {b.name || b.code || "Batch"}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">No batch assigned currently.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setViewingStudent(null)}
+                className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  const s = viewingStudent;
+                  setViewingStudent(null);
+                  setEditingStudent({
+                    ...s,
+                    name: s.user?.name || "",
+                    phone: s.user?.phone || s.phone || "",
+                    batches: s.batches || [],
+                  });
+                }}
+                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition text-center shadow-sm"
+              >
+                Edit Student
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+              <div>
+                <h2 className="font-extrabold text-xl text-slate-900">Edit Student</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Update student details, class, or assigned batches.</p>
+              </div>
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Full Name *</label>
+                  <input
+                    required
+                    value={editingStudent.name}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Phone</label>
+                  <input
+                    value={editingStudent.phone || ""}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Current Class</label>
+                  <select
+                    value={editingStudent.currentClass}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, currentClass: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    {["XI", "XII", "DROPPER", "REPEATER"].map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Student Type</label>
+                  <select
+                    value={editingStudent.studentType}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, studentType: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    {["REGULAR_OFFLINE", "REGULAR_ONLINE", "HYBRID", "EXAM_ONLY", "GUEST"].map((t) => (
+                      <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">City</label>
+                  <input
+                    value={editingStudent.city || ""}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Parent Name</label>
+                  <input
+                    value={editingStudent.parentName || ""}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, parentName: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Parent Phone</label>
+                  <input
+                    value={editingStudent.parentPhone || ""}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, parentPhone: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">School/College</label>
+                  <input
+                    value={editingStudent.school || ""}
+                    onChange={(e) => setEditingStudent((prev) => ({ ...prev, school: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Assign Batch</label>
+                  <select
+                    value={editingStudent.batches?.[0]?._id || editingStudent.batches?.[0] || ""}
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      setEditingStudent((prev) => ({
+                        ...prev,
+                        batches: selectedVal ? [selectedVal] : [],
+                      }));
+                    }}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                  >
+                    <option value="">No Batch Assigned</option>
+                    {batches.map((b) => (
+                      <option key={b._id} value={b._id}>{b.name} ({b.code})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!studentToDelete}
+        onClose={() => setStudentToDelete(null)}
+        onConfirm={confirmDeleteStudent}
+        title="Delete Student"
+        message={`Are you sure you want to permanently delete ${studentToDelete?.user?.name || "this student"}? This action cannot be undone.`}
+        confirmLabel="Delete Student"
+        danger={true}
+      />
     </div>
   );
 }

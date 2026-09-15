@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
   Users, GraduationCap, ClipboardList, Layers, UserPlus,
   ShieldCheck, Mail, Phone, BadgeCheck, UserCheck, Building2,
-  X, Save, Clock, ChevronRight
+  X, Save, Clock, ChevronRight, Eye, Calendar, BookOpen
 } from "lucide-react";
 import StudentBadge from "../../components/shared/StudentBadge";
 import toast from "react-hot-toast";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateStudent, setShowCreateStudent] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [creating, setCreating] = useState(false);
   const [newStudent, setNewStudent] = useState({
     name: "",
@@ -78,6 +81,7 @@ export default function AdminDashboard() {
       color: "text-blue-600",
       bg: "bg-blue-50",
       border: "border-blue-100",
+      path: "/admin/students",
     },
     {
       label: "Active Faculty",
@@ -86,6 +90,7 @@ export default function AdminDashboard() {
       color: "text-emerald-600",
       bg: "bg-emerald-50",
       border: "border-emerald-100",
+      path: "/admin/teachers",
     },
     {
       label: "Live Tests",
@@ -94,6 +99,7 @@ export default function AdminDashboard() {
       color: "text-purple-600",
       bg: "bg-purple-50",
       border: "border-purple-100",
+      path: "/admin/exams",
     },
     {
       label: "Test Submissions",
@@ -102,6 +108,7 @@ export default function AdminDashboard() {
       color: "text-amber-600",
       bg: "bg-amber-50",
       border: "border-amber-100",
+      path: "/admin/exams",
     },
   ];
 
@@ -151,16 +158,18 @@ export default function AdminDashboard() {
           statCards.map((s) => (
             <div
               key={s.label}
-              className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+              onClick={() => navigate(s.path)}
+              className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 group"
             >
-              <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center mb-4`}>
+              <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
                 <s.icon className={`w-5 h-5 ${s.color}`} />
               </div>
               <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 {s.value}
               </div>
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                {s.label}
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1 flex items-center justify-between">
+                <span>{s.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-slate-400 transition" />
               </div>
             </div>
           ))
@@ -177,7 +186,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <button
-            onClick={() => {}}
+            onClick={() => navigate("/admin/students")}
             className="text-xs font-semibold text-green-600 hover:text-green-700 inline-flex items-center gap-1"
           >
             View all students <ChevronRight className="w-3.5 h-3.5" />
@@ -193,13 +202,14 @@ export default function AdminDashboard() {
                 <th className="px-6 py-4">Type</th>
                 <th className="px-6 py-4">Batch & Class</th>
                 <th className="px-6 py-4">Guardian</th>
+                <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>
-                    {[1, 2, 3, 4, 5].map((j) => (
+                    {[1, 2, 3, 4, 5, 6].map((j) => (
                       <td key={j} className="px-6 py-4">
                         <div className="h-4 bg-slate-100 rounded w-full animate-pulse mb-2" />
                         <div className="h-3 bg-slate-100 rounded w-2/3 animate-pulse" />
@@ -209,7 +219,7 @@ export default function AdminDashboard() {
                 ))
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center">
+                  <td colSpan={6} className="px-6 py-16 text-center">
                     <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <h3 className="font-bold text-slate-600 mb-1">No students yet</h3>
                     <p className="text-sm text-slate-400">
@@ -274,6 +284,14 @@ export default function AdminDashboard() {
                           {s.parentPhone}
                         </div>
                       )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => setSelectedStudent(s)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-green-50 text-slate-600 hover:text-green-700 transition"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -426,6 +444,112 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Student Details Modal */}
+      {selectedStudent && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                  {selectedStudent.user?.name?.charAt(0)?.toUpperCase() || "S"}
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-slate-900">{selectedStudent.user?.name}</h3>
+                  <p className="text-xs font-mono text-slate-400">ID: {selectedStudent.studentId || "—"}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedStudent(null)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="text-xs text-slate-400 font-medium">Class / Category</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{selectedStudent.currentClass || "—"}</div>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="text-xs text-slate-400 font-medium">Student Type</div>
+                  <div className="font-bold text-slate-800 mt-0.5">{selectedStudent.studentType?.replace(/_/g, " ") || "—"}</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span>{selectedStudent.user?.email || "No email"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span>{selectedStudent.user?.phone || selectedStudent.phone || "No phone"}</span>
+                </div>
+                {selectedStudent.city && (
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span>City: {selectedStudent.city}</span>
+                  </div>
+                )}
+                {selectedStudent.school && (
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <BookOpen className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span>School/College: {selectedStudent.school}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Guardian Information</div>
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-1">
+                  <div className="text-slate-800 font-semibold">{selectedStudent.parentName || "Not specified"}</div>
+                  {selectedStudent.parentPhone && (
+                    <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <Phone className="w-3 h-3 text-slate-400" /> {selectedStudent.parentPhone}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Enrolled Batches</div>
+                {selectedStudent.batches?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedStudent.batches.map((b) => (
+                      <span key={b._id || b} className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-lg border border-green-200">
+                        {b.name || b.code || "Batch"}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">No batch assigned currently.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setSelectedStudent(null)}
+                className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStudent(null);
+                  navigate("/admin/students");
+                }}
+                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl transition text-center shadow-sm"
+              >
+                Manage in Students
+              </button>
+            </div>
           </div>
         </div>
       )}

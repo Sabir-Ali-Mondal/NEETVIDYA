@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
   Users, BookOpen, ClipboardList, PlusCircle, CheckCircle,
-  UsersRound, GraduationCap, HelpCircle, X, Save
+  UsersRound, GraduationCap, HelpCircle, X, Save, ChevronRight
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [teacher, setTeacher] = useState(null);
@@ -60,6 +62,7 @@ export default function TeacherDashboard() {
       color: "text-blue-600",
       bg: "bg-blue-50",
       border: "border-blue-100",
+      path: "/teacher/classes",
     },
     {
       label: "Questions Authored",
@@ -68,6 +71,7 @@ export default function TeacherDashboard() {
       color: "text-purple-600",
       bg: "bg-purple-50",
       border: "border-purple-100",
+      path: "/teacher/questions",
     },
     {
       label: "Active Tests",
@@ -76,6 +80,7 @@ export default function TeacherDashboard() {
       color: "text-green-600",
       bg: "bg-green-50",
       border: "border-green-100",
+      path: "/teacher/exams",
     },
   ];
 
@@ -131,12 +136,14 @@ export default function TeacherDashboard() {
           statCards.map((s) => (
             <div
               key={s.label}
-              className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
+              onClick={() => navigate(s.path)}
+              className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 group"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center`}>
+                <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center group-hover:scale-105 transition-transform`}>
                   <s.icon className={`w-5 h-5 ${s.color}`} />
                 </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" />
               </div>
               <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 {s.value}
@@ -158,9 +165,12 @@ export default function TeacherDashboard() {
               {questions.length} total questions in your question bank
             </p>
           </div>
-          <div className="text-xs font-semibold text-slate-500">
-            Last 5 questions
-          </div>
+          <button
+            onClick={() => navigate("/teacher/questions")}
+            className="text-xs font-semibold text-green-600 hover:text-green-700 inline-flex items-center gap-1"
+          >
+            View all questions <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
         <div className="divide-y divide-slate-50">
           {loading ? (

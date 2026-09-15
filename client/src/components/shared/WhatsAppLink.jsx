@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react";
 
-const WhatsAppLink = ({ number = "919876543210", message = "Hello NEETVIDYA! I am interested in admission.", label = "WhatsApp Us", className = "" }) => {
+const WhatsAppLink = ({ number = "917439685658", message = "Hello NEETVIDYA! I am interested in admission.", label = "WhatsApp Us", className = "" }) => {
   const cleanNumber = number.replace(/[^0-9]/g, "");
   const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 

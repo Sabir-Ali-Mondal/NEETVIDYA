@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, ClipboardList, FileText, TrendingUp, Clock, AlertCircle, ArrowRight } from "lucide-react";
+import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight } from "lucide-react";
 import api from "../../config/api";
 import StudentBadge from "../../components/shared/StudentBadge";
 import TelegramLink from "../../components/shared/TelegramLink";
+import useContactSettings from "../../hooks/useContactSettings";
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { settings } = useContactSettings();
 
   useEffect(() => {
     Promise.all([
@@ -24,7 +26,7 @@ export default function StudentDashboard() {
   }, []);
 
   const stats = [
-    { icon: BookOpen, label: "Enrolled Course", value: student?.batches?.[0]?.course?.name || "NEET Dropper Pinnacle", color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: BookOpen, label: "Enrolled Course", value: student?.batches?.[0]?.course?.name || "Admin-managed course", color: "text-blue-600", bg: "bg-blue-50" },
     { icon: ClipboardList, label: "Live Tests", value: `${dashboardData?.upcomingTests?.length || 1} Available`, color: "text-orange-600", bg: "bg-orange-50" },
     { icon: FileText, label: "Study Materials", value: `${dashboardData?.recentMaterials?.length || 4} Uploaded`, color: "text-emerald-600", bg: "bg-emerald-50" },
     { icon: TrendingUp, label: "Recent Accuracy", value: "82% Avg", color: "text-purple-600", bg: "bg-purple-50" },
@@ -41,12 +43,12 @@ export default function StudentDashboard() {
           <p className="text-xs text-gray-500 mt-1">Ready for today's concept practice and test drills?</p>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <StudentBadge batchType={student?.studentType === "REGULAR_ONLINE" ? "ONLINE" : student?.studentType === "HYBRID" ? "HYBRID" : "OFFLINE"} />
-            <span className="text-xs text-gray-500 font-medium">Batch: {student?.batches?.[0]?.name || "Target NEET Alpha"}</span>
+            <span className="text-xs text-gray-500 font-medium">Batch: {student?.batches?.[0]?.name || "12th Batch – SANKALP"}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <TelegramLink username="neetvidya_support" label="Doubt Desk" className="text-xs bg-sky-50 text-sky-700 px-3 py-2 rounded-lg border border-sky-200" />
+          <TelegramLink url={settings.telegramChannelLink} label="Doubt Desk" className="text-xs bg-sky-50 text-sky-700 px-3 py-2 rounded-lg border border-sky-200" />
           <Link to="/student/tests" className="btn-primary text-xs !py-2.5 !px-4">
             Start Live Exam <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -88,7 +90,7 @@ export default function StudentDashboard() {
                   <div>
                     <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">{test.testType}</span>
                     <h4 className="font-semibold text-sm text-brand-dark">{test.title}</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions • {test.duration} Minutes</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions â€¢ {test.duration} Minutes</p>
                   </div>
                   <Link to={`/exam/${test._id}/attempt`} className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
                     Take Test
@@ -100,7 +102,7 @@ export default function StudentDashboard() {
                 <div>
                   <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">MOCK_TEST</span>
                   <h4 className="font-semibold text-sm text-brand-dark">NEET Diagnostic Mock Test 01</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Physics & Biology • 30 Minutes</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Physics & Biology â€¢ 30 Minutes</p>
                 </div>
                 <Link to="/student/tests" className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
                   Open

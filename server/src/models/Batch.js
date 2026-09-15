@@ -9,7 +9,7 @@ const batchSchema = new mongoose.Schema(
       enum: ["OFFLINE", "ONLINE", "HYBRID", "EXAM_ONLY", "CRASH_COURSE"],
       required: true,
     },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
+    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
     academicYear: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },
