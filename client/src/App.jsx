@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 
 import PublicLayout from "./layouts/PublicLayout";
@@ -34,8 +34,6 @@ import ExamPage from "./pages/student/ExamPage";
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherMaterials from "./pages/teacher/TeacherMaterials";
-import TeacherClasses from "./pages/teacher/TeacherClasses";
-import TeacherQuestions from "./pages/teacher/TeacherQuestions";
 import TeacherExams from "./pages/teacher/TeacherExams";
 import TeacherPerformance from "./pages/teacher/TeacherPerformance";
 
@@ -106,8 +104,9 @@ export default function App() {
       <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>}>
         <Route index element={<TeacherDashboard />} />
         <Route path="materials" element={<TeacherMaterials />} />
-        <Route path="classes" element={<TeacherClasses />} />
-        <Route path="questions" element={<TeacherQuestions />} />
+        {/* Videos are now published as materials — the old separate section is retired. */}
+        <Route path="classes" element={<Navigate to="/teacher/materials" replace />} />
+        <Route path="questions" element={<Navigate to="/teacher/exams" replace />} />
         <Route path="exams" element={<TeacherExams />} />
         <Route path="performance" element={<TeacherPerformance />} />
       </Route>
@@ -118,9 +117,9 @@ export default function App() {
         <Route path="students" element={<AdminStudents />} />
         <Route path="teachers" element={<AdminTeachers />} />
         <Route path="batches" element={<AdminBatches />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="questions" element={<AdminQuestions />} />
-        <Route path="exams" element={<AdminExams />} />
+        <Route path="courses" element={<Navigate to="/admin/batches" replace />} />
+        <Route path="questions" element={<TeacherExams />} />
+        <Route path="exams" element={<TeacherExams />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="achievements" element={<AdminAchievements />} />
         <Route path="contact-settings" element={<AdminContactSettings />} />

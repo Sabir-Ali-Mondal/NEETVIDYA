@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import {
   Mail,
   Phone,
@@ -36,7 +36,7 @@ export default function ContactPage() {
     try {
       await api.post("/enquiries", form);
 
-      toast.success(
+      alertSuccess(
         "Enquiry submitted! Our admissions counselor will call you within 24 hours."
       );
 
@@ -48,7 +48,7 @@ export default function ContactPage() {
         message: "",
       });
     } catch (err) {
-      toast.error("Failed to submit enquiry. Please call us directly.");
+      alertError("Failed to submit enquiry. Please call us directly.");
     } finally {
       setLoading(false);
     }

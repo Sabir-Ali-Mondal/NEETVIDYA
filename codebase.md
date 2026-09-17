@@ -4,8 +4,8 @@
 > It excludes binaries, locks, secrets, and unused UI components to optimize for AI context.
 
 **Project:** `NEETVIDYA`  
-**Included files:** `192`  
-**Skipped files:** `84`  
+**Included files:** `196`  
+**Skipped files:** `83`  
 **Max file size:** `150 KB`  
 
 ---
@@ -26,6 +26,7 @@ NEETVIDYA
 │   │   │       ├── FileUpload.jsx
 │   │   │       ├── LoadingSpinner.jsx
 │   │   │       ├── NotificationBell.jsx
+│   │   │       ├── Pagination.jsx
 │   │   │       ├── PDFViewer.jsx
 │   │   │       ├── ProtectedRoute.jsx
 │   │   │       ├── SkeletonLoader.jsx
@@ -89,8 +90,10 @@ NEETVIDYA
 │   │   │       ├── TeacherDashboard.jsx
 │   │   │       ├── TeacherExams.jsx
 │   │   │       ├── TeacherMaterials.jsx
-│   │   │       ├── TeacherPerformance.jsx
-│   │   │       └── TeacherQuestions.jsx
+│   │   │       └── TeacherPerformance.jsx
+│   │   ├── utils
+│   │   │   ├── alert.js
+│   │   │   └── csv.js
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   └── main.jsx
@@ -99,6 +102,8 @@ NEETVIDYA
 │   ├── postcss.config.js
 │   ├── tailwind.config.js
 │   └── vite.config.js
+├── docs
+│   └── IMPLEMENTATION_PLAN.md
 ├── server
 │   ├── src
 │   │   ├── config
@@ -158,6 +163,7 @@ NEETVIDYA
 │   │   │   ├── Enquiry.js
 │   │   │   ├── Enrollment.js
 │   │   │   ├── Exam.js
+│   │   │   ├── ExamPermission.js
 │   │   │   ├── Lecture.js
 │   │   │   ├── Material.js
 │   │   │   ├── Notification.js
@@ -248,6 +254,7 @@ NEETVIDYA
 - `client\src\components\shared\FileUpload.jsx`
 - `client\src\components\shared\LoadingSpinner.jsx`
 - `client\src\components\shared\NotificationBell.jsx`
+- `client\src\components\shared\Pagination.jsx`
 - `client\src\components\shared\PDFViewer.jsx`
 - `client\src\components\shared\ProtectedRoute.jsx`
 - `client\src\components\shared\SkeletonLoader.jsx`
@@ -304,10 +311,12 @@ NEETVIDYA
 - `client\src\pages\teacher\TeacherExams.jsx`
 - `client\src\pages\teacher\TeacherMaterials.jsx`
 - `client\src\pages\teacher\TeacherPerformance.jsx`
-- `client\src\pages\teacher\TeacherQuestions.jsx`
+- `client\src\utils\alert.js`
+- `client\src\utils\csv.js`
 - `client\tailwind.config.js`
 - `client\vite.config.js`
 - `codebase.py`
+- `docs\IMPLEMENTATION_PLAN.md`
 - `HOWTORUN.md`
 - `implimentation.md`
 - `package.json`
@@ -367,6 +376,7 @@ NEETVIDYA
 - `server\src\models\Enquiry.js`
 - `server\src\models\Enrollment.js`
 - `server\src\models\Exam.js`
+- `server\src\models\ExamPermission.js`
 - `server\src\models\Lecture.js`
 - `server\src\models\Material.js`
 - `server\src\models\Notification.js`
@@ -431,6 +441,96 @@ NEETVIDYA
 
 ---
 
+# Skipped Files
+
+| File | Reason |
+|---|---|
+| `.gitignore` | ignored file |
+| `client-out.log` | binary/asset file |
+| `client\node_modules\combined-stream\yarn.lock` | ignored file |
+| `client\package-lock.json` | ignored file |
+| `client\src\assets\images\placeholders\about-institute.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\about-institute.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-milestone-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-milestone-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-result-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-result-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-result-2.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\achievement-result-2.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\contact-institute.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\contact-institute.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-class-xi.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-class-xi.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-class-xii.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-class-xii.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-neet-dropper.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-neet-dropper.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-neet-foundation.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-neet-foundation.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-test-series.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\course-test-series.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-materials.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-materials.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-results.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-results.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-tests.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\empty-state-tests.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-2.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-2.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-3.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\hero-slide-3.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-2.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-2.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-3.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\lecture-thumbnail-3.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\login-side-image.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\login-side-image.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\logo-rounded-transparent.png` | binary/asset file |
+| `client\src\assets\images\placeholders\logo.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\methodology-flow.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\methodology-flow.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\og-image.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\og-image.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\register-side-image.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\register-side-image.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\student-avatar-default.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\student-avatar-default.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-2.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-2.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-3.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-3.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-4.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-4.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-5.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-5.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-6.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\teacher-6.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\test-series-banner.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\test-series-banner.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-parent-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-parent-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-student-1.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-student-1.svg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-student-2.jpg` | binary/asset file |
+| `client\src\assets\images\placeholders\testimonial-student-2.svg` | binary/asset file |
+| `codebase.md` | generated output |
+| `docs\project-plan.md` | ignored file |
+| `docs\techstack-and-hosting.md` | ignored file |
+| `generate_placeholders.js` | ignored file |
+| `package-lock.json` | ignored file |
+| `server-out.log` | ignored file |
+| `server\.env` | ignored file |
+| `server\node_modules\nodemailer\.gitattributes` | ignored file |
+| `server\package-lock.json` | ignored file |
+
+---
+
 # Source Files
 
 # FILE: `.vibefree\skills\example.md`
@@ -491,9 +591,9 @@ into the chat input when the user picks "/example" from the skill menu.
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
-    "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.21.1",
     "recharts": "^2.10.3",
+    "sweetalert2": "^11.26.25",
     "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
@@ -524,7 +624,7 @@ export default {
 # FILE: `client\src\App.jsx`
 
 ```jsx
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 
 import PublicLayout from "./layouts/PublicLayout";
@@ -561,7 +661,6 @@ import ExamPage from "./pages/student/ExamPage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherMaterials from "./pages/teacher/TeacherMaterials";
 import TeacherClasses from "./pages/teacher/TeacherClasses";
-import TeacherQuestions from "./pages/teacher/TeacherQuestions";
 import TeacherExams from "./pages/teacher/TeacherExams";
 import TeacherPerformance from "./pages/teacher/TeacherPerformance";
 
@@ -633,7 +732,7 @@ export default function App() {
         <Route index element={<TeacherDashboard />} />
         <Route path="materials" element={<TeacherMaterials />} />
         <Route path="classes" element={<TeacherClasses />} />
-        <Route path="questions" element={<TeacherQuestions />} />
+        <Route path="questions" element={<Navigate to="/teacher/exams" replace />} />
         <Route path="exams" element={<TeacherExams />} />
         <Route path="performance" element={<TeacherPerformance />} />
       </Route>
@@ -644,9 +743,9 @@ export default function App() {
         <Route path="students" element={<AdminStudents />} />
         <Route path="teachers" element={<AdminTeachers />} />
         <Route path="batches" element={<AdminBatches />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="questions" element={<AdminQuestions />} />
-        <Route path="exams" element={<AdminExams />} />
+        <Route path="courses" element={<Navigate to="/admin/batches" replace />} />
+        <Route path="questions" element={<TeacherExams />} />
+        <Route path="exams" element={<TeacherExams />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="achievements" element={<AdminAchievements />} />
         <Route path="contact-settings" element={<AdminContactSettings />} />
@@ -837,7 +936,7 @@ export default ErrorBoundary;
 ```jsx
 import { useState, useRef } from "react";
 import { Upload, CheckCircle } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function FileUpload({
   onUpload,
@@ -854,7 +953,7 @@ export default function FileUpload({
   const handleFile = async (file) => {
     if (!file) return;
     if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`File too large. Max ${maxSizeMB}MB allowed.`);
+      alertError(`File too large. Max ${maxSizeMB}MB allowed.`);
       return;
     }
     setUploading(true);
@@ -866,10 +965,10 @@ export default function FileUpload({
     try {
       const response = await onUpload(formData, (p) => setProgress(p));
       setUploaded(true);
-      toast.success("File uploaded successfully");
+      alertSuccess("File uploaded successfully");
       return response;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Upload failed");
+      alertError(err.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -1043,6 +1142,113 @@ const NotificationBell = () => {
 };
 
 export default NotificationBell;
+```
+
+---
+
+# FILE: `client\src\components\shared\Pagination.jsx`
+
+```jsx
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+/**
+ * Reusable pagination control.
+ * Props: page, totalPages, totalItems, pageSize, onPageChange, onPageSizeChange
+ */
+export default function Pagination({
+  page = 1,
+  totalPages = 1,
+  totalItems = 0,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [10, 20, 50, 100],
+}) {
+  const safeTotal = Math.max(1, totalPages || 1);
+
+  // Build a compact page window: 1 … (p-1) p (p+1) … N
+  const pages = [];
+  const push = (v) => pages.push(v);
+  if (safeTotal <= 7) {
+    for (let i = 1; i <= safeTotal; i++) push(i);
+  } else {
+    push(1);
+    if (page > 3) push("…");
+    for (let i = Math.max(2, page - 1); i <= Math.min(safeTotal - 1, page + 1); i++) push(i);
+    if (page < safeTotal - 2) push("…");
+    push(safeTotal);
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-3">
+      <div className="text-xs text-slate-500">
+        {totalItems > 0 ? (
+          <>
+            Page <strong className="text-slate-700">{page}</strong> of{" "}
+            <strong className="text-slate-700">{safeTotal}</strong> · {totalItems} items
+            </>
+            ) : (
+            "No items"
+        )}
+          </div>
+
+        <div className="flex items-center gap-2">
+          {onPageSizeChange && (
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="text-xs border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+            >
+              {pageSizeOptions.map((n) => (
+                <option key={n} value={n}>
+                  {n} / page
+                </option>
+              ))}
+            </select>
+          )}
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="p-1.5 rounded-lg border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {pages.map((p, i) =>
+              p === "…" ? (
+                <span key={`gap-${i}`} className="px-1.5 text-slate-400 text-xs">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => onPageChange(p)}
+                  className={`min-w-[30px] px-2 py-1.5 rounded-lg text-xs font-semibold border transition ${p === page
+                      ? "bg-green-600 text-white border-green-600"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => onPageChange(Math.min(safeTotal, page + 1))}
+              disabled={page >= safeTotal}
+              className="p-1.5 rounded-lg border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+      );
+}
 ```
 
 ---
@@ -1612,8 +1818,7 @@ const navItems = [
   { label: "Overview", path: "/admin", icon: LayoutDashboard, end: true },
   { label: "Students", path: "/admin/students", icon: Users },
   { label: "Faculty", path: "/admin/teachers", icon: GraduationCap },
-  { label: "Batches", path: "/admin/batches", icon: Layers },
-  { label: "Courses", path: "/admin/courses", icon: BookOpen },
+  { label: "Batches & Courses", path: "/admin/batches", icon: Layers },
   { label: "Question Bank", path: "/admin/questions", icon: HelpCircle },
   { label: "Exams & Tests", path: "/admin/exams", icon: ClipboardList },
   { label: "Enquiries", path: "/admin/enquiries", icon: MessageSquare },
@@ -1633,8 +1838,8 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="overflow-y-auto max-h-[calc(100vh-80px)]">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -1673,7 +1878,7 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-btn w-full transition-colors"
@@ -1687,7 +1892,7 @@ export default function AdminLayout() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -1706,8 +1911,10 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
@@ -1912,9 +2119,10 @@ export default function PublicLayout() {
 
 ```jsx
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu, X, Bell } from "lucide-react";
-import { useState, useContext } from "react";
+import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu, X, Bell, GraduationCap } from "lucide-react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import api from "../config/api";
 import TelegramLink from "../components/shared/TelegramLink";
 import NotificationBell from "../components/shared/NotificationBell";
 import useContactSettings from "../hooks/useContactSettings";
@@ -1930,9 +2138,18 @@ const navItems = [
 
 export default function StudentLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [myBatch, setMyBatch] = useState(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const { settings } = useContactSettings();
+
+  // Show the student's batch at the top of their area.
+  useEffect(() => {
+    api
+      .get("/students/my")
+      .then(({ data }) => setMyBatch(data.data?.student?.batches?.[0] || null))
+      .catch(() => {});
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -1940,9 +2157,9 @@ export default function StudentLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -1981,7 +2198,7 @@ export default function StudentLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10 space-y-3">
+        <div className="p-4 border-t border-white/10 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="bg-white/5 rounded-lg p-3 text-xs text-gray-400">
             <p className="font-semibold text-gray-200 mb-1">Doubt Assistance</p>
             <TelegramLink url={settings.telegramChannelLink} label="Telegram Channel" className="text-xs text-sky-400" />
@@ -1999,13 +2216,18 @@ export default function StudentLayout() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 ml-auto">
+            {myBatch && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 bg-brand-green/10 text-brand-green rounded-full border-brand-green/20">
+                <GraduationCap className="w-3.5 h-3.5" /> {myBatch.name}
+              </span>
+            )}
             <NotificationBell />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-brand-dark leading-tight">{user?.name}</p>
@@ -2017,7 +2239,7 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
           <Outlet />
         </main>
       </div>
@@ -2041,8 +2263,7 @@ const navItems = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard, end: true },
   { label: "Study Materials", path: "/teacher/materials", icon: FileText },
   { label: "Video Classes", path: "/teacher/classes", icon: Video },
-  { label: "Question Bank", path: "/teacher/questions", icon: HelpCircle },
-  { label: "Exam Manager", path: "/teacher/exams", icon: ClipboardList },
+  { label: "Exam & Question Manager", path: "/teacher/exams", icon: ClipboardList },
   { label: "Student Performance", path: "/teacher/performance", icon: BarChart3 },
 ];
 
@@ -2057,8 +2278,8 @@ export default function TeacherLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-dark text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-dark text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -2097,7 +2318,7 @@ export default function TeacherLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-btn w-full transition-colors"
@@ -2110,8 +2331,8 @@ export default function TeacherLayout() {
 
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -2121,7 +2342,7 @@ export default function TeacherLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
           <Outlet />
         </main>
       </div>
@@ -2141,28 +2362,18 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
-import { Toaster } from "react-hot-toast";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
- <React.StrictMode>
+  <React.StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
           <App />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3500,
-              style: { borderRadius: "10px", fontSize: "14px", fontWeight: "500" },
-              success: { iconTheme: { primary: "#18A66A", secondary: "#fff" } },
-              error: { iconTheme: { primary: "#EF4444", secondary: "#fff" } },
-            }}
-          />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
- </React.StrictMode>
+  </React.StrictMode>
 );
 ```
 
@@ -2174,7 +2385,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Trophy, Plus, Search, Star, Pencil, Trash2, Award, X, Save } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const categoryColors = {
@@ -2219,12 +2430,12 @@ export default function AdminAchievements() {
     setCreating(true);
     try {
       await api.post("/achievements", form);
-      toast.success("Achievement added successfully");
+      alertSuccess("Achievement added successfully");
       setShowCreate(false);
       setForm({ title: "", description: "", category: "STUDENT_RESULT", studentName: "", studentBatch: "", score: "", year: new Date().getFullYear(), featured: false });
       fetchAchievements();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to add achievement");
+      alertError(err.response?.data?.message || "Failed to add achievement");
     } finally {
       setCreating(false);
     }
@@ -2236,11 +2447,11 @@ export default function AdminAchievements() {
     setSavingEdit(true);
     try {
       await api.put(`/achievements/${editingAchievement._id}`, editingAchievement);
-      toast.success("Achievement updated");
+      alertSuccess("Achievement updated");
       setEditingAchievement(null);
       fetchAchievements();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update achievement");
+      alertError(err.response?.data?.message || "Failed to update achievement");
     } finally {
       setSavingEdit(false);
     }
@@ -2249,10 +2460,10 @@ export default function AdminAchievements() {
   const toggleFeatured = async (achievement) => {
     try {
       await api.put(`/achievements/${achievement._id}`, { featured: !achievement.featured });
-      toast.success(achievement.featured ? "Unmarked from featured" : "Marked as featured");
+      alertSuccess(achievement.featured ? "Unmarked from featured" : "Marked as featured");
       fetchAchievements();
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -2260,11 +2471,11 @@ export default function AdminAchievements() {
     if (!achievementToDelete) return;
     try {
       await api.delete(`/achievements/${achievementToDelete._id}`);
-      toast.success("Achievement deleted");
+      alertSuccess("Achievement deleted");
       setAchievementToDelete(null);
       fetchAchievements();
     } catch {
-      toast.error("Failed to delete");
+      alertError("Failed to delete");
     }
   };
 
@@ -2580,7 +2791,7 @@ export default function AdminAchievements() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Users, Plus, Search, BookOpen, Clock, Calendar, Pencil, Trash2, X, Save, UserMinus, ShieldAlert } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const batchTypeColors = {
@@ -2642,7 +2853,7 @@ export default function AdminBatches() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.course) {
-      toast.error("Please select a course before creating a batch");
+      alertError("Please select a course before creating a batch");
       return;
     }
 
@@ -2652,12 +2863,12 @@ export default function AdminBatches() {
         ...form,
         capacity: Number(form.capacity || 0),
       });
-      toast.success("Batch created successfully");
+      alertSuccess("Batch created successfully");
       setShowCreate(false);
       setForm({ name: "", code: "", batchType: "OFFLINE", course: "", academicYear: "", capacity: "", schedule: "", color: "#22c55e" });
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create batch");
+      alertError(err.response?.data?.message || "Failed to create batch");
     } finally {
       setCreating(false);
     }
@@ -2676,7 +2887,7 @@ export default function AdminBatches() {
       setAllStudents(sRes.data.data?.students || []);
     } catch {
       setBatchStudents([]);
-      toast.error("Failed to load students in this batch");
+      alertError("Failed to load students in this batch");
     } finally {
       setLoadingStudents(false);
     }
@@ -2689,13 +2900,13 @@ export default function AdminBatches() {
       await api.post(`/batches/${viewingBatch._id}/students`, {
         studentIds: [studentToEnroll],
       });
-      toast.success("Student enrolled into batch successfully");
+      alertSuccess("Student enrolled into batch successfully");
       const { data } = await api.get(`/batches/${viewingBatch._id}/students`);
       setBatchStudents(data.data?.students || []);
       setStudentToEnroll("");
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to enroll student");
+      alertError(err.response?.data?.message || "Failed to enroll student");
     }
   };
 
@@ -2703,11 +2914,11 @@ export default function AdminBatches() {
     if (!viewingBatch) return;
     try {
       await api.delete(`/batches/${viewingBatch._id}/students/${studentId}`);
-      toast.success("Student removed from batch");
+      alertSuccess("Student removed from batch");
       setBatchStudents((prev) => prev.filter((s) => s._id !== studentId));
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to remove student");
+      alertError(err.response?.data?.message || "Failed to remove student");
     }
   };
 
@@ -2726,11 +2937,11 @@ export default function AdminBatches() {
         schedule: editingBatch.schedule,
         color: editingBatch.color,
       });
-      toast.success("Batch updated successfully");
+      alertSuccess("Batch updated successfully");
       setEditingBatch(null);
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update batch");
+      alertError(err.response?.data?.message || "Failed to update batch");
     } finally {
       setSavingEdit(false);
     }
@@ -2740,11 +2951,11 @@ export default function AdminBatches() {
     if (!batchToDelete) return;
     try {
       await api.delete(`/batches/${batchToDelete._id}`);
-      toast.success("Batch deleted successfully");
+      alertSuccess("Batch deleted successfully");
       setBatchToDelete(null);
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete batch");
+      alertError(err.response?.data?.message || "Failed to delete batch");
     }
   };
 
@@ -3194,7 +3405,7 @@ export default function AdminBatches() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Save, Globe, Mail, Send, RotateCcw, ExternalLink } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 
 const defaultSettings = {
   instituteEmail: "contact@neetvidya.com",
@@ -3245,10 +3456,15 @@ export default function AdminContactSettings() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleReset = () => {
-    if (confirm("Reset all contact settings to institute defaults?")) {
+  const handleReset = async () => {
+    const confirmed = await confirmDialog({
+      title: "Reset Settings?",
+      text: "Reset all contact settings to institute defaults?",
+      confirmText: "Yes, reset",
+    });
+    if (confirmed) {
       setForm(defaultSettings);
-      toast.success("Settings reset to defaults. Click 'Save All Settings' to persist.");
+      alertSuccess("Settings reset to defaults. Click 'Save All Settings' to persist.");
     }
   };
 
@@ -3257,9 +3473,9 @@ export default function AdminContactSettings() {
     setSaving(true);
     try {
       await api.put("/contact-settings", form);
-      toast.success("Contact settings saved successfully");
+      alertSuccess("Contact settings saved successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save");
+      alertError(err.response?.data?.message || "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -3495,7 +3711,7 @@ export default function AdminContactSettings() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { BookOpen, Plus, Search, IndianRupee, Clock, Users, ChevronRight, Pencil, Trash2, X, Save, CheckCircle2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 export default function AdminCourses() {
@@ -3546,12 +3762,12 @@ export default function AdminCourses() {
       };
 
       await api.post("/courses", payload);
-      toast.success("Course created successfully");
+      alertSuccess("Course created successfully");
       setShowCreate(false);
       setForm({ name: "", description: "", targetClass: "", duration: "", feeAmount: "", features: "" });
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create course");
+      alertError(err.response?.data?.message || "Failed to create course");
     } finally {
       setCreating(false);
     }
@@ -3577,11 +3793,11 @@ export default function AdminCourses() {
               .filter(Boolean),
       };
       await api.put(`/courses/${editingCourse._id}`, payload);
-      toast.success("Course updated successfully");
+      alertSuccess("Course updated successfully");
       setEditingCourse(null);
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update course");
+      alertError(err.response?.data?.message || "Failed to update course");
     } finally {
       setSavingEdit(false);
     }
@@ -3591,11 +3807,11 @@ export default function AdminCourses() {
     if (!courseToDelete) return;
     try {
       await api.delete(`/courses/${courseToDelete._id}`);
-      toast.success("Course deleted successfully");
+      alertSuccess("Course deleted successfully");
       setCourseToDelete(null);
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete course");
+      alertError(err.response?.data?.message || "Failed to delete course");
     }
   };
 
@@ -4010,7 +4226,7 @@ import {
   X, Save, Clock, ChevronRight, Eye, Calendar, BookOpen
 } from "lucide-react";
 import StudentBadge from "../../components/shared/StudentBadge";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -4051,9 +4267,8 @@ export default function AdminDashboard() {
     setCreating(true);
     try {
       const { data } = await api.post("/auth/admin/create-student", newStudent);
-      toast.success(
-        `Student created! ID: ${data.data.studentId} • Temp password copied to clipboard`,
-        { duration: 5000 }
+      alertSuccess(
+        `Student created! ID: ${data.data.studentId} • Temp password copied to clipboard`
       );
       try {
         navigator.clipboard?.writeText(data.data.tempPassword);
@@ -4070,7 +4285,7 @@ export default function AdminDashboard() {
       });
       loadData();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create student");
+      alertError(err.response?.data?.message || "Failed to create student");
     } finally {
       setCreating(false);
     }
@@ -4569,7 +4784,7 @@ export default function AdminDashboard() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { MessageSquare, Search, CheckCircle, XCircle, Clock, Phone, Mail, Eye, Trash2, Download } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const statusColors = {
@@ -4604,11 +4819,11 @@ export default function AdminEnquiries() {
   const updateStatus = async (id, status) => {
     try {
       await api.put(`/enquiries/${id}`, { status });
-      toast.success("Status updated");
+      alertSuccess("Status updated");
       fetchEnquiries();
       setSelected(null);
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -4616,18 +4831,18 @@ export default function AdminEnquiries() {
     if (!enquiryToDelete) return;
     try {
       await api.delete(`/enquiries/${enquiryToDelete._id}`);
-      toast.success("Enquiry deleted");
+      alertSuccess("Enquiry deleted");
       if (selected?._id === enquiryToDelete._id) setSelected(null);
       setEnquiryToDelete(null);
       fetchEnquiries();
     } catch {
-      toast.error("Failed to delete enquiry");
+      alertError("Failed to delete enquiry");
     }
   };
 
   const exportToCSV = () => {
     if (filtered.length === 0) {
-      toast.error("No enquiries to export");
+      alertError("No enquiries to export");
       return;
     }
     const headers = ["Name", "Email", "Phone", "Course Interest", "Message", "Status", "Date"];
@@ -4648,7 +4863,7 @@ export default function AdminEnquiries() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Enquiries exported to CSV");
+    alertSuccess("Enquiries exported to CSV");
   };
 
   const filtered = enquiries.filter((e) => {
@@ -4851,7 +5066,7 @@ import {
   ClipboardList, Plus, Search, Clock, Users, Calendar, PlayCircle,
   BarChart3, Pencil, Trash2, X, Save, CheckCircle2, AlertCircle, Trophy, Eye
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const statusColors = {
@@ -4931,7 +5146,7 @@ export default function AdminExams() {
   const handleCreateExam = async (e) => {
     e.preventDefault();
     if (!form.startTime || !form.endTime) {
-      toast.error("Please provide both start and end times");
+      alertError("Please provide both start and end times");
       return;
     }
     setSavingExam(true);
@@ -4944,11 +5159,11 @@ export default function AdminExams() {
         maxAttempts: Number(form.maxAttempts || 1),
         course: form.course || undefined,
       });
-      toast.success("Exam created in DRAFT status");
+      alertSuccess("Exam created in DRAFT status");
       setShowCreate(false);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create exam");
+      alertError(err.response?.data?.message || "Failed to create exam");
     } finally {
       setSavingExam(false);
     }
@@ -4972,11 +5187,11 @@ export default function AdminExams() {
         maxAttempts: Number(editingExam.maxAttempts || 1),
         instructions: editingExam.instructions,
       });
-      toast.success("Exam updated successfully");
+      alertSuccess("Exam updated successfully");
       setEditingExam(null);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update exam");
+      alertError(err.response?.data?.message || "Failed to update exam");
     } finally {
       setSavingExam(false);
     }
@@ -4985,20 +5200,20 @@ export default function AdminExams() {
   const handlePublish = async (examId) => {
     try {
       await api.put(`/exams/${examId}/publish`);
-      toast.success("Exam is now LIVE for students");
+      alertSuccess("Exam is now LIVE for students");
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to publish exam");
+      alertError(err.response?.data?.message || "Failed to publish exam");
     }
   };
 
   const handleClose = async (examId) => {
     try {
       await api.put(`/exams/${examId}/close`);
-      toast.success("Exam has been closed");
+      alertSuccess("Exam has been closed");
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to close exam");
+      alertError(err.response?.data?.message || "Failed to close exam");
     }
   };
 
@@ -5009,7 +5224,7 @@ export default function AdminExams() {
       const { data } = await api.get(`/exams/${exam._id}/results`);
       setExamResults(data.data);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load results");
+      alertError(err.response?.data?.message || "Failed to load results");
       setExamResults(null);
     } finally {
       setLoadingResults(false);
@@ -5020,11 +5235,11 @@ export default function AdminExams() {
     if (!examToDelete) return;
     try {
       await api.delete(`/exams/${examToDelete._id}`);
-      toast.success("Exam deleted successfully");
+      alertSuccess("Exam deleted successfully");
       setExamToDelete(null);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete exam");
+      alertError(err.response?.data?.message || "Failed to delete exam");
     }
   };
 
@@ -5587,7 +5802,7 @@ export default function AdminExams() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { HelpCircle, Plus, Search, CheckCircle, Pencil, Trash2, Filter, X, Save, BookOpen, Upload, Download, FileSpreadsheet } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const difficultyColors = {
@@ -5658,7 +5873,7 @@ export default function AdminQuestions() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.subject) {
-      toast.error("Please select a subject");
+      alertError("Please select a subject");
       return;
     }
     setSavingQuestion(true);
@@ -5669,7 +5884,7 @@ export default function AdminQuestions() {
         negativeMarks: Number(form.negativeMarks || 1),
         year: form.year ? Number(form.year) : undefined,
       });
-      toast.success("Question authored and saved to bank");
+      alertSuccess("Question authored and saved to bank");
       setShowCreate(false);
       setForm({
         questionText: "",
@@ -5685,7 +5900,7 @@ export default function AdminQuestions() {
       });
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to author question");
+      alertError(err.response?.data?.message || "Failed to author question");
     } finally {
       setSavingQuestion(false);
     }
@@ -5708,11 +5923,11 @@ export default function AdminQuestions() {
         options: editingQuestion.options,
         correctAnswer: Number(editingQuestion.correctAnswer ?? 0),
       });
-      toast.success("Question updated successfully");
+      alertSuccess("Question updated successfully");
       setEditingQuestion(null);
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update question");
+      alertError(err.response?.data?.message || "Failed to update question");
     } finally {
       setSavingQuestion(false);
     }
@@ -5722,11 +5937,11 @@ export default function AdminQuestions() {
     if (!questionToDelete) return;
     try {
       await api.delete(`/questions/${questionToDelete._id}`);
-      toast.success("Question deleted");
+      alertSuccess("Question deleted");
       setQuestionToDelete(null);
       fetchQuestions();
     } catch {
-      toast.error("Failed to delete question");
+      alertError("Failed to delete question");
     }
   };
 
@@ -5742,19 +5957,19 @@ export default function AdminQuestions() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("CSV template downloaded");
+    alertSuccess("CSV template downloaded");
   };
 
   const handleBulkImportSubmit = async (e) => {
     e.preventDefault();
     if (!bulkCsvText.trim()) {
-      toast.error("Please paste CSV data or choose a CSV file");
+      alertError("Please paste CSV data or choose a CSV file");
       return;
     }
 
     const lines = bulkCsvText.trim().split("\n");
     if (lines.length < 2) {
-      toast.error("CSV must contain at least a header and 1 question row");
+      alertError("CSV must contain at least a header and 1 question row");
       return;
     }
 
@@ -5784,18 +5999,18 @@ export default function AdminQuestions() {
       }
 
       if (parsedQuestions.length === 0) {
-        toast.error("No valid questions parsed from CSV. Please check formatting.");
+        alertError("No valid questions parsed from CSV. Please check formatting.");
         setBulkImporting(false);
         return;
       }
 
       const { data } = await api.post("/questions/bulk-import", { questions: parsedQuestions });
-      toast.success(`Successfully imported ${data.data?.imported || parsedQuestions.length} questions!`);
+      alertSuccess(`Successfully imported ${data.data?.imported || parsedQuestions.length} questions!`);
       setShowBulkImport(false);
       setBulkCsvText("");
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Bulk import failed");
+      alertError(err.response?.data?.message || "Bulk import failed");
     } finally {
       setBulkImporting(false);
     }
@@ -6331,7 +6546,7 @@ import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../config/api";
 import { Settings, ShieldCheck, Bell, Key, Database, Globe, Save, CheckCircle, RefreshCw, Activity, Server } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminSettings() {
   const { user, updateUser } = useContext(AuthContext);
@@ -6353,7 +6568,7 @@ export default function AdminSettings() {
     setLoadingHealth(true);
     try {
       const { data } = await api.get("/admin/system-health");
-      setSystemHealth(data.data);
+      setSystemHealth(data?.data || null);
     } catch {
       setSystemHealth(null);
     } finally {
@@ -6361,13 +6576,20 @@ export default function AdminSettings() {
     }
   };
 
+  // Safe accessors — never let a missing field crash the render (browser has no `process`).
+  const health = systemHealth || {};
+  const dbInfo = health.database || {};
+  const serverInfo = health.server || {};
+  const runtimeEnv = (import.meta.env && import.meta.env.MODE) || "production";
+  const apiBase = (import.meta.env && import.meta.env.VITE_API_BASE_URL) || "/api";
+
   const handleClearCache = async () => {
     setClearingCache(true);
     try {
       await api.post("/admin/clear-cache");
-      toast.success("Cache cleared successfully");
+      alertSuccess("Cache cleared successfully");
     } catch {
-      toast.error("Failed to clear cache");
+      alertError("Failed to clear cache");
     } finally {
       setClearingCache(false);
     }
@@ -6379,9 +6601,9 @@ export default function AdminSettings() {
     try {
       const { data } = await api.put("/auth/profile", profileForm);
       updateUser(data.data.user);
-      toast.success("Profile updated successfully");
+      alertSuccess("Profile updated successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update profile");
+      alertError(err.response?.data?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -6390,11 +6612,11 @@ export default function AdminSettings() {
   const handlePasswordSave = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("New passwords do not match");
+      alertError("New passwords do not match");
       return;
     }
     if (passwordForm.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      alertError("Password must be at least 8 characters");
       return;
     }
     setSaving(true);
@@ -6403,10 +6625,10 @@ export default function AdminSettings() {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      toast.success("Password changed successfully");
+      alertSuccess("Password changed successfully");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+      alertError(err.response?.data?.message || "Failed to change password");
     } finally {
       setSaving(false);
     }
@@ -6588,7 +6810,7 @@ export default function AdminSettings() {
                   </button>
                   <button
                     onClick={() => {
-                      toast.success("SMTP connection verified — mailer service operational");
+                      alertSuccess("SMTP connection verified — mailer service operational");
                     }}
                     className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition"
                   >
@@ -6601,13 +6823,13 @@ export default function AdminSettings() {
               <div className="p-6 space-y-4">
                 {[
                   { label: "Platform", value: "NEETVIDYA v1.0.0" },
-                  { label: "Environment", value: import.meta.env.MODE || "development" },
-                  { label: "Database Status", value: systemHealth?.database?.status ? `${systemHealth.database.status} (${systemHealth.database.connectionState})` : "Healthy (MongoDB)" },
-                  { label: "Server Node", value: systemHealth?.server?.nodeVersion || process.version || "Node.js v20+" },
-                  { label: "Server Uptime", value: systemHealth?.server?.uptime ? `${Math.round(systemHealth.server.uptime / 60)} minutes` : "Active" },
-                  { label: "Memory Usage", value: systemHealth?.server?.memoryUsageMB ? `${systemHealth.server.memoryUsageMB} MB` : "Normal" },
-                  { label: "API Base", value: import.meta.env.VITE_API_URL || "http://localhost:5000/api" },
-                  { label: "Logged in as", value: user?.email },
+                  { label: "Environment", value: runtimeEnv },
+                  { label: "Database Status", value: dbInfo.status ? `${dbInfo.status} (${dbInfo.connectionState || "Unknown"})` : "Unavailable" },
+                  { label: "Server Node", value: serverInfo.nodeVersion || "—" },
+                  { label: "Server Uptime", value: serverInfo.uptime ? `${Math.round(serverInfo.uptime / 60)} minutes` : "—" },
+                  { label: "Memory Usage", value: serverInfo.memoryUsageMB ? `${serverInfo.memoryUsageMB} MB` : "—" },
+                  { label: "API Base", value: apiBase },
+                  { label: "Logged in as", value: user?.email || "—" },
                   { label: "Role", value: "Administrator" },
                   { label: "Last login", value: user?.lastLogin ? new Date(user.lastLogin).toLocaleString("en-IN") : "—" },
                 ].map((item) => (
@@ -6636,9 +6858,9 @@ import api from "../../config/api";
 import {
   Users, Search, Plus, Filter, ChevronRight, BadgeCheck,
   Phone, Mail, MapPin, GraduationCap, MoreVertical, UserX, UserCheck, Eye,
-  Pencil, Trash2, X, Building2, BookOpen, Save
+  Pencil, Trash2, X, Building2, BookOpen, Save, ShieldCheck
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const typeColors = {
@@ -6662,12 +6884,63 @@ export default function AdminStudents() {
   const [editingStudent, setEditingStudent] = useState(null);
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [grantableExams, setGrantableExams] = useState([]);
+  const [examToPermit, setExamToPermit] = useState("");
+  const [grantingAccess, setGrantingAccess] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", phone: "", currentClass: "DROPPER",
     studentType: "REGULAR_OFFLINE", city: "", parentName: "", parentPhone: "", school: ""
   });
 
   const limit = 15;
+
+  // Exams available to grant access to an exam-only / guest student.
+  const loadGrantableExams = async () => {
+    try {
+      const { data } = await api.get("/exams?limit=100");
+      setGrantableExams(data.data?.exams || []);
+    } catch {
+      setGrantableExams([]);
+    }
+  };
+
+  const handleGrantExamAccess = async () => {
+    if (!examToPermit || !viewingStudent?.user?._id) return;
+    setGrantingAccess(true);
+    try {
+      await api.post(`/exams/${examToPermit}/permissions`, {
+        studentId: viewingStudent.user._id,
+        reason: "Admin granted exam-only access",
+      });
+      alertSuccess("Exam access granted");
+      const granted = grantableExams.find((e) => e._id === examToPermit);
+      setViewingStudent((prev) => ({
+        ...prev,
+        examPermissions: [...(prev.examPermissions || []), granted || { _id: examToPermit }],
+      }));
+      setExamToPermit("");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to grant access");
+    } finally {
+      setGrantingAccess(false);
+    }
+  };
+
+  const handleRevokeExamAccess = async (examId) => {
+    if (!viewingStudent?.user?._id) return;
+    try {
+      await api.delete(`/exams/${examId}/permissions/${viewingStudent.user._id}`);
+      alertSuccess("Exam access revoked");
+      setViewingStudent((prev) => ({
+        ...prev,
+        examPermissions: (prev.examPermissions || []).filter(
+          (e) => (e._id || e) !== examId
+        ),
+      }));
+    } catch {
+      alertError("Failed to revoke access");
+    }
+  };
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -6701,12 +6974,12 @@ export default function AdminStudents() {
     setCreating(true);
     try {
       const { data } = await api.post("/auth/admin/create-student", form);
-      toast.success(`Student created! ID: ${data.data.studentId}, Password: ${data.data.tempPassword}`);
+      alertSuccess(`Student created! ID: ${data.data.studentId}, Password: ${data.data.tempPassword}`);
       setShowCreate(false);
       setForm({ name: "", email: "", phone: "", currentClass: "DROPPER", studentType: "REGULAR_OFFLINE", city: "", parentName: "", parentPhone: "", school: "" });
       fetchStudents();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create student");
+      alertError(err.response?.data?.message || "Failed to create student");
     } finally {
       setCreating(false);
     }
@@ -6715,10 +6988,10 @@ export default function AdminStudents() {
   const toggleActive = async (studentId, isActive) => {
     try {
       await api.put(`/students/${studentId}/toggle-active`);
-      toast.success(isActive ? "Student deactivated" : "Student activated");
+      alertSuccess(isActive ? "Student deactivated" : "Student activated");
       fetchStudents();
     } catch {
-      toast.error("Failed to update student");
+      alertError("Failed to update student");
     }
   };
 
@@ -6738,11 +7011,11 @@ export default function AdminStudents() {
         parentPhone: editingStudent.parentPhone,
         batches: editingStudent.batches?.map((b) => (typeof b === "object" ? b._id : b)) || [],
       });
-      toast.success("Student updated successfully");
+      alertSuccess("Student updated successfully");
       setEditingStudent(null);
       fetchStudents();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update student");
+      alertError(err.response?.data?.message || "Failed to update student");
     } finally {
       setSavingEdit(false);
     }
@@ -6752,11 +7025,11 @@ export default function AdminStudents() {
     if (!studentToDelete) return;
     try {
       await api.delete(`/students/${studentToDelete._id}`);
-      toast.success("Student deleted successfully");
+      alertSuccess("Student deleted successfully");
       setStudentToDelete(null);
       fetchStudents();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete student");
+      alertError(err.response?.data?.message || "Failed to delete student");
     }
   };
 
@@ -6856,7 +7129,11 @@ export default function AdminStudents() {
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
                         <button
-                          onClick={() => setViewingStudent(s)}
+                          onClick={() => {
+                            setViewingStudent(s);
+                            setExamToPermit("");
+                            loadGrantableExams();
+                          }}
                           className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition"
                           title="View Details"
                         >
@@ -6986,6 +7263,14 @@ export default function AdminStudents() {
                   <input value={form.school} onChange={(e) => setForm((f) => ({ ...f, school: e.target.value }))}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="School or college name" />
                 </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Initial Batch</label>
+                  <select value={form.batch || ""} onChange={(e) => setForm((f) => ({ ...f, batch: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white">
+                    <option value="">No Batch Assigned</option>
+                    {batches.map((b) => <option key={b._id} value={b._id}>{b.name} ({b.code})</option>)}
+                  </select>
+                </div>
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
@@ -7088,6 +7373,56 @@ export default function AdminStudents() {
                   </div>
                 ) : (
                   <p className="text-xs text-slate-400">No batch assigned currently.</p>
+                )}
+              </div>
+
+              {/* Exam-specific access — for exam-only / guest students outside a batch */}
+              <div className="border-t border-slate-100 pt-3">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Exam Access Permissions
+                </div>
+                <p className="text-xs text-slate-400 mb-2">
+                  Grant this student access to a specific exam without joining its batch.
+                </p>
+                <div className="flex gap-2">
+                  <select
+                    value={examToPermit}
+                    onChange={(e) => setExamToPermit(e.target.value)}
+                    className="flex-1 px-3 py-2 border-slate-200 rounded-lg text-xs bg-white"
+                  >
+                    <option value="">Select an exam to grant access...</option>
+                    {grantableExams.map((ex) => (
+                      <option key={ex._id} value={ex._id}>
+                        {ex.title} {ex.batch?.name ? `— ${ex.batch.name}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleGrantExamAccess}
+                    disabled={!examToPermit || grantingAccess}
+                    className="px-3.5 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" /> Grant
+                  </button>
+                </div>
+                {viewingStudent.examPermissions?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {viewingStudent.examPermissions.map((ex) => (
+                      <span
+                        key={ex._id || ex}
+                        className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg border-blue-200 flex items-center gap-1"
+                      >
+                        {ex.title || "Exam"}
+                        <button
+                          onClick={() => handleRevokeExamAccess(ex._id || ex)}
+                          className="text-blue-400 hover:text-red-500 ml-1"
+                          title="Revoke access"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -7279,7 +7614,7 @@ import {
   GraduationCap, Plus, Search, Eye, UserX, UserCheck, Mail,
   Pencil, X, Save, Phone, BookOpen, Clock, Target
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminTeachers() {
   const [teachers, setTeachers] = useState([]);
@@ -7314,12 +7649,12 @@ export default function AdminTeachers() {
     setCreating(true);
     try {
       const { data } = await api.post("/auth/admin/create-teacher", form);
-      toast.success(`Teacher created! Temp password: ${data.data.tempPassword}`);
+      alertSuccess(`Teacher created! Temp password: ${data.data.tempPassword}`);
       setShowCreate(false);
       setForm({ name: "", email: "", phone: "", qualification: "", experience: "", specialisation: "", bio: "" });
       fetchTeachers();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create teacher");
+      alertError(err.response?.data?.message || "Failed to create teacher");
     } finally {
       setCreating(false);
     }
@@ -7328,10 +7663,10 @@ export default function AdminTeachers() {
   const toggleActive = async (teacherId, currentStatus) => {
     try {
       await api.put(`/teachers/${teacherId}/toggle-active`);
-      toast.success(currentStatus ? "Faculty deactivated" : "Faculty activated");
+      alertSuccess(currentStatus ? "Faculty deactivated" : "Faculty activated");
       fetchTeachers();
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -7348,11 +7683,11 @@ export default function AdminTeachers() {
         specialisation: editingTeacher.specialisation,
         bio: editingTeacher.bio,
       });
-      toast.success("Teacher profile updated successfully");
+      alertSuccess("Teacher profile updated successfully");
       setEditingTeacher(null);
       fetchTeachers();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update teacher");
+      alertError(err.response?.data?.message || "Failed to update teacher");
     } finally {
       setSavingEdit(false);
     }
@@ -7872,157 +8207,480 @@ export default function AboutPage() {
 # FILE: `client\src\pages\public\ContactPage.jsx`
 
 ```jsx
+
 import { useState } from "react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { alertSuccess, alertError } from "../../utils/alert";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  GraduationCap,
+  MessageCircle,
+  ArrowUpRight,
+  Clock,
+  Navigation,
+} from "lucide-react";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import TelegramLink from "../../components/shared/TelegramLink";
 import useContactSettings from "../../hooks/useContactSettings";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", course: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    course: "",
+    message: "",
+  });
+
   const [loading, setLoading] = useState(false);
   const { settings } = useContactSettings();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       await api.post("/enquiries", form);
-      toast.success("Enquiry submitted! Our admissions counselor will call you within 24 hours.");
-      setForm({ name: "", email: "", phone: "", course: "", message: "" });
+
+      alertSuccess(
+        "Enquiry submitted! Our admissions counselor will call you within 24 hours."
+      );
+
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        course: "",
+        message: "",
+      });
     } catch (err) {
-      toast.error("Failed to submit enquiry. Please call us directly.");
+      alertError("Failed to submit enquiry. Please call us directly.");
     } finally {
       setLoading(false);
     }
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm text-gray-800 outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-300 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10";
+
+  const labelClass =
+    "mb-2 block text-xs font-bold uppercase tracking-wider text-gray-600";
+
   return (
-    <div className="section-padding bg-brand-soft min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-xl mx-auto mb-16">
-          <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Connect With Us</span>
-          <h1 className="font-heading font-extrabold text-3xl sm:text-5xl text-brand-dark mt-2">Admissions & Consulting</h1>
-          <p className="text-gray-600 text-sm mt-3">Speak with our academic mentors regarding course eligibility, batch timing, and fee assistance.</p>
+    <section className="relative min-h-screen overflow-hidden bg-[#f5f8f6] py-14 sm:py-20 lg:py-24">
+      {/* Background decoration */}
+      <div className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full bg-emerald-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-teal-200/20 blur-3xl" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mx-auto mb-12 max-w-2xl text-center sm:mb-16">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">
+              Connect With Us
+            </span>
+          </div>
+
+          <h1 className="font-heading text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
+            Your NEET Journey
+            <span className="mt-1 block text-emerald-700">
+              Starts Here.
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-gray-600 sm:text-base">
+            Speak with our academic mentors regarding course eligibility,
+            batch timing, and fee assistance. We are here to help you take
+            the next step towards your dream.
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-12">
-          {/* Contact Details */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="card space-y-4">
-              <h3 className="font-heading font-bold text-xl text-brand-dark">Institute Campus</h3>
-              <div className="flex items-start gap-3 text-sm text-gray-600">
-                <MapPin className="w-5 h-5 text-brand-green shrink-0 mt-0.5" />
-                <span>NEETVIDYA COACHING CENTER, Karimpur Main Road, Karimpur, Nadia</span>
+        {/* Contact Details and Enquiry Form */}
+        <div className="grid items-start gap-8 lg:grid-cols-12 lg:gap-10">
+          {/* Left: Contact Information */}
+          <div className="space-y-6 lg:col-span-5">
+            {/* Campus Card */}
+            <div className="overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg">
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 p-6 text-white sm:p-8">
+                <div className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full border-[24px] border-white/5" />
+
+                <div className="relative flex items-center gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20">
+                    <GraduationCap className="h-6 w-6" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-emerald-100">
+                      Visit Us
+                    </p>
+                    <h2 className="mt-1 font-heading text-xl font-bold sm:text-2xl">
+                      Institute Campus
+                    </h2>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <Phone className="w-5 h-5 text-brand-green shrink-0" />
-                <span>{settings.institutePhone || "+91 74396 85658 / +91 83910 21878"}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <Mail className="w-5 h-5 text-brand-green shrink-0" />
-                <span>{settings.instituteEmail || "neetvidya720@gmail.com"}</span>
+
+              <div className="space-y-5 p-6 sm:p-8">
+                {/* Address */}
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0 pt-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                      Our Address
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-6 text-gray-700">
+                      NEETVIDYA COACHING CENTER, Karimpur Main Road,
+                      Karimpur, Nadia
+                    </p>
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100" />
+
+                {/* Phone */}
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <Phone className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0 pt-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                      Call Us
+                    </p>
+                    <p className="mt-1 break-words text-sm font-semibold text-gray-700">
+                      {settings.institutePhone ||
+                        "+91 74396 85658 / +91 83910 21878"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100" />
+
+                {/* Email */}
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                    <Mail className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0 pt-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                      Email Us
+                    </p>
+                    <p className="mt-1 break-all text-sm font-semibold text-gray-700">
+                      {settings.instituteEmail || "neetvidya720@gmail.com"}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="card space-y-3 bg-gradient-to-br from-emerald-50 to-emerald-100/40 border-emerald-200">
-              <h4 className="font-heading font-bold text-base text-emerald-900">Direct Chat Channels</h4>
-              <p className="text-xs text-emerald-800">For immediate admission enquiries and doubts, reach us directly via WhatsApp or Telegram:</p>
-              <div className="pt-2 flex flex-col gap-2">
-                <WhatsAppLink number={settings.whatsappNumber} message={settings.whatsappDefaultMessage} label="Chat with Counselor on WhatsApp" className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold" />
-                {settings.whatsappGroupLink && (
-                  <a href={settings.whatsappGroupLink} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold">
-                    Join WhatsApp Group
-                  </a>
-                )}
-                <TelegramLink url={settings.telegramChannelLink} label="Join Telegram Channel" className="text-sm text-sky-700 hover:text-sky-800 font-semibold" />
+            {/* Direct Chat Channels */}
+            <div className="relative overflow-hidden rounded-3xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6 shadow-sm sm:p-8">
+              <div className="pointer-events-none absolute -bottom-12 -right-10 h-36 w-36 rounded-full bg-emerald-100/60 blur-2xl" />
+
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
+                    <MessageCircle className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <h3 className="font-heading text-lg font-bold text-gray-900">
+                      Direct Chat Channels
+                    </h3>
+                    <p className="mt-1 text-xs text-emerald-700">
+                      We are just a message away
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 transition-colors hover:border-emerald-300">
+                    <WhatsAppLink
+                      number={settings.whatsappNumber}
+                      message={settings.whatsappDefaultMessage}
+                      label="Chat with Counselor on WhatsApp"
+                      className="flex-1 text-sm font-semibold text-emerald-700 hover:text-emerald-900"
+                    />
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-emerald-600" />
+                  </div>
+
+                  {settings.whatsappGroupLink && (
+                    <a
+                      href={settings.whatsappGroupLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors hover:border-emerald-300 hover:text-emerald-900"
+                    >
+                      <span className="flex-1">Join WhatsApp Group</span>
+                      <ArrowUpRight className="h-4 w-4 shrink-0" />
+                    </a>
+                  )}
+
+                  <div className="flex items-center gap-3 rounded-xl border border-sky-100 bg-white px-4 py-3 transition-colors hover:border-sky-300">
+                    <TelegramLink
+                      url={settings.telegramChannelLink}
+                      label="Join Telegram Channel"
+                      className="flex-1 text-sm font-semibold text-sky-700 hover:text-sky-900"
+                    />
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-sky-600" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Enquiry Form */}
+          {/* Right: Enquiry Form */}
           <div className="lg:col-span-7">
-            <div className="card shadow-lg p-8 sm:p-10 bg-white">
-              <h2 className="font-heading font-bold text-2xl text-brand-dark mb-2">Send an Admission Enquiry</h2>
-              <p className="text-xs text-gray-500 mb-6">Fill in your details below and our team will get back to you promptly.</p>
+            <div className="overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-lg shadow-gray-200/40">
+              {/* Form Heading */}
+              <div className="border-b border-gray-100 bg-gradient-to-r from-white to-emerald-50/50 px-6 py-7 sm:px-10 sm:py-9">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                    <Send className="h-5 w-5" />
+                  </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Student Full Name</label>
+                    <h2 className="font-heading text-xl font-bold text-gray-900 sm:text-2xl">
+                      Send an Admission Enquiry
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-gray-500">
+                      Fill in your details below and our team will get back
+                      to you promptly.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-2">
+                  <span className="h-1.5 w-10 rounded-full bg-emerald-600" />
+                  <span className="h-1.5 w-5 rounded-full bg-emerald-200" />
+                  <span className="h-1.5 w-2 rounded-full bg-emerald-100" />
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-6 p-6 sm:p-10"
+              >
+                {/* Name and Phone */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>
+                      Student Full Name
+                    </label>
+
                     <input
                       type="text"
                       required
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
                       placeholder="e.g. Priya Das"
-                      className="input-field"
+                      className={inputClass}
                     />
                   </div>
+
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Contact Phone</label>
+                    <label className={labelClass}>
+                      Contact Phone
+                    </label>
+
                     <input
                       type="tel"
                       required
                       value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, phone: e.target.value })
+                      }
                       placeholder="+91 98765 XXXXX"
-                      className="input-field"
+                      className={inputClass}
                     />
                   </div>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
+                {/* Email and Course */}
+                <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Email Address</label>
+                    <label className={labelClass}>
+                      Email Address
+                    </label>
+
                     <input
                       type="email"
                       required
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
                       placeholder="priya@gmail.com"
-                      className="input-field"
+                      className={inputClass}
                     />
                   </div>
+
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Target Program</label>
+                    <label className={labelClass}>
+                      Target Program
+                    </label>
+
                     <select
                       value={form.course}
-                      onChange={(e) => setForm({ ...form, course: e.target.value })}
-                      className="input-field"
+                      onChange={(e) =>
+                        setForm({ ...form, course: e.target.value })
+                      }
+                      className={`${inputClass} cursor-pointer`}
                     >
                       <option value="">Select a program</option>
-                      <option value="12th Batch – SANKALP">12th Batch – SANKALP</option>
-                      <option value="11th Batch – UDAAN">11th Batch – UDAAN</option>
-                      <option value="Admin-managed course">Admin-managed course</option>
+                      <option value="12th Batch – SANKALP">
+                        12th Batch – SANKALP
+                      </option>
+                      <option value="11th Batch – UDAAN">
+                        11th Batch – UDAAN
+                      </option>
+                      <option value="Admin-managed course">
+                        Admin-managed course
+                      </option>
                     </select>
                   </div>
                 </div>
 
+                {/* Message */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Message / Current Status</label>
+                  <label className={labelClass}>
+                    Message / Current Status
+                  </label>
+
                   <textarea
-                    rows={4}
+                    rows={5}
                     required
                     value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, message: e.target.value })
+                    }
                     placeholder="Tell us about your current class, target NEET score, and any specific queries..."
-                    className="input-field resize-none"
+                    className={`${inputClass} resize-none leading-6`}
                   />
+
+                  <p className="mt-2 text-xs text-gray-400">
+                    Share your questions so our academic team can guide you
+                    better.
+                  </p>
                 </div>
 
-                <button type="submit" disabled={loading} className="btn-primary w-full !py-3">
-                  <Send className="w-4 h-4" />
-                  {loading ? "Submitting Enquiry..." : "Submit Admission Enquiry"}
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 px-6 py-4 text-sm font-bold text-white shadow-md shadow-emerald-700/20 transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-800 hover:to-emerald-700 hover:shadow-lg hover:shadow-emerald-700/25 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                >
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Submitting Enquiry...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      Submit Admission Enquiry
+                    </>
+                  )}
                 </button>
+
+                <p className="text-center text-xs leading-5 text-gray-400">
+                  Your details will be used to respond to your admission
+                  enquiry.
+                </p>
               </form>
             </div>
           </div>
         </div>
+
+        {/* Google Maps Location */}
+        <div className="mt-12 sm:mt-16">
+          <div className="overflow-hidden rounded-3xl border border-gray-200/80 bg-white shadow-lg shadow-gray-200/40">
+            {/* Map Header */}
+            <div className="flex flex-col gap-5 border-b border-gray-100 bg-gradient-to-r from-white to-emerald-50/50 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                  <MapPin className="h-6 w-6" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">
+                    Find Our Location
+                  </p>
+
+                  <h2 className="mt-1 font-heading text-xl font-extrabold text-gray-900 sm:text-2xl">
+                    NEETVIDYA COACHING CENTER
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Karimpur Main Road, Karimpur, Nadia
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="https://maps.app.goo.gl/w8qdwchcmCKUuiBA8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-700/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-800 hover:shadow-lg sm:self-center"
+              >
+                <Navigation className="h-4 w-4" />
+                Get Directions
+                <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Embedded Google Map */}
+            <div className="relative h-[300px] w-full overflow-hidden bg-gray-100 sm:h-[400px] lg:h-[460px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3645.389904738659!2d88.62802537541862!3d23.982004878513003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39f95b496d5aa2a3%3A0xf782e256576893df!2sNEETVIDYA%20COACHING%20CENTER!5e0!3m2!1sen!2sin!4v1789449477986!5m2!1sen!2sin"
+                title="NEETVIDYA COACHING CENTER Google Maps Location"
+                className="absolute inset-0 h-full w-full border-0"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
+
+            {/* Map Footer */}
+            <div className="flex flex-col gap-2 border-t border-gray-100 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <MapPin className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span>
+                  Visit us for admission enquiries and academic guidance.
+                </span>
+              </div>
+
+              <a
+                href="https://maps.app.goo.gl/w8qdwchcmCKUuiBA8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-900"
+              >
+                View on Google Maps →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Note */}
+        <div className="mt-10 text-center">
+          <p className="text-xs text-gray-400">
+            NEETVIDYA Coaching Center · Your partner in NEET preparation
+          </p>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 ```
@@ -8035,36 +8693,17 @@ export default function ContactPage() {
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../config/api";
-import images from "../../config/images";
-import { BookOpen, CheckCircle, ArrowRight } from "lucide-react";
+import { CheckCircle, ArrowRight, Layers, Clock, Users } from "lucide-react";
 
+// Batch = Course on this platform. This page showcases the institute's batches.
 export default function CoursesPage() {
-  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const approvedBatches = [
-    {
-      _id: "dropper-sankalp",
-      name: "SANKALP",
-      description: "Duration: Complete 1 Year | Fees: ₹20,000",
-      targetClass: "Dropper / 12th",
-      feeAmount: 20000,
-      coverImageUrl: images.courseClassXii,
-    },
-    {
-      _id: "11th-udaan",
-      name: "UDAAN",
-      description: "Duration: Complete 2 Years | Fees: ₹35,000",
-      targetClass: "11th",
-      feeAmount: 35000,
-      coverImageUrl: images.courseClassXi,
-    },
-  ];
-
   useEffect(() => {
-    api.get("/courses")
-      .then(() => setCourses(approvedBatches))
-      .catch(() => setCourses(approvedBatches))
+    api.get("/batches")
+      .then(({ data }) => setBatches(data.data?.batches || []))
+      .catch(() => setBatches([]))
       .finally(() => setLoading(false));
   }, []);
 
@@ -8072,10 +8711,11 @@ export default function CoursesPage() {
     <div className="section-padding bg-brand-soft min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Published Programs</span>
+          <span className="text-xs font-bold text-brand-green uppercase tracking-widest">Batches & Programs</span>
           <h1 className="font-heading font-extrabold text-3xl sm:text-5xl text-brand-dark mt-2">NEET Program Catalog</h1>
           <p className="text-gray-600 text-sm sm:text-base mt-3">
-            Browse the institute's published course offerings as managed from the admin panel.
+            Browse the institute's batches. Each batch is a complete course with its own study
+            materials and exams.
           </p>
         </div>
 
@@ -8083,40 +8723,58 @@ export default function CoursesPage() {
           <div className="text-center py-20">
             <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
-        ) : courses.length === 0 ? (
+        ) : batches.length === 0 ? (
           <div className="text-center py-20 text-gray-600">
-            <p className="font-semibold text-brand-dark mb-2">No courses are currently published.</p>
-            <p className="text-sm text-gray-500">Create and publish a course from the admin panel to make it visible here.</p>
+            <p className="font-semibold text-brand-dark mb-2">No batches are currently published.</p>
+            <p className="text-sm text-gray-500">Batches created in the admin panel appear here automatically.</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-              <div key={course._id} className="card card-hover flex flex-col justify-between border-gray-200">
+            {batches.map((batch) => (
+              <div key={batch._id} className="card card-hover flex-col justify-between border-gray-200">
                 <div>
-                  <div className="h-52 rounded-xl overflow-hidden mb-5 bg-gray-100 relative">
-                    <img src={course.coverImageUrl || images.courseNeetFoundation} alt={course.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-3 left-3">
-                      <span className="badge bg-brand-black/80 text-brand-lime border border-brand-lime/30">{course.targetClass || "NEET UG"}</span>
-                    </div>
+                  <div
+                    className="h-2 rounded-full mb-5"
+                    style={{ backgroundColor: batch.color || "#18A66A" }}
+                  />
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="badge bg-brand-black/5 text-brand-dark border-gray-200">
+                      {batch.batchType?.replace(/_/g, " ") || "NEET UG"}
+                    </span>
+                    {batch.academicYear && (
+                      <span className="text-[11px] text-gray-500">{batch.academicYear}</span>
+                    )}
                   </div>
 
-                  <h2 className="font-heading font-bold text-2xl text-brand-dark mb-2">{course.name}</h2>
-                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">{course.description}</p>
+                  <h2 className="font-heading font-bold text-2xl text-brand-dark mb-2">{batch.name}</h2>
+                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                    {batch.schedule || "Full NEET syllabus coverage with daily practice and mock tests."}
+                  </p>
 
                   <div className="space-y-2 mb-6">
-                    {course.features?.slice(0, 4).map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
+                    <div className="flex items-center gap-2 text-xs text-gray-700">
+                      <Users className="w-4 h-4 text-brand-green shrink-0" />
+                      <span>{batch.students?.length || 0} students enrolled</span>
+                    </div>
+                    {batch.capacity ? (
+                      <div className="flex items-center gap-2 text-xs text-gray-700">
                         <CheckCircle className="w-4 h-4 text-brand-green shrink-0" />
-                        <span>{f}</span>
+                        <span>Limited to {batch.capacity} seats</span>
                       </div>
-                    ))}
+                    ) : null}
+                    {batch.schedule && (
+                      <div className="flex items-center gap-2 text-xs text-gray-700">
+                        <Clock className="w-4 h-4 text-brand-green shrink-0" />
+                        <span>{batch.schedule}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="pt-5 border-t border-gray-100 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-gray-500 block">Fee</span>
-                    <span className="font-extrabold text-xl text-brand-dark">₹{course.feeAmount?.toLocaleString() || "0"}</span>
+                    <span className="text-xs text-gray-500 block">Batch Code</span>
+                    <span className="font-mono font-bold text-brand-dark">{batch.code || "—"}</span>
                   </div>
                   <Link to="/register" className="btn-primary text-sm !py-2.5 !px-5">
                     Join Batch <ArrowRight className="w-4 h-4" />
@@ -8130,6 +8788,7 @@ export default function CoursesPage() {
     </div>
   );
 }
+
 ```
 
 ---
@@ -8138,24 +8797,20 @@ export default function CoursesPage() {
 
 ```jsx
 
+import { useState, useEffect } from "react";
+import api from "../../config/api";
 import images from "../../config/images";
 
-const facultyProfiles = [
-  {
-    id: "ramij-khan",
-    name: "Ramij Khan",
-    image: images.teacher2,
-    number: "01",
-  },
-  {
-    id: "bheshma-das",
-    name: "Bheshma Das",
-    image: images.teacher1,
-    number: "02",
-  },
-];
-
 export default function FacultyPage() {
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/teachers/public")
+      .then(({ data }) => setTeachers(data.data?.teachers || []))
+      .catch(() => setTeachers([]))
+      .finally(() => setLoading(false));
+  }, []);
   return (
     <main className="relative min-h-screen overflow-hidden bg-brand-soft">
       {/* Decorative background */}
@@ -8200,69 +8855,80 @@ export default function FacultyPage() {
         </div>
 
         {/* Faculty cards */}
-        <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-10">
-          {facultyProfiles.map((teacher) => (
-            <article
-              key={teacher.id}
-              className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
-            >
-              {/* Full poster image */}
-              <div className="overflow-hidden rounded-[1.5rem] bg-white">
-                <img
-                  src={teacher.image}
-                  alt={`Faculty profile of ${teacher.name}`}
-                  loading="lazy"
-                  className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : teachers.length === 0 ? (
+          <div className="text-center py-20 text-slate-500">
+            <p className="font-semibold text-lg text-brand-dark mb-1">No faculty profiles available at the moment</p>
+            <p className="text-sm">Please check back soon.</p>
+          </div>
+        ) : (
+          <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-10">
+            {teachers.map((teacher) => (
+              <article
+                key={teacher._id}
+                className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
+              >
+                {/* Full poster image */}
+                <div className="overflow-hidden rounded-[1.5rem] bg-white">
+                  <img
+                    src={teacher.photoUrl || teacher.user?.avatar || images.teacher1}
+                    alt={`Faculty profile of ${teacher.user?.name || teacher.name}`}
+                    loading="lazy"
+                    className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                </div>
 
-              {/* Faculty information */}
-              <div className="px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">
-                      Meet Your Mentor
+                {/* Faculty information */}
+                <div className="px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">
+                        {teacher.specialisation || "Faculty"}
+                      </p>
+
+                      <h2 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl">
+                        {teacher.user?.name || teacher.name}
+                      </h2>
+                    </div>
+
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-green transition-all duration-300 group-hover:bg-brand-green group-hover:text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 17 17 7" />
+                        <path d="M7 7h10v10" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 h-px w-full bg-slate-100" />
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-slate-500">
+                      {teacher.qualification || "Guiding your next step."}
                     </p>
 
-                    <h2 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl">
-                      {teacher.name}
-                    </h2>
-                  </div>
-
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-green transition-all duration-300 group-hover:bg-brand-green group-hover:text-white">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M7 17 17 7" />
-                      <path d="M7 7h10v10" />
-                    </svg>
+                    <span className="whitespace-nowrap text-xs font-bold tracking-wide text-brand-green">
+                      NEETVIDYA
+                    </span>
                   </div>
                 </div>
-
-                <div className="mt-5 h-px w-full bg-slate-100" />
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-slate-500">
-                    Guiding your next step.
-                  </p>
-
-                  <span className="whitespace-nowrap text-xs font-bold tracking-wide text-brand-green">
-                    NEETVIDYA
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         {/* Bottom message */}
         <div className="mx-auto mt-16 max-w-2xl text-center sm:mt-20">
@@ -8415,27 +9081,8 @@ export default function HomePage() {
   const [teachers, setTeachers] = useState([]);
   const { settings } = useContactSettings();
 
-  const approvedBatches = [
-    {
-      _id: "dropper-sankalp",
-      name: "SANKALP",
-      description: "Duration: Complete 1 Year | Fees: ₹20,000",
-      targetClass: "Dropper / 12th",
-      feeAmount: 20000,
-      coverImageUrl: images.courseClassXii,
-    },
-    {
-      _id: "11th-udaan",
-      name: "UDAAN",
-      description: "Duration: Complete 2 Years | Fees: ₹35,000",
-      targetClass: "11th",
-      feeAmount: 35000,
-      coverImageUrl: images.courseClassXi,
-    },
-  ];
-
   useEffect(() => {
-    api.get("/courses").then(({ data }) => setCourses(approvedBatches)).catch(() => setCourses(approvedBatches));
+    api.get("/courses").then(({ data }) => setCourses(data.data?.courses || [])).catch(() => setCourses([]));
     api.get("/teachers/public").then(({ data }) => setTeachers(data.data.teachers || [])).catch(() => {});
   }, []);
 
@@ -8674,7 +9321,7 @@ export default function HomePage() {
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import { LogIn, Eye, EyeOff, BadgeCheck, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
@@ -8690,13 +9337,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(identifier.trim(), password);
-      toast.success(`Welcome back, ${user.name}!`);
+      alertSuccess(`Welcome back, ${user.name}!`);
       if (user.role === "admin") navigate("/admin");
       else if (user.role === "teacher") navigate("/teacher");
       else navigate("/student");
     } catch (err) {
       const msg = err.response?.data?.message || "Invalid credentials";
-      toast.error(msg);
+      alertError(msg);
     } finally {
       setLoading(false);
     }
@@ -8842,7 +9489,7 @@ export default function LoginPage() {
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertError } from "../../utils/alert";
 import { UserPlus, Eye, EyeOff, ArrowLeft, CheckCircle, MailCheck, BadgeCheck, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
@@ -8857,11 +9504,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
+      alertError("Passwords do not match");
       return;
     }
     if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      alertError("Password must be at least 8 characters");
       return;
     }
     setLoading(true);
@@ -8869,7 +9516,7 @@ export default function RegisterPage() {
       await register(form.name, form.email, form.password, form.phone);
       setRegistered(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
+      alertError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -9094,7 +9741,7 @@ import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import { Eye, EyeOff, KeyRound, CheckCircle, XCircle, ShieldCheck } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess } from "../../utils/alert";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -9130,7 +9777,7 @@ export default function ResetPasswordPage() {
     try {
       await api.post(`/auth/reset-password?token=${token}`, { password });
       setSuccess(true);
-      toast.success("Password reset successfully!");
+      alertSuccess("Password reset successfully!");
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Reset failed. The link may have expired.");
@@ -9548,7 +10195,7 @@ export default function TestSeriesPage() {
 # FILE: `client\src\pages\public\VerifyEmailPage.jsx`
 
 ```jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../../config/api";
 import { CheckCircle, XCircle, Loader2, MailCheck, RefreshCw } from "lucide-react";
@@ -9556,22 +10203,31 @@ import { CheckCircle, XCircle, Loader2, MailCheck, RefreshCw } from "lucide-reac
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState("loading"); // loading | success | error | resend
+  const [status, setStatus] = useState("loading"); // loading | success | error | resend | already-verified
   const [resendEmail, setResendEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
+  const requestedRef = useRef(false);
 
   useEffect(() => {
     if (!token) {
       setStatus("no-token");
       return;
     }
+
+    if (requestedRef.current) return;
+    requestedRef.current = true;
+
     const verify = async () => {
       try {
         await api.get(`/auth/verify-email?token=${token}`);
         setStatus("success");
       } catch (err) {
-        setStatus("error");
+        if (err.response?.data?.message?.includes("already verified")) {
+          setStatus("already-verified");
+        } else {
+          setStatus("error");
+        }
       }
     };
     verify();
@@ -9605,12 +10261,16 @@ export default function VerifyEmailPage() {
           </>
         )}
 
-        {status === "success" && (
+        {(status === "success" || status === "already-verified") && (
           <>
             <CheckCircle className="w-14 h-14 text-green-500 mx-auto" />
-            <h1 className="font-extrabold text-2xl text-slate-900">Email Verified!</h1>
+            <h1 className="font-extrabold text-2xl text-slate-900">
+              {status === "already-verified" ? "Email Already Verified!" : "Email Verified!"}
+            </h1>
             <p className="text-slate-500 text-sm">
-              Your email has been successfully verified. You can now sign in to your NEETVIDYA account.
+              {status === "already-verified"
+                ? "Your email address is already verified. You can sign in to your NEETVIDYA account."
+                : "Your email has been successfully verified. You can now sign in to your NEETVIDYA account."}
             </p>
             <Link
               to="/login"
@@ -9681,7 +10341,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, AlertTriangle, ArrowRight } from "lucide-react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
+import { alertError } from "../../utils/alert";
 
 export default function ExamInstructions() {
   const { examId } = useParams();
@@ -9703,7 +10363,7 @@ export default function ExamInstructions() {
       await api.post(`/attempts/exam/${examId}/start`);
       navigate(`/exam/${examId}/attempt`);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Cannot start exam");
+      alertError(err.response?.data?.message || "Cannot start exam");
       setStarting(false);
     }
   };
@@ -9785,7 +10445,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Flag, Eraser, Send, Clock, AlertTriangle } from "lucide-react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 
 export default function ExamPage() {
   const { examId } = useParams();
@@ -9818,7 +10478,7 @@ export default function ExamPage() {
       setTimeLeft(remaining > 0 ? remaining : (d.duration || 30) * 60);
       setLoading(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Could not initialize exam");
+      alertError(err.response?.data?.message || "Could not initialize exam");
       navigate("/student/tests");
     }
   }, [examId, navigate]);
@@ -9859,10 +10519,10 @@ export default function ExamPage() {
     try {
       await api.put(`/attempts/${attemptId}/save`, { answers, currentQuestion: currentQ }).catch(() => {});
       const { data } = await api.post(`/attempts/${attemptId}/submit`);
-      toast.success(auto ? "Time expired. Exam auto-submitted." : "Exam submitted successfully!");
+      alertSuccess(auto ? "Time expired. Exam auto-submitted." : "Exam submitted successfully!");
       navigate(`/student/results`);
     } catch (err) {
-      toast.error("Error finalizing exam submission");
+      alertError("Error finalizing exam submission");
       navigate("/student/results");
     } finally {
       setSubmitting(false);
@@ -9942,8 +10602,13 @@ export default function ExamPage() {
             {formatTime(timeLeft)}
           </div>
           <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to submit your test now?")) {
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: "Submit Examination?",
+                text: "Are you sure you want to submit your test now?",
+                confirmText: "Yes, submit",
+              });
+              if (confirmed) {
                 submitExam(false);
               }
             }}
@@ -10043,8 +10708,13 @@ export default function ExamPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => {
-                      if (window.confirm("Submit final exam responses?")) submitExam(false);
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: "Submit Final Exam?",
+                        text: "Submit final exam responses?",
+                        confirmText: "Submit",
+                      });
+                      if (confirmed) submitExam(false);
                     }}
                     className="btn-lime text-xs !py-2 !px-4"
                   >
@@ -10097,8 +10767,13 @@ export default function ExamPage() {
 
           <div className="pt-6 border-t border-gray-100">
             <button
-              onClick={() => {
-                if (window.confirm("Ready to complete and grade this exam?")) submitExam(false);
+              onClick={async () => {
+                const confirmed = await confirmDialog({
+                  title: "Grade Exam?",
+                  text: "Ready to complete and grade this exam?",
+                  confirmText: "Complete & Grade",
+                });
+                if (confirmed) submitExam(false);
               }}
               disabled={submitting}
               className="btn-primary w-full text-sm !py-3"
@@ -10120,73 +10795,178 @@ export default function ExamPage() {
 ```jsx
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { BookOpen, FileText, Video, Download, ExternalLink } from "lucide-react";
+import {
+  BookOpen, FileText, Download, ExternalLink, Search,
+  ChevronDown, ChevronRight, Layers, FolderOpen,
+} from "lucide-react";
 
 export default function LearnPage() {
-  const [courses, setCourses] = useState([]);
-  const [activeSubject, setActiveSubject] = useState("all");
+  const [tree, setTree] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [expandedUnits, setExpandedUnits] = useState({});
+  const [expandedChapters, setExpandedChapters] = useState({});
 
-  const sampleMaterials = [
-    { title: "Kinematics & 1D Motion Formula Sheet", subject: "Physics", chapter: "Units & Kinematics", size: "2.4 MB", url: "#" },
-    { title: "Cell: The Unit of Life - NCERT Notes", subject: "Biology", chapter: "Cell Biology", size: "3.8 MB", url: "#" },
-    { title: "Periodic Table & Periodic Trends Cheat Sheet", subject: "Chemistry", chapter: "Inorganic", size: "1.9 MB", url: "#" },
-    { title: "Newton's Laws of Motion & Friction DPP 01", subject: "Physics", chapter: "NLM", size: "1.1 MB", url: "#" },
-    { title: "Plant Anatomy & Tissues Flash Cards", subject: "Biology", chapter: "Botany", size: "2.7 MB", url: "#" },
-  ];
+  useEffect(() => {
+    fetchTree();
+  }, []);
 
-  const filtered = activeSubject === "all" ? sampleMaterials : sampleMaterials.filter(m => m.subject.toLowerCase() === activeSubject);
+  const fetchTree = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/materials/tree");
+      setTree(data.data?.tree || []);
+    } catch {
+      setTree([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleUnit = (id) => setExpandedUnits((p) => ({ ...p, [id]: !p[id] }));
+  const toggleChapter = (id) => setExpandedChapters((p) => ({ ...p, [id]: !p[id] }));
+
+  const q = search.trim().toLowerCase();
+  const filteredTree = q
+    ? tree
+        .map((u) => ({
+          ...u,
+          chapters: u.chapters
+            .map((c) => ({
+              ...c,
+              materials: c.materials.filter(
+                (m) =>
+                  m.title?.toLowerCase().includes(q) ||
+                  m.description?.toLowerCase().includes(q)
+              ),
+            }))
+            .filter((c) => c.materials.length > 0),
+        }))
+        .filter((u) => u.chapters.length > 0)
+    : tree;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-heading font-extrabold text-2xl text-brand-dark">Digital Learning Center</h1>
-        <p className="text-xs text-gray-500 mt-1">Access curated theory handouts, formula sheets, and Daily Practice Papers (DPPs).</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Your batch materials, organised as Unit → Chapter → Material.
+        </p>
       </div>
 
-      {/* Subject Filter Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-3">
-        {["all", "physics", "biology", "chemistry"].map((subj) => (
-          <button
-            key={subj}
-            onClick={() => setActiveSubject(subj)}
-            className={`px-4 py-2 rounded-btn text-xs font-bold uppercase tracking-wider transition-colors ${
-              activeSubject === subj
-                ? "bg-brand-green text-white shadow-sm"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
-          >
-            {subj}
-          </button>
-        ))}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search materials..."
+          className="w-full pl-10 pr-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+        />
       </div>
 
-      {/* Materials List */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((mat, i) => (
-          <div key={i} className="card card-hover flex flex-col justify-between border-gray-200">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="badge bg-emerald-100 text-emerald-800">{mat.subject}</span>
-                <span className="text-[11px] text-gray-400 font-medium">{mat.size}</span>
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="w-9 h-9 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filteredTree.length === 0 ? (
+        <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+          <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <h3 className="font-bold text-slate-600 mb-1">No materials available yet</h3>
+          <p className="text-slate-400 text-sm">
+            Your teachers will publish materials for your batch here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredTree.map((unit) => {
+            const unitOpen = expandedUnits[unit._id] ?? true;
+            return (
+              <div key={unit._id} className="bg-white border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => toggleUnit(unit._id)}
+                  className="w-full flex items-center gap-3 p-5 hover:bg-slate-50 transition text-left"
+                >
+                  {unitOpen ? (
+                    <ChevronDown className="w-5 h-5 text-green-600 shrink-0" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+                  )}
+                  <Layers className="w-5 h-5 text-green-600 shrink-0" />
+                  <span className="font-bold text-brand-dark">{unit.name}</span>
+                  <span className="ml-auto text-xs text-slate-400">
+                    {unit.chapters.reduce((n, c) => n + c.materials.length, 0)} materials
+                  </span>
+                </button>
+
+                {unitOpen && (
+                  <div className="border-t border-slate-50">
+                    {unit.chapters.map((chapter) => {
+                      const chapOpen = expandedChapters[chapter._id] ?? true;
+                      return (
+                        <div key={chapter._id} className="pl-4 sm:pl-6">
+                          <button
+                            onClick={() => toggleChapter(chapter._id)}
+                            className="w-full flex items-center gap-2 px-5 py-3 bg-slate-50/60 hover:bg-slate-100/60 transition text-left"
+                          >
+                            {chapOpen ? (
+                              <ChevronDown className="w-4 h-4 text-slate-500" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4 text-slate-400" />
+                            )}
+                            <FolderOpen className="w-4 h-4 text-slate-400" />
+                            <span className="font-semibold text-slate-600 text-sm">{chapter.name}</span>
+                            <span className="text-xs text-slate-400 ml-1">({chapter.materials.length})</span>
+                          </button>
+
+                          {chapOpen && (
+                            <div className="divide-y divide-slate-50">
+                              {chapter.materials.map((mat) => (
+                                <div key={mat._id} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-slate-50 transition">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-9 h-9 rounded-lg bg-emerald-50 border-emerald-100 flex items-center justify-center shrink-0">
+                                      <FileText className="w-4 h-4 text-emerald-600" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-brand-dark truncate">{mat.title}</p>
+                                      <p className="text-xs text-gray-400 truncate">
+                                        {mat.description || mat.subject?.name || mat.type || "Material"}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <a
+                                    href={mat.fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition inline-flex items-center gap-1 shrink-0"
+                                  >
+                                    {mat.fileUrl?.includes("drive.google") || mat.fileUrl?.includes("youtube") ? (
+                                      <>
+                                        <ExternalLink className="w-3.5 h-3.5" /> Open
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Download className="w-3.5 h-3.5" /> View
+                                      </>
+                                    )}
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              <h3 className="font-heading font-bold text-base text-brand-dark mb-1">{mat.title}</h3>
-              <p className="text-xs text-gray-500 mb-4">{mat.chapter}</p>
-            </div>
-
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5" /> PDF Handout
-              </span>
-              <button onClick={() => alert("Downloading study handout...")} className="btn-secondary text-xs !py-1.5 !px-3">
-                <Download className="w-3.5 h-3.5" /> Download
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
+
 ```
 
 ---
@@ -10212,11 +10992,7 @@ export default function PerformancePage() {
         score: r.obtainedMarks,
         accuracy: r.accuracy,
       }))
-    : [
-        { name: "Diagnostic 01", score: 12, accuracy: 75 },
-        { name: "DPP 02", score: 14, accuracy: 85 },
-        { name: "Chapter Test 03", score: 15, accuracy: 92 },
-      ];
+    : [];
 
   return (
     <div className="space-y-8">
@@ -10256,18 +11032,25 @@ export default function PerformancePage() {
 
       <div className="card p-6 sm:p-8 space-y-4">
         <h3 className="font-heading font-bold text-lg text-brand-dark">Score Progression Chart</h3>
-        <div className="h-72 w-full pt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
-              <YAxis stroke="#94a3b8" fontSize={12} />
-              <Tooltip />
-              <Line type="monotone" dataKey="score" stroke="#18A66A" strokeWidth={3} dot={{ r: 5 }} name="Obtained Score" />
-              <Line type="monotone" dataKey="accuracy" stroke="#A8C900" strokeWidth={2} dot={{ r: 4 }} name="Accuracy %" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p className="font-semibold text-gray-500">No test results yet</p>
+            <p className="text-xs mt-1">Take tests to see your performance chart here.</p>
+          </div>
+        ) : (
+          <div className="h-72 w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
+                <YAxis stroke="#94a3b8" fontSize={12} />
+                <Tooltip />
+                <Line type="monotone" dataKey="score" stroke="#18A66A" strokeWidth={3} dot={{ r: 5 }} name="Obtained Score" />
+                <Line type="monotone" dataKey="accuracy" stroke="#A8C900" strokeWidth={2} dot={{ r: 4 }} name="Accuracy %" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -10282,7 +11065,7 @@ export default function PerformancePage() {
 import { useState, useEffect, useContext } from "react";
 import api from "../../config/api";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import { Camera, Key, Save, BadgeCheck, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export default function ProfilePage() {
@@ -10305,15 +11088,15 @@ export default function ProfilePage() {
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 300 * 1024) { toast.error("Image must be under 300KB"); return; }
+    if (file.size > 300 * 1024) { alertError("Image must be under 300KB"); return; }
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const b64 = ev.target.result;
       setAvatarBase64(b64);
       try {
         await api.put("/students/my/avatar", { avatarBase64: b64 });
-        toast.success("Profile photo updated!");
-      } catch { toast.error("Failed to save photo"); }
+        alertSuccess("Profile photo updated!");
+      } catch { alertError("Failed to save photo"); }
     };
     reader.readAsDataURL(file);
   };
@@ -10324,26 +11107,26 @@ export default function ProfilePage() {
     try {
       const { data } = await api.put("/auth/profile", profileForm);
       updateUser(data.data.user);
-      toast.success("Profile updated!");
+      alertSuccess("Profile updated!");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
+      alertError(err.response?.data?.message || "Update failed");
     } finally { setSaving(false); }
   };
 
   const handlePasswordSave = async (e) => {
     e.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) { toast.error("Passwords don't match"); return; }
-    if (passwordForm.newPassword.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) { alertError("Passwords don't match"); return; }
+    if (passwordForm.newPassword.length < 8) { alertError("Password must be at least 8 characters"); return; }
     setSaving(true);
     try {
       await api.put("/auth/change-password", {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      toast.success("Password changed successfully!");
+      alertSuccess("Password changed successfully!");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+      alertError(err.response?.data?.message || "Failed to change password");
     } finally { setSaving(false); }
   };
 
@@ -10711,9 +11494,9 @@ export default function ResultPage() {
 # FILE: `client\src\pages\student\StudentDashboard.jsx`
 
 ```jsx
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight } from "lucide-react";
+import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight, Clock, GraduationCap } from "lucide-react";
 import api from "../../config/api";
 import StudentBadge from "../../components/shared/StudentBadge";
 import TelegramLink from "../../components/shared/TelegramLink";
@@ -10738,28 +11521,58 @@ export default function StudentDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const stats = [
-    { icon: BookOpen, label: "Enrolled Course", value: student?.batches?.[0]?.course?.name || "Admin-managed course", color: "text-blue-600", bg: "bg-blue-50" },
-    { icon: ClipboardList, label: "Live Tests", value: `${dashboardData?.upcomingTests?.length || 1} Available`, color: "text-orange-600", bg: "bg-orange-50" },
-    { icon: FileText, label: "Study Materials", value: `${dashboardData?.recentMaterials?.length || 4} Uploaded`, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { icon: TrendingUp, label: "Recent Accuracy", value: "82% Avg", color: "text-purple-600", bg: "bg-purple-50" },
+    { icon: BookOpen, label: "My Batch", value: student?.batches?.[0]?.name || "Not Assigned", color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: ClipboardList, label: "Live Tests", value: `${dashboardData?.upcomingTests?.length || 0} Available`, color: "text-orange-600", bg: "bg-orange-50" },
+    { icon: FileText, label: "Study Materials", value: `${dashboardData?.recentMaterials?.length || 0} New`, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { icon: TrendingUp, label: "Tests Taken", value: `${dashboardData?.recentResults?.length || 0}`, color: "text-purple-600", bg: "bg-purple-50" },
   ];
 
   return (
     <div className="space-y-8">
-      {/* Header Profile Strip */}
+      {/* Batch banner - which batch am I in? */}
+      <div className="bg-gradient-to-r from-brand-green to-brand-lime rounded-2xl p-5 text-brand-black shadow-sm flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-white/70 flex items-center justify-center">
+            <GraduationCap className="w-5 h-5 text-brand-green" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider opacity-70">Your Batch / Course</p>
+            <p className="font-heading font-extrabold text-lg leading-tight">
+              {student?.batches?.[0]?.name || "No batch assigned"}
+            </p>
+            {student?.batches?.[0]?.code && (
+              <p className="text-[11px] font-medium opacity-70">{student.batches[0].code}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StudentBadge batchType={student?.studentType === "REGULAR_ONLINE" ? "ONLINE" : student?.studentType === "HYBRID" ? "HYBRID" : "OFFLINE"} />
+        </div>
+      </div>
+
+      {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading font-extrabold text-2xl text-brand-dark">
             Hello, {student?.user?.name || "Aspirant"}!
           </h1>
-          <p className="text-xs text-gray-500 mt-1">Ready for today's concept practice and test drills?</p>
+          <p className="text-xs text-gray-500 mt-1">Ready for today's practice?</p>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <StudentBadge batchType={student?.studentType === "REGULAR_ONLINE" ? "ONLINE" : student?.studentType === "HYBRID" ? "HYBRID" : "OFFLINE"} />
-            <span className="text-xs text-gray-500 font-medium">Batch: {student?.batches?.[0]?.name || "12th Batch – SANKALP"}</span>
+            {student?.batches?.[0] && (
+              <span className="text-xs text-gray-500 font-medium">Batch: {student.batches[0].name}</span>
+            )}
           </div>
         </div>
-
         <div className="flex items-center gap-3">
           <TelegramLink url={settings.telegramChannelLink} label="Doubt Desk" className="text-xs bg-sky-50 text-sky-700 px-3 py-2 rounded-lg border border-sky-200" />
           <Link to="/student/tests" className="btn-primary text-xs !py-2.5 !px-4">
@@ -10785,77 +11598,65 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Main Dual Grid */}
+      {/* Live Tests */}
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Live Tests Available */}
         <div className="card space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <h3 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-brand-green" /> Live Computerized Tests
+              <ClipboardList className="w-5 h-5 text-brand-green" /> Live Tests
             </h3>
             <Link to="/student/tests" className="text-xs text-brand-green font-semibold hover:underline">View All</Link>
           </div>
-
-          <div className="space-y-3">
-            {dashboardData?.upcomingTests?.length > 0 ? (
-              dashboardData.upcomingTests.map((test) => (
+          {dashboardData?.upcomingTests?.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.upcomingTests.map((test) => (
                 <div key={test._id} className="p-4 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between gap-4">
                   <div>
                     <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">{test.testType}</span>
                     <h4 className="font-semibold text-sm text-brand-dark">{test.title}</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions â€¢ {test.duration} Minutes</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions • {test.duration} Min</p>
                   </div>
-                  <Link to={`/exam/${test._id}/attempt`} className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
+                  <Link to={`/exam/${test._id}/instructions`} className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
                     Take Test
                   </Link>
                 </div>
-              ))
-            ) : (
-              <div className="p-4 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
-                <div>
-                  <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">MOCK_TEST</span>
-                  <h4 className="font-semibold text-sm text-brand-dark">NEET Diagnostic Mock Test 01</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Physics & Biology â€¢ 30 Minutes</p>
-                </div>
-                <Link to="/student/tests" className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
-                  Open
-                </Link>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400 text-sm">No live tests available right now.</div>
+          )}
         </div>
 
-        {/* Quick Study Materials */}
+        {/* Recent Materials */}
         <div className="card space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <h3 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-brand-green" /> Recent Study Notes & DPPs
+              <BookOpen className="w-5 h-5 text-brand-green" /> Recent Materials
             </h3>
             <Link to="/student/learn" className="text-xs text-brand-green font-semibold hover:underline">Go to Learn</Link>
           </div>
-
-          <div className="space-y-3">
-            {[
-              { title: "Kinematics & Vectors Revision Notes", subject: "Physics", type: "PDF" },
-              { title: "Cell Organelles & Ribosomes NCERT Flash", subject: "Biology", type: "PDF" },
-              { title: "Chemical Bonding Hybridization Chart", subject: "Chemistry", type: "PDF" },
-            ].map((mat, idx) => (
-              <div key={idx} className="p-3.5 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                    {mat.type}
+          {dashboardData?.recentMaterials?.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.recentMaterials.map((mat) => (
+                <div key={mat._id} className="p-3.5 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                      {mat.fileType || "PDF"}
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-xs text-brand-dark">{mat.title}</h5>
+                      <span className="text-[11px] text-gray-500">{mat.subject?.name || "General"}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="font-semibold text-xs text-brand-dark">{mat.title}</h5>
-                    <span className="text-[11px] text-gray-500">{mat.subject}</span>
-                  </div>
+                  <a href={mat.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-green font-medium hover:underline">
+                    Open
+                  </a>
                 </div>
-                <Link to="/student/learn" className="text-xs text-brand-green font-medium hover:underline">
-                  Download
-                </Link>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400 text-sm">No materials uploaded yet.</div>
+          )}
         </div>
       </div>
     </div>
@@ -10871,56 +11672,146 @@ export default function StudentDashboard() {
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../config/api";
-import { ClipboardList, Clock, Award, ArrowRight } from "lucide-react";
+import { ClipboardList, Clock, ArrowRight, Archive, BookOpen } from "lucide-react";
+import Pagination from "../../components/shared/Pagination";
 
 export default function TestsPage() {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [meta, setMeta] = useState({ total: 0, pages: 1 });
 
   useEffect(() => {
-    api.get("/exams")
-      .then(({ data }) => setExams(data.data.exams || []))
-      .catch(() => {})
+    setLoading(true);
+    api
+      .get(`/exams?page=${page}&limit=${limit}`)
+      .then(({ data }) => {
+        setExams(data.data?.exams || []);
+        setMeta({ total: data.data?.total || 0, pages: data.data?.pages || 1 });
+      })
+      .catch(() => setExams([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, limit]);
+
+  // Split live/published exams from archived study papers.
+  const liveExams = exams.filter((e) => ["LIVE", "PUBLISHED"].includes(e.status));
+  const studyExams = exams.filter(
+    (e) => ["CLOSED", "ARCHIVED"].includes(e.status) && e.studyVisible
+  );
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading font-extrabold text-2xl text-brand-dark">Tests & Computerized Exams</h1>
+        <h1 className="font-heading font-extrabold text-2xl text-brand-dark">
+          Tests & Computerized Exams
+        </h1>
         <p className="text-xs text-gray-500 mt-1">
-          Take your daily practice papers (DPPs), chapter tests, and national diagnostic mock exams.
+          Exams released to your batch. Secret/unpublished exams never appear here.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {exams.map((exam) => (
-          <div key={exam._id} className="card card-hover flex flex-col justify-between border-gray-200">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="badge bg-purple-100 text-purple-800">{exam.testType}</span>
-                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Active</span>
-              </div>
-              <h3 className="font-heading font-bold text-lg text-brand-dark mb-2">{exam.title}</h3>
-              <p className="text-xs text-gray-500 mb-4 line-clamp-2">{exam.instructions || "Full marks test with standard negative marking."}</p>
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="w-9 h-9 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : exams.length === 0 ? (
+        <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+          <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <h3 className="font-bold text-slate-600 mb-1">No exams available right now</h3>
+          <p className="text-slate-400 text-sm">
+            When your teachers publish an exam for your batch, it will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {liveExams.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="font-heading font-bold text-lg text-brand-dark">Live & Upcoming</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {liveExams.map((exam) => (
+                  <div key={exam._id} className="card card-hover flex-col justify-between border-gray-200">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="badge bg-purple-100 text-purple-800">
+                          {exam.testType?.replace(/_/g, " ")}
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                          {exam.status === "LIVE" ? "Active" : "Scheduled"}
+                        </span>
+                      </div>
+                      <h3 className="font-heading font-bold text-lg text-brand-dark mb-1">{exam.title}</h3>
+                      {exam.batch?.name && (
+                        <p className="text-[11px] text-gray-400 mb-2">{exam.batch.name}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mb-4 line-clamp-2">
+                        {exam.instructions || "Standard exam with negative marking."}
+                      </p>
 
-              <div className="grid grid-cols-2 gap-2 bg-brand-soft p-3 rounded-xl text-xs mb-4">
-                <div><span className="text-gray-400">MCQs:</span> <strong className="text-brand-dark">{exam.totalQuestions}</strong></div>
-                <div><span className="text-gray-400">Duration:</span> <strong className="text-brand-dark">{exam.duration} Min</strong></div>
-                <div><span className="text-gray-400">Total Marks:</span> <strong className="text-brand-dark">{exam.totalMarks}</strong></div>
-                <div><span className="text-gray-400">Pattern:</span> <strong className="text-brand-dark">+{exam.marksPerCorrect}/-{exam.negativePerWrong}</strong></div>
+                      <div className="grid grid-cols-2 gap-2 bg-brand-soft p-3 rounded-xl text-xs mb-4">
+                        <div><span className="text-gray-400">MCQs:</span> <strong className="text-brand-dark">{exam.totalQuestions}</strong></div>
+                        <div><span className="text-gray-400">Duration:</span> <strong className="text-brand-dark">{exam.duration} Min</strong></div>
+                        <div><span className="text-gray-400">Total Marks:</span> <strong className="text-brand-dark">{exam.totalMarks}</strong></div>
+                        <div><span className="text-gray-400">Pattern:</span> <strong className="text-brand-dark">+{exam.marksPerCorrect ?? 4}/-{exam.negativePerWrong ?? 1}</strong></div>
+                      </div>
+                    </div>
+
+                    <Link
+                      to={`/exam/${exam._id}/attempt`}
+                      className="btn-primary w-full text-center text-xs !py-2.5 inline-flex items-center justify-center gap-1"
+                    >
+                      Start Exam Now <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
 
-            <Link to={`/exam/${exam._id}/attempt`} className="btn-primary w-full text-center text-xs !py-2.5">
-              Start Exam Now <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        ))}
-      </div>
+          {studyExams.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
+                <Archive className="w-5 h-5 text-purple-600" /> Previous Papers (Study)
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {studyExams.map((exam) => (
+                  <div key={exam._id} className="card flex-col justify-between border-gray-200 p-5">
+                    <div>
+                      <span className="badge bg-purple-100 text-purple-800 mb-2 inline-block">
+                        {exam.testType?.replace(/_/g, " ")}
+                      </span>
+                      <h3 className="font-heading font-bold text-base text-brand-dark mb-1">{exam.title}</h3>
+                      <p className="text-xs text-gray-500">
+                        {exam.totalQuestions} questions · {exam.duration} min
+                      </p>
+                    </div>
+                    <div className="pt-3 mt-3 border-t border-gray-100 flex items-center gap-1 text-xs text-purple-600 font-semibold">
+                      <BookOpen className="w-3.5 h-3.5" /> Available for study
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Pagination
+            page={page}
+            totalPages={meta.pages}
+            totalItems={meta.total}
+            pageSize={limit}
+            pageSizeOptions={[12, 24, 48]}
+            onPageChange={setPage}
+            onPageSizeChange={(n) => {
+              setLimit(n);
+              setPage(1);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
+
 ```
 
 ---
@@ -10931,7 +11822,7 @@ export default function TestsPage() {
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Video, Play, Plus, Search, Clock, Eye, Pencil, Trash2, X, Save, ExternalLink } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 export default function TeacherClasses() {
@@ -10993,7 +11884,7 @@ export default function TeacherClasses() {
   const handleCreateLecture = async (e) => {
     e.preventDefault();
     if (!form.subject) {
-      toast.error("Please select a subject");
+      alertError("Please select a subject");
       return;
     }
     setSavingLecture(true);
@@ -11002,7 +11893,7 @@ export default function TeacherClasses() {
         ...form,
         duration: Number(form.duration || 45),
       });
-      toast.success("Lecture published successfully");
+      alertSuccess("Lecture published successfully");
       setShowAdd(false);
       setForm({
         title: "",
@@ -11014,7 +11905,7 @@ export default function TeacherClasses() {
       });
       fetchLectures();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to publish lecture");
+      alertError(err.response?.data?.message || "Failed to publish lecture");
     } finally {
       setSavingLecture(false);
     }
@@ -11033,11 +11924,11 @@ export default function TeacherClasses() {
         duration: Number(editingLecture.duration || 45),
         description: editingLecture.description,
       });
-      toast.success("Lecture updated successfully");
+      alertSuccess("Lecture updated successfully");
       setEditingLecture(null);
       fetchLectures();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update lecture");
+      alertError(err.response?.data?.message || "Failed to update lecture");
     } finally {
       setSavingLecture(false);
     }
@@ -11047,11 +11938,11 @@ export default function TeacherClasses() {
     if (!lectureToDelete) return;
     try {
       await api.delete(`/lectures/${lectureToDelete._id}`);
-      toast.success("Lecture removed");
+      alertSuccess("Lecture removed");
       setLectureToDelete(null);
       fetchLectures();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete lecture");
+      alertError(err.response?.data?.message || "Failed to delete lecture");
     }
   };
 
@@ -11444,79 +12335,31 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
-  Users, BookOpen, ClipboardList, PlusCircle, CheckCircle,
-  UsersRound, GraduationCap, HelpCircle, X, Save, ChevronRight
+  ClipboardList, FileText, Archive, UsersRound, GraduationCap,
+  ChevronRight, BookOpen, Layers,
 } from "lucide-react";
-import toast from "react-hot-toast";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
-  const [questions, setQuestions] = useState([]);
   const [teacher, setTeacher] = useState(null);
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
-  const [newQ, setNewQ] = useState({
-    questionText: "",
-    options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
-    correctAnswer: 0,
-    difficulty: "Medium",
-    explanation: "",
-  });
-  const [savingQuestion, setSavingQuestion] = useState(false);
 
   useEffect(() => {
     Promise.all([
       api.get("/dashboard/teacher").then(({ data }) => setData(data.data)),
-      api.get("/questions").then(({ data }) => setQuestions(data.data.questions || [])),
       api.get("/teachers/my").then(({ data }) => setTeacher(data.data.teacher)),
-    ]).finally(() => setLoading(false));
+      api.get("/batches").then(({ data }) => setBatches(data.data?.batches || [])),
+    ])
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleCreateQuestion = async (e) => {
-    e.preventDefault();
-    setSavingQuestion(true);
-    try {
-      await api.post("/questions", newQ);
-      toast.success("Question added to central question bank!");
-      setShowQuestionModal(false);
-      setNewQ({
-        questionText: "",
-        options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
-        correctAnswer: 0,
-        difficulty: "Medium",
-        explanation: "",
-      });
-      const { data } = await api.get("/questions");
-      setQuestions(data.data.questions || []);
-    } catch {
-      toast.error("Failed to save question");
-    } finally {
-      setSavingQuestion(false);
-    }
-  };
-
+  // No "question bank" KPI — questions live inside exams and archive here.
   const statCards = [
     {
-      label: "Assigned Batches",
-      value: data?.batchCount ?? 0,
-      icon: UsersRound,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
-      border: "border-blue-100",
-      path: "/teacher/classes",
-    },
-    {
-      label: "Questions Authored",
-      value: questions.length,
-      icon: HelpCircle,
-      color: "text-purple-600",
-      bg: "bg-purple-50",
-      border: "border-purple-100",
-      path: "/teacher/questions",
-    },
-    {
-      label: "Active Tests",
+      label: "Active Exams",
       value: data?.examCount ?? 0,
       icon: ClipboardList,
       color: "text-green-600",
@@ -11524,16 +12367,28 @@ export default function TeacherDashboard() {
       border: "border-green-100",
       path: "/teacher/exams",
     },
+    {
+      label: "Archived Papers",
+      value: data?.archivedCount ?? 0,
+      icon: Archive,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      border: "border-purple-100",
+      path: "/teacher/exams",
+    },
+    {
+      label: "Study Materials",
+      value: data?.materialCount ?? 0,
+      icon: FileText,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      border: "border-blue-100",
+      path: "/teacher/materials",
+    },
   ];
 
-  const difficultyColors = {
-    Easy: "bg-green-100 text-green-700 border-green-200",
-    Medium: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    Hard: "bg-red-100 text-red-700 border-red-200",
-  };
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
@@ -11543,7 +12398,7 @@ export default function TeacherDashboard() {
             {teacher?.subjectName && (
               <>
                 <span>•</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-semibold">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-100 font-semibold">
                   {teacher.subjectName}
                 </span>
               </>
@@ -11553,14 +12408,14 @@ export default function TeacherDashboard() {
             Welcome back{teacher?.user?.name ? `, ${teacher.user.name.split(" ")[0]}` : ""}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Manage assigned batches, author NCERT-aligned questions, and review student performance.
+            Build unique exams with their own questions, publish study materials, and review student performance.
           </p>
         </div>
         <button
-          onClick={() => setShowQuestionModal(true)}
+          onClick={() => navigate("/teacher/exams")}
           className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
         >
-          <PlusCircle className="w-4 h-4" /> Author New MCQ
+          <ClipboardList className="w-4 h-4" /> Manage Exams
         </button>
       </div>
 
@@ -11568,7 +12423,7 @@ export default function TeacherDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div key={i} className="bg-white border-slate-100 rounded-2xl p-6 shadow-sm animate-pulse">
               <div className="h-10 w-10 bg-slate-100 rounded-xl mb-4" />
               <div className="h-3 bg-slate-100 rounded w-24 mb-3" />
               <div className="h-8 bg-slate-100 rounded w-16" />
@@ -11579,7 +12434,7 @@ export default function TeacherDashboard() {
             <div
               key={s.label}
               onClick={() => navigate(s.path)}
-              className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 group"
+              className="bg-white border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 group"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center group-hover:scale-105 transition-transform`}>
@@ -11587,209 +12442,91 @@ export default function TeacherDashboard() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" />
               </div>
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                {s.value}
-              </div>
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">
-                {s.label}
-              </div>
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">{s.value}</div>
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">{s.label}</div>
             </div>
           ))
         )}
       </div>
 
-      {/* Recently Authored MCQs */}
-      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+      {/* How it works — replaces the old question-bank section */}
+      <div className="bg-white border-slate-100 rounded-2xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Layers className="w-5 h-5 text-green-600" />
+          <h2 className="font-bold text-lg text-slate-900">How exams work</h2>
+        </div>
+        <div className="grid sm:grid-cols-4 gap-4">
+          {[
+            { t: "Create Exam", d: "Pick a batch (mandatory) and set the schedule, marks and duration." },
+            { t: "Add Questions", d: "Author questions in the UI or import a CSV — each question belongs to that exam only." },
+            { t: "Conduct & Close", d: "Publish for the batch, then close it when the window ends." },
+            { t: "Archive", d: "Closed exams land in the Question Bank for reconduct, study, or download." },
+          ].map((step, i) => (
+            <div key={step.t} className="p-4 rounded-xl bg-slate-50 border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-green-100 text-green-700 flex items-center justify-center font-bold text-sm mb-2">
+                {i + 1}
+              </div>
+              <p className="font-semibold text-slate-800 text-sm">{step.t}</p>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">{step.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* My Batches */}
+      <div className="bg-white border-slate-100 rounded-2xl shadow-sm">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h2 className="font-bold text-lg text-slate-900">Recently Authored MCQs</h2>
+            <h2 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+              <UsersRound className="w-5 h-5 text-green-600" /> Assigned Batches
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {questions.length} total questions in your question bank
+              {batches.length} batch{batches.length === 1 ? "" : "es"} · Batch = Course on this platform
             </p>
           </div>
           <button
-            onClick={() => navigate("/teacher/questions")}
+            onClick={() => navigate("/teacher/classes")}
             className="text-xs font-semibold text-green-600 hover:text-green-700 inline-flex items-center gap-1"
           >
-            View all questions <ChevronRight className="w-3.5 h-3.5" />
+            View all <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
         <div className="divide-y divide-slate-50">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="p-5 animate-pulse">
-                <div className="h-3 bg-slate-100 rounded w-32 mb-3" />
-                <div className="h-4 bg-slate-100 rounded w-full mb-2" />
-                <div className="h-4 bg-slate-100 rounded w-3/4" />
+                <div className="h-4 bg-slate-100 rounded w-40 mb-2" />
+                <div className="h-3 bg-slate-100 rounded w-24" />
               </div>
             ))
-          ) : questions.length === 0 ? (
+          ) : batches.length === 0 ? (
             <div className="p-12 text-center">
-              <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h3 className="font-bold text-slate-600 mb-1">No questions yet</h3>
-              <p className="text-sm text-slate-400">
-                Author your first MCQ using the button above.
-              </p>
+              <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <h3 className="font-bold text-slate-600 mb-1">No batches assigned</h3>
+              <p className="text-sm text-slate-400">An administrator will assign you to batches.</p>
             </div>
           ) : (
-            questions.slice(0, 5).map((q, idx) => (
-              <div key={q._id || idx} className="p-5 hover:bg-slate-50 transition">
-                <div className="flex items-start gap-3 mb-2">
-                  <span
-                    className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border ${
-                      difficultyColors[q.difficulty] || difficultyColors.Medium
-                    } flex-shrink-0`}
-                  >
-                    {q.difficulty}
-                  </span>
-                  <span className="text-xs font-semibold text-green-600 inline-flex items-center gap-1 ml-auto">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Correct: {String.fromCharCode(65 + (q.correctAnswer ?? 0))}
-                  </span>
+            batches.slice(0, 5).map((b) => (
+              <div key={b._id} className="p-5 hover:bg-slate-50 transition flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-800 text-sm">{b.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {b.batchType ? b.batchType.replace(/_/g, " ") : "Batch"} · {b.students?.length || 0} students
+                  </p>
                 </div>
-                <p className="text-sm font-semibold text-slate-800 leading-relaxed">
-                  {q.questionText}
-                </p>
-                {q.subject && (
-                  <div className="mt-2 text-[11px] text-slate-500">
-                    Subject: {typeof q.subject === "string" ? q.subject : q.subject?.name || "—"}
-                  </div>
-                )}
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: b.color || "#18A66A" }}
+                />
               </div>
             ))
           )}
         </div>
       </div>
-
-      {/* Create Question Modal */}
-      {showQuestionModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
-              <div>
-                <h3 className="font-extrabold text-xl text-slate-900">Author New MCQ Question</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Create a 4-option NEET-aligned question</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowQuestionModal(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateQuestion} className="p-6 space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  Question Text
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={newQ.questionText}
-                  onChange={(e) => setNewQ({ ...newQ, questionText: e.target.value })}
-                  placeholder="E.g. The dimensions of Planck's constant match which of the following?"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  4 Options <span className="text-green-600 normal-case font-semibold tracking-normal">(select the correct one)</span>
-                </label>
-                <div className="space-y-2.5">
-                  {newQ.options.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <label className="flex-shrink-0 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="correct"
-                          checked={newQ.correctAnswer === i}
-                          onChange={() => setNewQ({ ...newQ, correctAnswer: i })}
-                          className="w-4 h-4 accent-green-600"
-                        />
-                      </label>
-                      <div
-                        className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold border ${
-                          newQ.correctAnswer === i
-                            ? "bg-green-600 text-white border-green-600 shadow-sm"
-                            : "bg-slate-50 text-slate-500 border-slate-200"
-                        }`}
-                      >
-                        {String.fromCharCode(65 + i)}
-                      </div>
-                      <input
-                        type="text"
-                        required
-                        placeholder={`Option ${String.fromCharCode(65 + i)} text`}
-                        value={opt.text}
-                        onChange={(e) => {
-                          const opts = [...newQ.options];
-                          opts[i].text = e.target.value;
-                          setNewQ({ ...newQ, options: opts });
-                        }}
-                        className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                    Difficulty
-                  </label>
-                  <select
-                    value={newQ.difficulty}
-                    onChange={(e) => setNewQ({ ...newQ, difficulty: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                  NCERT Explanation
-                </label>
-                <textarea
-                  rows={2}
-                  value={newQ.explanation}
-                  onChange={(e) => setNewQ({ ...newQ, explanation: e.target.value })}
-                  placeholder="Step-by-step explanation shown to students after submission..."
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowQuestionModal(false)}
-                  className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingQuestion}
-                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
-                >
-                  <Save className="w-4 h-4" />
-                  {savingQuestion ? "Saving..." : "Save MCQ"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
 ```
 
 ---
@@ -11797,150 +12534,379 @@ export default function TeacherDashboard() {
 # FILE: `client\src\pages\teacher\TeacherExams.jsx`
 
 ```jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../../config/api";
 import {
-  ClipboardList, Plus, Search, Clock, Users, Calendar, PlayCircle,
-  BarChart3, Pencil, Trash2, X, Save, CheckCircle2, AlertCircle, Trophy
+  ClipboardList, Plus, Search, Layers, BarChart3, Trash2, X, Save,
+  CheckCircle2, Eye, EyeOff, Image as ImageIcon, Upload, Download,
+  RefreshCw, Users, Calendar, FileSpreadsheet, Archive, ChevronLeft,
+  ChevronRight, Clock, AlertCircle,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
+import Pagination from "../../components/shared/Pagination";
+import { parseCSV, downloadCSVTemplate } from "../../utils/csv";
 
 const statusColors = {
   LIVE: "bg-green-100 text-green-700 border-green-200",
+  PUBLISHED: "bg-emerald-100 text-emerald-700 border-emerald-200",
   SCHEDULED: "bg-blue-100 text-blue-700 border-blue-200",
   CLOSED: "bg-slate-100 text-slate-600 border-slate-200",
+  ARCHIVED: "bg-purple-100 text-purple-700 border-purple-200",
   DRAFT: "bg-yellow-100 text-yellow-700 border-yellow-200",
 };
 
+const emptyQuestion = () => ({
+  questionText: "",
+  questionImage: null,
+  questionImagePreview: "",
+  difficulty: "Medium",
+  marks: 4,
+  negativeMarks: 1,
+  explanation: "",
+  options: [
+    { text: "", image: null, imagePreview: "" },
+    { text: "", image: null, imagePreview: "" },
+    { text: "", image: null, imagePreview: "" },
+    { text: "", image: null, imagePreview: "" },
+  ],
+  correctAnswer: 0,
+});
+
 export default function TeacherExams() {
+  const [activeTab, setActiveTab] = useState("exams");
   const [exams, setExams] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [archived, setArchived] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [editingExam, setEditingExam] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [meta, setMeta] = useState({ total: 0, pages: 1 });
+  const [bankMeta, setBankMeta] = useState({ total: 0, pages: 1 });
+  const [bankPage, setBankPage] = useState(1);
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [savingExam, setSavingExam] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
   const [examResults, setExamResults] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
-  const [examToDelete, setExamToDelete] = useState(null);
-  const [savingExam, setSavingExam] = useState(false);
 
-  const [form, setForm] = useState({
+  // Draft questions are held client-side, then saved to the exam after creation.
+  const [draftQuestions, setDraftQuestions] = useState([]);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [qForm, setQForm] = useState(emptyQuestion());
+  const [csvPreview, setCsvPreview] = useState([]);
+  const csvInputRef = useRef(null);
+
+  const [examForm, setExamForm] = useState({
     title: "",
     description: "",
-    testType: "CHAPTER_TEST",
-    course: "",
-    totalQuestions: 45,
-    totalMarks: 180,
+    testType: "MOCK_TEST",
+    batch: "",
+    duration: 60,
     marksPerCorrect: 4,
     negativePerWrong: 1,
-    duration: 60,
     startTime: "",
     endTime: "",
     maxAttempts: 1,
-    instructions: "General CBT Test Instructions: Select one best option per MCQ. Marking: +4 / -1.",
+    instructions: "",
+    resultPublishMode: "MANUAL",
+    resultPublishAt: "",
+    publishNow: false,
   });
 
   const fetchExams = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get("/exams");
-      setExams(data.data?.exams || []);
+      const [examsRes, batchRes, subjRes] = await Promise.all([
+        api.get(`/exams?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`),
+        api.get("/batches"),
+        api.get("/academics/subjects"),
+      ]);
+      setExams(examsRes.data?.exams || []);
+      setMeta({
+        total: examsRes.data?.total || 0,
+        pages: examsRes.data?.pages || 1,
+      });
+      setBatches(batchRes.data?.batches || []);
+      setSubjects(subjRes.data?.subjects || []);
     } catch {
-      setExams([]);
-    } finally {
-      setLoading(false);
+      // ignore
     }
+    setLoading(false);
   };
 
-  const fetchDependencies = async () => {
+  const fetchBank = async () => {
     try {
-      const [cRes, bRes] = await Promise.all([
-        api.get("/courses"),
-        api.get("/batches"),
-      ]);
-      setCourses(cRes.data.data?.courses || []);
-      setBatches(bRes.data.data?.batches || []);
-    } catch {}
+      const { data } = await api.get(`/exams/bank?page=${bankPage}&limit=${limit}`);
+      setArchived(data.data?.exams || []);
+      setBankMeta({ total: data.data?.total || 0, pages: data.data?.pages || 1 });
+    } catch {
+      setArchived([]);
+    }
   };
 
   useEffect(() => {
     fetchExams();
-    fetchDependencies();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, search]);
 
-  const handleCreateExam = async (e) => {
+  useEffect(() => {
+    if (activeTab === "bank") fetchBank();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, bankPage, limit]);
+
+  // ─── Wizard: create exam (Basic → Questions → Settings) ───
+  const resetWizard = () => {
+    setWizardStep(1);
+    setDraftQuestions([]);
+    setCsvPreview([]);
+    setQForm(emptyQuestion());
+    setExamForm({
+      title: "",
+      description: "",
+      testType: "MOCK_TEST",
+      batch: "",
+      duration: 60,
+      marksPerCorrect: 4,
+      negativePerWrong: 1,
+      startTime: "",
+      endTime: "",
+      maxAttempts: 1,
+      instructions: "",
+      resultPublishMode: "MANUAL",
+      resultPublishAt: "",
+      publishNow: false,
+    });
+  };
+
+  const addDraftQuestion = (q) => {
+    setDraftQuestions((prev) => [...prev, q]);
+  };
+
+  const removeDraftQuestion = (idx) => {
+    setDraftQuestions((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleAddQuestionToDraft = (e) => {
     e.preventDefault();
-    if (!form.startTime || !form.endTime) {
-      toast.error("Please provide both start and end times");
+    if (qForm.options.some((o) => !o.text.trim())) {
+      alertError("All four options need text");
       return;
     }
+    addDraftQuestion({ ...qForm });
+    setQForm(emptyQuestion());
+    setShowQuestionForm(false);
+    alertSuccess("Question added to this exam");
+  };
+
+  const handleCSV = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = parseCSV(evt.target.result);
+        if (parsed.length === 0) {
+          alertError("No valid rows found. Check the CSV headers.");
+          return;
+        }
+        setCsvPreview(parsed);
+        alertSuccess(`${parsed.length} rows ready to import`);
+      } catch {
+        alertError("Could not parse CSV file");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const commitCSVToDraft = () => {
+    if (csvPreview.length === 0) return;
+    const shaped = csvPreview.map((r) => ({
+      questionText: r.questionText,
+      questionImage: null,
+      questionImagePreview: "",
+      difficulty: r.difficulty || "Medium",
+      marks: r.marks || examForm.marksPerCorrect,
+      negativeMarks: r.negativeMarks || examForm.negativePerWrong,
+      explanation: r.explanation || "",
+      options: r.options.map((o) => ({ text: o.text, image: null, imagePreview: "" })),
+      correctAnswer: r.correctAnswer || 0,
+    }));
+    setDraftQuestions((prev) => [...prev, ...shaped]);
+    setCsvPreview([]);
+    alertSuccess(`${shaped.length} questions added — you can now add images to any of them`);
+  };
+
+  const createExamWithQuestions = async () => {
+    if (!examForm.batch) {
+      alertError("Select a batch — every exam belongs to one batch");
+      return;
+    }
+    if (!examForm.startTime || !examForm.endTime) {
+      alertError("Start and end times are required");
+      return;
+    }
+    if (draftQuestions.length === 0) {
+      alertError("Add at least one question to this exam");
+      return;
+    }
+    if (examForm.resultPublishMode === "SCHEDULED" && !examForm.resultPublishAt) {
+      alertError("Set a date/time for scheduled result publishing");
+      return;
+    }
+
     setSavingExam(true);
     try {
-      await api.post("/exams", {
-        ...form,
-        totalQuestions: Number(form.totalQuestions || 10),
-        totalMarks: Number(form.totalMarks || 40),
-        duration: Number(form.duration || 60),
-        maxAttempts: Number(form.maxAttempts || 1),
-        course: form.course || undefined,
+      const totalMarks = draftQuestions.reduce(
+        (sum, q) => sum + Number(q.marks || examForm.marksPerCorrect),
+        0
+      );
+
+      // 1) Create the exam shell (questions are linked next).
+      const { data: created } = await api.post("/exams", {
+        ...examForm,
+        totalQuestions: draftQuestions.length,
+        totalMarks,
+        duration: Number(examForm.duration),
+        maxAttempts: Number(examForm.maxAttempts),
+        marksPerCorrect: Number(examForm.marksPerCorrect),
+        negativePerWrong: Number(examForm.negativePerWrong),
+        questions: [],
+        publishNow: false,
       });
-      toast.success("Exam created in DRAFT status");
-      setShowCreate(false);
+
+      const examId = created.data.exam._id;
+
+      // 2) Add each question to THIS exam (with images).
+      for (const q of draftQuestions) {
+        const fd = new FormData();
+        fd.append("questionText", q.questionText);
+        fd.append("difficulty", q.difficulty);
+        fd.append("marks", q.marks);
+        fd.append("negativeMarks", q.negativeMarks);
+        fd.append("explanation", q.explanation || "");
+        fd.append("correctAnswer", q.correctAnswer);
+        fd.append(
+          "options",
+          JSON.stringify(q.options.map((o) => ({ text: o.text })))
+        );
+        if (q.questionImage) fd.append("questionImage", q.questionImage);
+        q.options.forEach((opt, i) => {
+          if (opt.image) fd.append(`optionImage_${i}`, opt.image);
+        });
+        await api.post(`/exams/${examId}/questions`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      // 3) Publish now if requested.
+      if (examForm.publishNow) {
+        await api.put(`/exams/${examId}/publish`);
+      }
+
+      alertSuccess("Exam created with its own question set");
+      setShowWizard(false);
+      resetWizard();
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create exam");
+      alertError(err.response?.data?.message || "Failed to create exam");
     } finally {
       setSavingExam(false);
     }
   };
 
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!editingExam) return;
-    setSavingExam(true);
+  // ─── Exam actions ───
+  const handlePublish = async (id) => {
     try {
-      await api.put(`/exams/${editingExam._id}`, {
-        title: editingExam.title,
-        description: editingExam.description,
-        testType: editingExam.testType,
-        course: typeof editingExam.course === "object" ? editingExam.course?._id : editingExam.course,
-        totalQuestions: Number(editingExam.totalQuestions || 10),
-        totalMarks: Number(editingExam.totalMarks || 40),
-        duration: Number(editingExam.duration || 60),
-        startTime: editingExam.startTime,
-        endTime: editingExam.endTime,
-        maxAttempts: Number(editingExam.maxAttempts || 1),
-        instructions: editingExam.instructions,
+      await api.put(`/exams/${id}/publish`);
+      alertSuccess("Exam is now LIVE");
+      fetchExams();
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to publish");
+    }
+  };
+
+  const handleClose = async (id) => {
+    const ok = await confirmDialog({
+      title: "Close & archive exam?",
+      text: "The exam moves to the Question Bank archive where it can be reused, published for study, or downloaded.",
+      confirmText: "Close & Archive",
+    });
+    if (!ok) return;
+    try {
+      await api.put(`/exams/${id}/close`);
+      alertSuccess("Exam closed and archived to Question Bank");
+      fetchExams();
+    } catch {
+      alertError("Failed to close exam");
+    }
+  };
+
+  const handlePublishResults = async (id) => {
+    try {
+      await api.put(`/exams/${id}/publish-results`, { publish: true });
+      alertSuccess("Results published to students");
+      fetchExams();
+    } catch {
+      alertError("Failed to publish results");
+    }
+  };
+
+  const handleStudyToggle = async (exam) => {
+    try {
+      await api.put(`/exams/${exam._id}/study-visibility`, {
+        studyVisible: !exam.studyVisible,
       });
-      toast.success("Exam updated successfully");
-      setEditingExam(null);
-      fetchExams();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update exam");
-    } finally {
-      setSavingExam(false);
+      alertSuccess(
+        exam.studyVisible ? "Hidden from students" : "Published for student study"
+      );
+      fetchBank();
+    } catch {
+      alertError("Failed to update visibility");
     }
   };
 
-  const handlePublish = async (examId) => {
+  const handleReconduct = async (exam) => {
     try {
-      await api.put(`/exams/${examId}/publish`);
-      toast.success("Exam published and live for students");
+      await api.post(`/exams/${exam._id}/reconduct`, {
+        title: `${exam.title} (Reconduct)`,
+      });
+      alertSuccess("New exam draft created from archive");
+      setActiveTab("exams");
       fetchExams();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to publish exam");
+    } catch {
+      alertError("Failed to reconduct");
     }
   };
 
-  const handleClose = async (examId) => {
+  const handleDownload = async (exam) => {
     try {
-      await api.put(`/exams/${examId}/close`);
-      toast.success("Exam has been closed");
+      const { data } = await api.get(`/exams/${exam._id}/download`);
+      const blob = new Blob([JSON.stringify(data.data.pack, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${exam.title.replace(/\s+/g, "-")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alertError("Failed to download exam");
+    }
+  };
+
+  const handleDeleteExam = async () => {
+    if (!examToDelete) return;
+    try {
+      await api.delete(`/exams/${examToDelete._id}`);
+      alertSuccess("Exam deleted");
+      setExamToDelete(null);
       fetchExams();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to close exam");
+    } catch {
+      alertError("Failed to delete");
     }
   };
 
@@ -11950,504 +12916,782 @@ export default function TeacherExams() {
     try {
       const { data } = await api.get(`/exams/${exam._id}/results`);
       setExamResults(data.data);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load results");
+      setActiveTab("submissions");
+    } catch {
+      alertError("Failed to load results");
       setExamResults(null);
     } finally {
       setLoadingResults(false);
     }
   };
 
-  const confirmDeleteExam = async () => {
-    if (!examToDelete) return;
-    try {
-      await api.delete(`/exams/${examToDelete._id}`);
-      toast.success("Exam deleted");
-      setExamToDelete(null);
-      fetchExams();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete exam");
-    }
-  };
-
-  const filtered = exams.filter((e) =>
-    e.title?.toLowerCase().includes(search.toLowerCase())
-  );
+  const tabs = [
+    { id: "exams", label: "Exams", icon: ClipboardList },
+    { id: "bank", label: "Question Bank", icon: Archive },
+    { id: "submissions", label: "Submissions", icon: BarChart3 },
+  ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-extrabold text-2xl text-slate-900">Exams & Tests</h1>
-          <p className="text-slate-500 text-sm mt-1">Create and schedule CBT exams for your batches</p>
+          <h1 className="font-extrabold text-2xl text-slate-900">Exam Manager</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Create a unique exam with its own questions, conduct it, then archive it to the Question Bank.
+          </p>
         </div>
         <button
-          onClick={() => setShowCreate(true)}
+          onClick={() => {
+            resetWizard();
+            setShowWizard(true);
+          }}
           className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
         >
-          <Plus className="w-4 h-4" /> Create Exam
+          <Plus className="w-4 h-4" /> Create New Exam
         </button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search exams..."
-          className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-        />
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+              activeTab === tab.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-          <ClipboardList className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="font-bold text-slate-600 mb-1">No exams yet</h3>
-          <p className="text-slate-400 text-sm">Create your first exam using the button above.</p>
-        </div>
-      ) : (
+      {/* ─── EXAMS TAB ─── */}
+      {activeTab === "exams" && (
         <div className="space-y-4">
-          {filtered.map((exam) => (
-            <div key={exam._id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${statusColors[exam.status] || statusColors.DRAFT}`}>
-                      {exam.status}
-                    </span>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
-                      {exam.testType?.replace(/_/g, " ")}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-slate-800 text-base mb-2">{exam.title}</h3>
-                  <div className="flex flex-wrap gap-4 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <ClipboardList className="w-3.5 h-3.5" /> {exam.totalQuestions} questions
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> {exam.duration} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {exam.totalMarks} marks
-                    </span>
-                    {exam.startTime && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {new Date(exam.startTime).toLocaleDateString("en-IN")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
-                  <button
-                    onClick={() => handleOpenResults(exam)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition border border-green-200"
-                  >
-                    <BarChart3 className="w-3.5 h-3.5" /> View Results
-                  </button>
-                  <button
-                    onClick={() =>
-                      setEditingExam({
-                        ...exam,
-                        startTime: exam.startTime ? new Date(exam.startTime).toISOString().slice(0, 16) : "",
-                        endTime: exam.endTime ? new Date(exam.endTime).toISOString().slice(0, 16) : "",
-                      })
-                    }
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> Edit
-                  </button>
-                  {exam.status !== "LIVE" && exam.status !== "CLOSED" && (
-                    <button
-                      onClick={() => handlePublish(exam._id)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Publish
-                    </button>
-                  )}
-                  {exam.status === "LIVE" && (
-                    <button
-                      onClick={() => handleClose(exam._id)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
-                    >
-                      <AlertCircle className="w-3.5 h-3.5" /> Close
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setExamToDelete(exam)}
-                    className="p-1.5 text-slate-400 hover:text-red-500 rounded transition"
-                    title="Delete Exam"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Create Exam Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Create New Exam / DPP</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Setup a CBT test for your classes and batches.</p>
-              </div>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateExam} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Exam Title *</label>
-                  <input
-                    required
-                    value={form.title}
-                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="e.g. Physics Weekly Practice Test – Mechanics"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Test Type</label>
-                  <select
-                    value={form.testType}
-                    onChange={(e) => setForm((prev) => ({ ...prev, testType: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option value="CHAPTER_TEST">Chapter Test</option>
-                    <option value="UNIT_TEST">Unit Test</option>
-                    <option value="DPP">Daily Practice Problem (DPP)</option>
-                    <option value="MOCK_TEST">Mock Test</option>
-                    <option value="PYQ">PYQ Test</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Course</label>
-                  <select
-                    value={form.course}
-                    onChange={(e) => setForm((prev) => ({ ...prev, course: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option value="">All Courses</option>
-                    {courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Total Questions</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.totalQuestions}
-                    onChange={(e) => setForm((prev) => ({ ...prev, totalQuestions: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Total Marks</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.totalMarks}
-                    onChange={(e) => setForm((prev) => ({ ...prev, totalMarks: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Duration (Minutes)</label>
-                  <input
-                    type="number"
-                    min="5"
-                    value={form.duration}
-                    onChange={(e) => setForm((prev) => ({ ...prev, duration: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Max Attempts</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.maxAttempts}
-                    onChange={(e) => setForm((prev) => ({ ...prev, maxAttempts: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Start Time *</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    value={form.startTime}
-                    onChange={(e) => setForm((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">End Time *</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    value={form.endTime}
-                    onChange={(e) => setForm((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Instructions</label>
-                  <textarea
-                    rows={2}
-                    value={form.instructions}
-                    onChange={(e) => setForm((prev) => ({ ...prev, instructions: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreate(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingExam}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {savingExam ? "Creating..." : "Save Exam"}
-                </button>
-              </div>
-            </form>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search exams..."
+              className="w-full pl-10 pr-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+            />
           </div>
-        </div>
-      )}
 
-      {/* Edit Exam Modal */}
-      {editingExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Edit Exam</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Modify test details and availability window.</p>
-              </div>
-              <button
-                onClick={() => setEditingExam(null)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          {loading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
             </div>
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Exam Title *</label>
-                  <input
-                    required
-                    value={editingExam.title}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
+          ) : exams.length === 0 ? (
+            <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+              <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <h3 className="font-bold text-slate-600 mb-1">No exams yet</h3>
+              <p className="text-slate-400 text-sm">Create your first exam with its own questions.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {exams.map((exam) => (
+                <div key={exam._id} className="bg-white border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${statusColors[exam.status] || statusColors.DRAFT}`}>
+                          ● {exam.status}
+                        </span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
+                          {exam.testType?.replace(/_/g, " ")}
+                        </span>
+                        {exam.batch?.name && (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border-blue-200">
+                            {exam.batch.name}
+                          </span>
+                        )}
+                        {exam.resultPublishMode && (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold border-amber-200">
+                            Results: {exam.resultPublishMode}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-bold text-slate-800 text-base truncate">{exam.title}</h3>
+                      <div className="flex flex-wrap gap-4 text-xs text-slate-500 mt-2">
+                        <span>{exam.totalQuestions} questions</span>
+                        <span>{exam.duration} min</span>
+                        <span>{exam.totalMarks} marks</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleOpenResults(exam)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5 inline mr-1" /> Results
+                      </button>
+                      {exam.status !== "LIVE" && exam.status !== "CLOSED" && (
+                        <button
+                          onClick={() => handlePublish(exam._id)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" /> Go Live
+                        </button>
+                      )}
+                      {exam.status === "LIVE" && (
+                        <button
+                          onClick={() => handleClose(exam._id)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200"
+                        >
+                          <Archive className="w-3.5 h-3.5 inline mr-1" /> Close & Archive
+                        </button>
+                      )}
+                      {!exam.resultsPublished && (
+                        <button
+                          onClick={() => handlePublishResults(exam._id)}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
+                        >
+                          Publish Results
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setExamToDelete(exam)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Duration (Minutes)</label>
-                  <input
-                    type="number"
-                    value={editingExam.duration}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, duration: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Total Questions</label>
-                  <input
-                    type="number"
-                    value={editingExam.totalQuestions}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, totalQuestions: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Start Time</label>
-                  <input
-                    type="datetime-local"
-                    value={editingExam.startTime}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, startTime: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">End Time</label>
-                  <input
-                    type="datetime-local"
-                    value={editingExam.endTime}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, endTime: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingExam(null)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingExam}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {savingExam ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
+              ))}
+              <Pagination
+                page={page}
+                totalPages={meta.pages}
+                totalItems={meta.total}
+                pageSize={limit}
+                onPageChange={setPage}
+                onPageSizeChange={(n) => {
+                  setLimit(n);
+                  setPage(1);
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
-      {/* Exam Results Modal */}
-      {examResults && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+      {/* ─── QUESTION BANK (ARCHIVE) TAB ─── */}
+      {activeTab === "bank" && (
+        <div className="space-y-4">
+          <div className="bg-blue-50 border-blue-100 rounded-xl p-4 text-xs text-blue-800">
+            The Question Bank is the archive of completed exam papers. Open a paper to reconduct it,
+            publish it for student study, or download it. Nothing here is created manually.
+          </div>
+
+          {archived.length === 0 ? (
+            <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+              <Archive className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+              <h3 className="font-bold text-slate-600 mb-1">No archived exam papers</h3>
+              <p className="text-slate-400 text-sm">Close a live exam to archive it here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {archived.map((exam) => (
+                <div key={exam._id} className="bg-white border-slate-100 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-purple-100 text-purple-700 border-purple-200">
+                          <Archive className="w-3 h-3 inline mr-1" /> Archived
+                        </span>
+                        {exam.batch?.name && (
+                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border-blue-200">
+                            {exam.batch.name}
+                          </span>
+                        )}
+                        <span
+                          className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
+                            exam.studyVisible
+                              ? "bg-green-50 text-green-700 border-green-200"
+                              : "bg-slate-50 text-slate-500 border-slate-200"
+                          }`}
+                        >
+                          {exam.studyVisible ? "Visible to students" : "Hidden from students"}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-slate-800 text-base truncate">{exam.title}</h3>
+                      <div className="flex flex-wrap gap-4 text-xs text-slate-500 mt-2">
+                        <span>{exam.totalQuestions} questions</span>
+                        <span>{exam.duration} min</span>
+                        <span>{exam.totalMarks} marks</span>
+                        {exam.archivedAt && (
+                          <span>Archived {new Date(exam.archivedAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleReconduct(exam)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 inline mr-1" /> Reconduct
+                      </button>
+                      <button
+                        onClick={() => handleStudyToggle(exam)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                      >
+                        {exam.studyVisible ? (
+                          <><EyeOff className="w-3.5 h-3.5 inline mr-1" /> Hide</>
+                        ) : (
+                          <><Eye className="w-3.5 h-3.5 inline mr-1" /> Publish for Study</>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDownload(exam)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                      >
+                        <Download className="w-3.5 h-3.5 inline mr-1" /> Download
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Pagination
+                page={bankPage}
+                totalPages={bankMeta.pages}
+                totalItems={bankMeta.total}
+                pageSize={limit}
+                onPageChange={setBankPage}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── SUBMISSIONS TAB ─── */}
+      {activeTab === "submissions" && (
+        <div>
+          {examResults ? (
+            <div className="bg-white rounded-2xl border-slate-100 p-6 space-y-6">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-green-50 text-green-700">
-                  Student Results
+                <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
+                  Exam Submissions
                 </span>
-                <h2 className="font-extrabold text-xl text-slate-900 mt-1">{examResults.exam?.title}</h2>
+                <h2 className="font-extrabold text-xl text-slate-900 mt-2">{examResults.exam?.title}</h2>
               </div>
-              <button
-                onClick={() => setExamResults(null)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <div className="text-2xl font-extrabold text-slate-900">
-                    {examResults.analytics?.totalSubmissions || 0}
-                  </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
+                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.totalSubmissions || examResults.results?.length || 0}</div>
                   <div className="text-xs text-slate-500 mt-1">Submissions</div>
                 </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <div className="text-2xl font-extrabold text-slate-900">
-                    {examResults.analytics?.avgScore || 0}
-                  </div>
+                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
+                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.avgScore || 0}</div>
                   <div className="text-xs text-slate-500 mt-1">Average Score</div>
                 </div>
-                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <div className="text-2xl font-extrabold text-green-600">
-                    {examResults.analytics?.highestScore || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">Highest Score</div>
+                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
+                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.highestScore || 0}</div>
+                  <div className="text-xs text-slate-500 mt-1">Highest</div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-bold text-slate-800 text-sm mb-3">Submissions List</h3>
-                {loadingResults ? (
-                  <div className="py-12 flex justify-center">
-                    <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : !examResults.results || examResults.results.length === 0 ? (
-                  <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-100">
-                    <Trophy className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-slate-600">No submissions recorded yet</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Students who take this exam will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="border border-slate-100 rounded-xl overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <tr>
-                          <th className="py-3 px-4 text-left">Rank</th>
-                          <th className="py-3 px-4 text-left">Student</th>
-                          <th className="py-3 px-4 text-center">Score</th>
-                          <th className="py-3 px-4 text-center">Accuracy</th>
-                          <th className="py-3 px-4 text-right">Date</th>
+              {examResults.results?.length > 0 ? (
+                <div className="border border-slate-100 rounded-xl overflow-x-auto">
+                  <table className="w-full text-sm min-w-[600px]">
+                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                      <tr>
+                        <th className="py-3 px-4 text-left">Rank</th>
+                        <th className="py-3 px-4 text-left">Student</th>
+                        <th className="py-3 px-4 text-center">Score</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {examResults.results.map((r, i) => (
+                        <tr key={r._id || i} className="hover:bg-slate-50">
+                          <td className="py-3 px-4 font-bold text-xs">#{r.rank || i + 1}</td>
+                          <td className="py-3 px-4 font-semibold text-slate-800">{r.student?.name || "Student"}</td>
+                          <td className="py-3 px-4 text-center font-bold">{r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}</td>
+                          <td className="py-3 px-4 text-center">
+                            {r.isPublished ? (
+                              <span className="text-xs font-semibold text-green-600">Published</span>
+                            ) : (
+                              <span className="text-xs font-semibold text-amber-600">Pending</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right text-xs text-slate-400">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {examResults.results.map((r, i) => (
-                          <tr key={r._id || i} className="hover:bg-slate-50">
-                            <td className="py-3 px-4">
-                              <span className="font-extrabold text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                                #{r.rank || i + 1}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="font-semibold text-slate-800">{r.student?.name || "Student"}</div>
-                              <div className="text-xs text-slate-400">{r.student?.email}</div>
-                            </td>
-                            <td className="py-3 px-4 text-center font-bold text-slate-800">
-                              {r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
-                                {Math.round(r.accuracy || 0)}%
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right text-xs text-slate-400">
-                              {r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-IN") : "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-400 text-sm">No submissions recorded yet.</div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-200" />
+              <p className="font-semibold text-slate-500">Select an exam from the Exams tab to view submissions.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── CREATE EXAM WIZARD ─── */}
+      {showWizard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex-col">
+            {/* Wizard header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div>
+                <h2 className="font-extrabold text-xl text-slate-900">Create New Exam</h2>
+                <p className="text-slate-500 text-xs mt-0.5">
+                  Step {wizardStep} of 3 · {["Basic Details", "Add Questions", "Settings"][wizardStep - 1]}
+                </p>
               </div>
+              <button
+                onClick={() => setShowWizard(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <div className="p-6 border-t border-slate-100 flex justify-end">
+            {/* Steps indicator */}
+            <div className="px-5 pt-4 flex items-center gap-2 shrink-0">
+              {[1, 2, 3].map((s) => (
+                <div key={s} className="flex items-center gap-2 flex-1">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                      wizardStep >= s ? "bg-green-600 text-white" : "bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    {s}
+                  </div>
+                  {s < 3 && (
+                    <div className={`h-0.5 flex-1 ${wizardStep > s ? "bg-green-600" : "bg-slate-100"}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Wizard body */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {wizardStep === 1 && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Exam Title *</label>
+                    <input
+                      value={examForm.title}
+                      onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
+                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm"
+                      placeholder="e.g. NEET Mock Test #12 — Full Syllabus"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
+                      <select
+                        value={examForm.batch}
+                        onChange={(e) => setExamForm({ ...examForm, batch: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                      >
+                        <option value="">Select batch</option>
+                        {batches.map((b) => (
+                          <option key={b._id} value={b._id}>{b.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-[11px] text-slate-400 mt-1">Every exam belongs to exactly one batch.</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Test Type</label>
+                      <select
+                        value={examForm.testType}
+                        onChange={(e) => setExamForm({ ...examForm, testType: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                      >
+                        <option value="MOCK_TEST">Mock Test</option>
+                        <option value="CHAPTER_TEST">Chapter Test</option>
+                        <option value="DPP">DPP</option>
+                        <option value="UNIT_TEST">Unit Test</option>
+                        <option value="PYQ">PYQ</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Duration (min)</label>
+                      <input type="number" value={examForm.duration}
+                        onChange={(e) => setExamForm({ ...examForm, duration: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Marks / Correct</label>
+                      <input type="number" value={examForm.marksPerCorrect}
+                        onChange={(e) => setExamForm({ ...examForm, marksPerCorrect: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Negative / Wrong</label>
+                      <input type="number" value={examForm.negativePerWrong}
+                        onChange={(e) => setExamForm({ ...examForm, negativePerWrong: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Start Time *</label>
+                      <input type="datetime-local" value={examForm.startTime}
+                        onChange={(e) => setExamForm({ ...examForm, startTime: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">End Time *</label>
+                      <input type="datetime-local" value={examForm.endTime}
+                        onChange={(e) => setExamForm({ ...examForm, endTime: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Instructions</label>
+                    <textarea rows={2} value={examForm.instructions}
+                      onChange={(e) => setExamForm({ ...examForm, instructions: e.target.value })}
+                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none"
+                      placeholder="Shown to students before they begin..." />
+                  </div>
+                </>
+              )}
+
+              {wizardStep === 2 && (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setShowQuestionForm(true)}
+                      className="inline-flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm"
+                    >
+                      <Plus className="w-4 h-4 text-green-600" /> Create Question (UI)
+                    </button>
+                    <label className="inline-flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm cursor-pointer">
+                      <FileSpreadsheet className="w-4 h-4 text-green-600" /> Import CSV
+                      <input
+                        type="file"
+                        accept=".csv"
+                        className="hidden"
+                        onChange={(e) => handleCSV(e.target.files[0])}
+                      />
+                    </label>
+                    <button
+                      onClick={downloadCSVTemplate}
+                      className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-slate-700 px-2"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download template
+                    </button>
+                  </div>
+
+                  {csvPreview.length > 0 && (
+                    <div className="bg-green-50 border-green-100 rounded-xl p-4 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-green-800">
+                          {csvPreview.length} rows parsed from CSV
+                        </span>
+                        <button
+                          onClick={commitCSVToDraft}
+                          className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-lg"
+                        >
+                          Add all to exam
+                        </button>
+                      </div>
+                      <p className="text-xs text-green-700 mt-1">
+                        After adding, you can edit each question and attach images.
+                      </p>
+                    </div>
+                  )}
+
+                  {draftQuestions.length === 0 ? (
+                    <div className="border border-dashed border-slate-200 rounded-xl p-10 text-center">
+                      <Layers className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                      <p className="text-slate-500 text-sm">
+                        No questions yet. Create one in the UI or import from CSV.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {draftQuestions.map((q, i) => (
+                        <div key={i} className="bg-white border-slate-100 rounded-xl p-4 flex items-start gap-3">
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-slate-800 font-medium">{q.questionText}</p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {q.options.map((o, oi) => (
+                                <span
+                                  key={oi}
+                                  className={`text-[11px] px-2 py-0.5 rounded border ${
+                                    oi === q.correctAnswer
+                                      ? "bg-green-50 text-green-700 border-green-200 font-semibold"
+                                      : "bg-slate-50 text-slate-500 border-slate-100"
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + oi)}. {o.text || "—"}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeDraftQuestion(i)}
+                            className="p-1.5 text-slate-300 hover:text-red-500 rounded transition shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {wizardStep === 3 && (
+                <>
+                  <div className="bg-slate-50 border-slate-100 rounded-xl p-4 space-y-3">
+                    <h4 className="font-bold text-slate-700 text-sm">Result Publishing</h4>
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rpm"
+                        checked={examForm.resultPublishMode === "IMMEDIATE"}
+                        onChange={() => setExamForm({ ...examForm, resultPublishMode: "IMMEDIATE" })}
+                        className="accent-green-600"
+                      />
+                      Publish result right after exam submission
+                    </label>
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rpm"
+                        checked={examForm.resultPublishMode === "MANUAL"}
+                        onChange={() => setExamForm({ ...examForm, resultPublishMode: "MANUAL" })}
+                        className="accent-green-600"
+                      />
+                      Publish manually later
+                    </label>
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rpm"
+                        checked={examForm.resultPublishMode === "SCHEDULED"}
+                        onChange={() => setExamForm({ ...examForm, resultPublishMode: "SCHEDULED" })}
+                        className="accent-green-600"
+                      />
+                      Publish at a scheduled time
+                    </label>
+                    {examForm.resultPublishMode === "SCHEDULED" && (
+                      <input
+                        type="datetime-local"
+                        value={examForm.resultPublishAt}
+                        onChange={(e) => setExamForm({ ...examForm, resultPublishAt: e.target.value })}
+                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                      />
+                    )}
+                  </div>
+
+                  <label className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer bg-slate-50 border-slate-100 rounded-xl p-4">
+                    <input
+                      type="checkbox"
+                      checked={examForm.publishNow}
+                      onChange={(e) => setExamForm({ ...examForm, publishNow: e.target.checked })}
+                      className="accent-green-600 w-4 h-4"
+                    />
+                    <div>
+                      <div className="font-semibold">Publish exam immediately</div>
+                      <div className="text-xs text-slate-500">
+                        Otherwise it stays a secret draft until you publish it.
+                      </div>
+                    </div>
+                  </label>
+
+                  <div className="bg-amber-50 border-amber-100 rounded-xl p-4 text-xs text-amber-800 flex gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      Draft exams are never visible to students, even those in the selected batch.
+                      Only you and other admins/faculty can see them until published.
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Wizard footer */}
+            <div className="p-5 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
               <button
-                onClick={() => setExamResults(null)}
-                className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                onClick={() => (wizardStep === 1 ? setShowWizard(false) : setWizardStep(wizardStep - 1))}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition inline-flex items-center gap-1"
               >
-                Close
+                <ChevronLeft className="w-4 h-4" />
+                {wizardStep === 1 ? "Cancel" : "Back"}
               </button>
+
+              {wizardStep < 3 ? (
+                <button
+                  onClick={() => {
+                    if (wizardStep === 1 && (!examForm.title || !examForm.batch)) {
+                      alertError("Title and batch are required");
+                      return;
+                    }
+                    setWizardStep(wizardStep + 1);
+                  }}
+                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm inline-flex items-center gap-1"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={createExamWithQuestions}
+                  disabled={savingExam}
+                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm inline-flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingExam ? "Creating..." : `Create Exam (${draftQuestions.length} Q)`}
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Exam Confirmation */}
+      {/* ─── ADD QUESTION (draft) MODAL ─── */}
+      {showQuestionForm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex-col">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div>
+                <h2 className="font-extrabold text-lg text-slate-900">Create Question</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Text + image questions and options</p>
+              </div>
+              <button onClick={() => setShowQuestionForm(false)} className="p-2 rounded-lg hover:bg-slate-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddQuestionToDraft} className="p-5 space-y-4 overflow-y-auto flex-1">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={qForm.questionText}
+                  onChange={(e) => setQForm({ ...qForm, questionText: e.target.value })}
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Image (optional)</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 px-4 py-2.5 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 text-sm text-slate-600">
+                    <ImageIcon className="w-4 h-4" /> Upload Image
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) setQForm({ ...qForm, questionImage: file, questionImagePreview: URL.createObjectURL(file) });
+                      }} />
+                  </label>
+                  {qForm.questionImagePreview && (
+                    <img src={qForm.questionImagePreview} alt="Preview" className="h-16 rounded-lg border" />
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                  Options (select correct, add optional images)
+                </label>
+                <div className="space-y-2.5">
+                  {qForm.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border-slate-200">
+                      <input type="radio" name="correct" checked={qForm.correctAnswer === idx}
+                        onChange={() => setQForm({ ...qForm, correctAnswer: idx })}
+                        className="w-4 h-4 accent-green-600" />
+                      <span className="w-6 text-xs font-bold text-slate-500">{String.fromCharCode(65 + idx)}.</span>
+                      <input required value={opt.text}
+                        onChange={(e) => {
+                          const opts = [...qForm.options];
+                          opts[idx] = { ...opts[idx], text: e.target.value };
+                          setQForm({ ...qForm, options: opts });
+                        }}
+                        placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                        className="flex-1 px-3 py-2 border-slate-200 rounded-lg text-sm" />
+                      <label className="p-2 rounded-lg border-slate-200 cursor-pointer hover:bg-slate-100">
+                        <ImageIcon className="w-4 h-4 text-slate-400" />
+                        <input type="file" accept="image/*" className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const opts = [...qForm.options];
+                              opts[idx] = { ...opts[idx], image: file, imagePreview: URL.createObjectURL(file) };
+                              setQForm({ ...qForm, options: opts });
+                            }
+                          }} />
+                      </label>
+                      {opt.imagePreview && <img src={opt.imagePreview} className="h-8 rounded border" alt="" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Marks</label>
+                  <input type="number" value={qForm.marks}
+                    onChange={(e) => setQForm({ ...qForm, marks: e.target.value })}
+                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Negative</label>
+                  <input type="number" value={qForm.negativeMarks}
+                    onChange={(e) => setQForm({ ...qForm, negativeMarks: e.target.value })}
+                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Difficulty</label>
+                  <select value={qForm.difficulty}
+                    onChange={(e) => setQForm({ ...qForm, difficulty: e.target.value })}
+                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm bg-white">
+                    <option>Easy</option><option>Medium</option><option>Hard</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
+                <textarea rows={2} value={qForm.explanation}
+                  onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })}
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowQuestionForm(false)}
+                  className="flex-1 py-2.5 border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button type="submit"
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl">
+                  Add to Exam
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={!!examToDelete}
         onClose={() => setExamToDelete(null)}
-        onConfirm={confirmDeleteExam}
+        onConfirm={handleDeleteExam}
         title="Delete Exam"
-        message={`Are you sure you want to delete "${examToDelete?.title}"?`}
-        confirmLabel="Delete Exam"
+        message={`Delete "${examToDelete?.title}"? All attempts will be affected.`}
+        confirmLabel="Delete"
         danger={true}
       />
     </div>
   );
 }
+
 ```
 
 ---
@@ -12457,24 +13701,40 @@ export default function TeacherExams() {
 ```jsx
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { BookOpen, Upload, FileText, Trash2, Plus, Search, Download, ExternalLink, X, Save, Link as LinkIcon } from "lucide-react";
-import toast from "react-hot-toast";
+import {
+  BookOpen, Plus, Search, Trash2, X, Save, Link as LinkIcon,
+  FileText, ExternalLink, ChevronDown, ChevronRight, Layers, FolderOpen,
+} from "lucide-react";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 export default function TeacherMaterials() {
   const [materials, setMaterials] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [subjectFilter, setSubjectFilter] = useState("All");
+  const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [showUpload, setShowUpload] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [batchFilter, setBatchFilter] = useState("All");
   const [materialToDelete, setMaterialToDelete] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [expanded, setExpanded] = useState({});
+
+  // Upload flow state
+  const [showUpload, setShowUpload] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
+  const [units, setUnits] = useState([]);
+  const [chapters, setChapters] = useState([]);
+  const [creatingUnit, setCreatingUnit] = useState(false);
+  const [creatingChapter, setCreatingChapter] = useState(false);
+  const [newUnitName, setNewUnitName] = useState("");
+  const [newChapterName, setNewChapterName] = useState("");
 
   const [form, setForm] = useState({
     title: "",
     subject: "",
+    batch: "",
+    unit: "",
+    chapter: "",
     type: "PDF",
     fileUrl: "",
     description: "",
@@ -12491,62 +13751,129 @@ export default function TeacherMaterials() {
     }
   };
 
-  const fetchSubjects = async () => {
+  const fetchDependencies = async () => {
     try {
-      const { data } = await api.get("/academics/subjects");
-      setSubjects(data.data?.subjects || []);
+      const [sRes, bRes] = await Promise.all([
+        api.get("/academics/subjects"),
+        api.get("/batches"),
+      ]);
+      setSubjects(sRes.data?.subjects || []);
+      setBatches(bRes.data?.batches || []);
     } catch {
-      setSubjects([]);
+      // ignore
     }
   };
 
   useEffect(() => {
     fetchMaterials();
-    fetchSubjects();
+    fetchDependencies();
   }, []);
+
+  // Load units when the subject changes
+  useEffect(() => {
+    if (!form.subject) {
+      setUnits([]);
+      return;
+    }
+    api
+      .get(`/academics/units?subject=${form.subject}`)
+      .then(({ data }) => setUnits(data.data?.units || []))
+      .catch(() => setUnits([]));
+  }, [form.subject]);
+
+  // Load chapters when the unit changes
+  useEffect(() => {
+    if (!form.unit) {
+      setChapters([]);
+      return;
+    }
+    api
+      .get(`/academics/chapters?unit=${form.unit}`)
+      .then(({ data }) => setChapters(data.data?.chapters || []))
+      .catch(() => setChapters([]));
+  }, [form.unit]);
+
+  const handleCreateUnit = async () => {
+    if (!newUnitName.trim() || !form.subject) {
+      alertError("Enter a unit name and pick a subject first");
+      return;
+    }
+    setCreatingUnit(true);
+    try {
+      const { data } = await api.post("/academics/units", {
+        name: newUnitName.trim(),
+        subject: form.subject,
+      });
+      const unit = data.data.unit;
+      setUnits((prev) => (prev.find((u) => u._id === unit._id) ? prev : [...prev, unit]));
+      setForm((f) => ({ ...f, unit: unit._id, chapter: "" }));
+      setNewUnitName("");
+      alertSuccess("Unit added");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to create unit");
+    } finally {
+      setCreatingUnit(false);
+    }
+  };
+
+  const handleCreateChapter = async () => {
+    if (!newChapterName.trim() || !form.unit) {
+      alertError("Enter a chapter name and pick a unit first");
+      return;
+    }
+    setCreatingChapter(true);
+    try {
+      const { data } = await api.post("/academics/chapters", {
+        name: newChapterName.trim(),
+        unit: form.unit,
+        subject: form.subject,
+      });
+      const chapter = data.data.chapter;
+      setChapters((prev) =>
+        prev.find((c) => c._id === chapter._id) ? prev : [...prev, chapter]
+      );
+      setForm((f) => ({ ...f, chapter: chapter._id }));
+      setNewChapterName("");
+      alertSuccess("Chapter added");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to create chapter");
+    } finally {
+      setCreatingChapter(false);
+    }
+  };
 
   const handleCreateMaterial = async (e) => {
     e.preventDefault();
-    if (!form.subject) {
-      toast.error("Please select a subject");
-      return;
-    }
+    if (!form.batch) return alertError("Please select a batch");
+    if (!form.unit) return alertError("Please select or create a unit");
+    if (!form.chapter) return alertError("Please select or create a chapter");
+    if (!fileToUpload && !form.fileUrl.trim())
+      return alertError("Provide either a file upload or an external URL");
 
     setUploading(true);
-    let finalUrl = form.fileUrl;
-
     try {
-      // If a local file was selected, upload it first
-      if (fileToUpload) {
-        const formData = new FormData();
-        formData.append("file", fileToUpload);
-        const { data: uploadRes } = await api.post("/upload/pdf", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        finalUrl = uploadRes.data?.url || uploadRes.data?.secure_url;
-      }
+      const formData = new FormData();
+      formData.append("title", form.title);
+      if (form.subject) formData.append("subject", form.subject);
+      formData.append("batch", form.batch);
+      formData.append("unit", form.unit);
+      formData.append("chapter", form.chapter);
+      formData.append("type", form.type);
+      formData.append("description", form.description);
+      if (fileToUpload) formData.append("file", fileToUpload);
+      else formData.append("fileUrl", form.fileUrl);
 
-      if (!finalUrl) {
-        toast.error("Please provide a file or file URL");
-        setUploading(false);
-        return;
-      }
-
-      await api.post("/materials", {
-        title: form.title,
-        subject: form.subject,
-        type: form.type,
-        fileUrl: finalUrl,
-        description: form.description,
+      await api.post("/materials", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast.success("Study material uploaded successfully");
+      alertSuccess("Study material published to Cloudinary");
       setShowUpload(false);
-      setForm({ title: "", subject: subjects[0]?._id || "", type: "PDF", fileUrl: "", description: "" });
+      setForm({ title: "", subject: "", batch: "", unit: "", chapter: "", type: "PDF", fileUrl: "", description: "" });
       setFileToUpload(null);
       fetchMaterials();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to upload material");
+      alertError(err.response?.data?.message || "Failed to upload material");
     } finally {
       setUploading(false);
     }
@@ -12556,64 +13883,72 @@ export default function TeacherMaterials() {
     if (!materialToDelete) return;
     try {
       await api.delete(`/materials/${materialToDelete._id}`);
-      toast.success("Material deleted");
+      alertSuccess("Material deleted");
       setMaterialToDelete(null);
       fetchMaterials();
     } catch {
-      toast.error("Failed to delete material");
+      alertError("Failed to delete material");
     }
   };
 
+  // Group: Unit → Chapter → Materials
   const filtered = materials.filter((m) => {
     const matchSearch =
       m.title?.toLowerCase().includes(search.toLowerCase()) ||
-      m.subject?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      (typeof m.subject === "string" && m.subject.toLowerCase().includes(search.toLowerCase()));
-    const matchSubject =
-      subjectFilter === "All" ||
-      m.subject?._id === subjectFilter ||
-      m.subject === subjectFilter;
-    return matchSearch && matchSubject;
+      m.subject?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchBatch =
+      batchFilter === "All" ||
+      m.batch?._id === batchFilter ||
+      m.batch === batchFilter;
+    return matchSearch && matchBatch;
   });
 
+  const grouped = filtered.reduce((acc, m) => {
+    const unitName = m.unit?.name || "Unsorted Unit";
+    const chapterName = m.chapter?.name || "Unsorted Chapter";
+    acc[unitName] = acc[unitName] || {};
+    acc[unitName][chapterName] = acc[unitName][chapterName] || [];
+    acc[unitName][chapterName].push(m);
+    return acc;
+  }, {});
+
+  const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-extrabold text-2xl text-slate-900">Study Materials</h1>
-          <p className="text-slate-500 text-sm mt-1">Upload and manage PDF notes, handouts and resources</p>
+          <p className="text-slate-500 text-sm mt-1">
+            Publish notes and resources as Unit → Chapter → Material for your batches.
+          </p>
         </div>
         <button
-          onClick={() => {
-            if (!form.subject && subjects.length > 0) {
-              setForm((prev) => ({ ...prev, subject: subjects[0]._id }));
-            }
-            setShowUpload(true);
-          }}
+          onClick={() => setShowUpload(true)}
           className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
         >
-          <Plus className="w-4 h-4" /> Upload Material
+          <Plus className="w-4 h-4" /> Add Material
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+     <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by title or subject..."
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+            className="w-full pl-10 pr-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
           />
         </div>
         <select
-          value={subjectFilter}
-          onChange={(e) => setSubjectFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white"
+          value={batchFilter}
+          onChange={(e) => setBatchFilter(e.target.value)}
+          className="px-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
         >
-          <option value="All">All Subjects</option>
-          {subjects.map((s) => (
-            <option key={s._id} value={s._id}>{s.name}</option>
+          <option value="All">All Batches</option>
+          {batches.map((b) => (
+            <option key={b._id} value={b._id}>{b.name}</option>
           ))}
         </select>
       </div>
@@ -12623,84 +13958,129 @@ export default function TeacherMaterials() {
           <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+        <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="font-bold text-slate-600 mb-1">No materials yet</h3>
-          <p className="text-slate-400 text-sm">Upload your first study material using the button above.</p>
+          <p className="text-slate-400 text-sm">Add your first material using the button above.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((m) => (
-            <div key={m._id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-green-600" />
-                </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {m.fileType || "PDF"}
+        <div className="space-y-3">
+          {Object.entries(grouped).map(([unitName, chapters]) => (
+            <div key={unitName} className="bg-white border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggle(unitName)}
+                className="w-full flex items-center gap-3 p-5 hover:bg-slate-50 transition text-left"
+              >
+                {expanded[unitName] ? (
+                  <ChevronDown className="w-5 h-5 text-green-600 shrink-0" />
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+                )}
+                <Layers className="w-5 h-5 text-green-600 shrink-0" />
+                <span className="font-bold text-slate-800">{unitName}</span>
+                <span className="ml-auto text-xs text-slate-400">
+                  {Object.values(chapters).flat().length} materials
                 </span>
-              </div>
-              <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-2">{m.title}</h3>
-              <p className="text-xs text-slate-500 mb-4">{m.subject?.name || m.subject || "General"}</p>
-              <div className="flex gap-2">
-                <a
-                  href={m.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition flex items-center justify-center gap-1"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" /> View
-                </a>
-                <button
-                  onClick={() => setMaterialToDelete(m)}
-                  className="text-xs font-semibold px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                  title="Delete Material"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              </button>
+
+              {expanded[unitName] && (
+                <div className="border-t border-slate-50">
+                  {Object.entries(chapters).map(([chapterName, items]) => (
+                    <div key={chapterName} className="pl-6">
+                      <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/60">
+                        <FolderOpen className="w-4 h-4 text-slate-400" />
+                        <span className="font-semibold text-slate-600 text-sm">{chapterName}</span>
+                        <span className="text-xs text-slate-400">({items.length})</span>
+                      </div>
+                      <div className="divide-y divide-slate-50">
+                        {items.map((m) => (
+                          <div key={m._id} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-slate-50 transition">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-lg bg-green-50 border-green-100 flex items-center justify-center shrink-0">
+                                <FileText className="w-4 h-4 text-green-600" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-slate-800 truncate">{m.title}</p>
+                                <p className="text-xs text-slate-400 truncate">
+                                  {m.batch?.name || "—"} · {m.type || "PDF"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <a
+                                href={m.fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition inline-flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> View
+                              </a>
+                              <button
+                                onClick={() => setMaterialToDelete(m)}
+                                className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Upload Material Modal */}
+      {/* Upload / add-material modal */}
       {showUpload && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] flex-col">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
               <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Upload Study Material</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Share notes, handouts, formula sheets, or DPPs with students.</p>
+                <h2 className="font-extrabold text-xl text-slate-900">Add Study Material</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Unit → Chapter → Material</p>
               </div>
-              <button
-                onClick={() => setShowUpload(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
+              <button onClick={() => setShowUpload(false)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateMaterial} className="p-6 space-y-4">
+            <form onSubmit={handleCreateMaterial} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Material Title *</label>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Title *</label>
                 <input
                   required
                   value={form.title}
-                  onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. Physics – Rotational Dynamics Handwritten Notes"
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="e.g. Rotational Dynamics — Handwritten Notes"
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject *</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
                   <select
                     required
+                    value={form.batch}
+                    onChange={(e) => setForm((p) => ({ ...p, batch: e.target.value }))}
+                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
+                  >
+                    <option value="">Select batch</option>
+                    {batches.map((b) => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject</label>
+                  <select
                     value={form.subject}
-                    onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                    onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value, unit: "", chapter: "" }))}
+                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
                   >
                     <option value="">Select subject</option>
                     {subjects.map((s) => (
@@ -12708,31 +14088,103 @@ export default function TeacherMaterials() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Material Type</label>
+              </div>
+
+              {/* Unit step */}
+              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/60">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                  1 · Unit * {!form.subject && <span className="text-slate-400 normal-case">(pick a subject first)</span>}
+                </label>
+                <div className="flex gap-2">
                   <select
-                    value={form.type}
-                    onChange={(e) => setForm((prev) => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                    value={form.unit}
+                    onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value, chapter: "" }))}
+                    disabled={!form.subject}
+                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white disabled:bg-slate-100"
                   >
-                    <option value="PDF">PDF Document</option>
-                    <option value="DOC">Word Document</option>
-                    <option value="PPT">Presentation (PPT)</option>
-                    <option value="IMAGE">Image / Diagram</option>
+                    <option value="">Select existing unit</option>
+                    {units.map((u) => (
+                      <option key={u._id} value={u._id}>{u.name}</option>
+                    ))}
                   </select>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={newUnitName}
+                    onChange={(e) => setNewUnitName(e.target.value)}
+                    placeholder="Or type a new unit name"
+                    disabled={!form.subject}
+                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm disabled:bg-slate-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateUnit}
+                    disabled={creatingUnit || !form.subject || !newUnitName.trim()}
+                    className="px-4 py-2.5 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Unit
+                  </button>
                 </div>
               </div>
 
-              {/* Upload file or enter link */}
+              {/* Chapter step */}
+              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/60">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
+                  2 · Chapter * {!form.unit && <span className="text-slate-400 normal-case">(pick a unit first)</span>}
+                </label>
+                <select
+                  value={form.chapter}
+                  onChange={(e) => setForm((p) => ({ ...p, chapter: e.target.value }))}
+                  disabled={!form.unit}
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white disabled:bg-slate-100"
+                >
+                  <option value="">Select existing chapter</option>
+                  {chapters.map((c) => (
+                    <option key={c._id} value={c._id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={newChapterName}
+                    onChange={(e) => setNewChapterName(e.target.value)}
+                    placeholder="Or type a new chapter name"
+                    disabled={!form.unit}
+                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm disabled:bg-slate-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateChapter}
+                    disabled={creatingChapter || !form.unit || !newChapterName.trim()}
+                    className="px-4 py-2.5 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Chapter
+                  </button>
+                </div>
+              </div>
+
+              {/* Material step */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">3 · Material Type</label>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                >
+                  <option value="PDF">PDF Document</option>
+                  <option value="DOC">Word Document</option>
+                  <option value="PPT">Presentation (PPT)</option>
+                  <option value="IMAGE">Image / Diagram</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">
-                  File Source (Upload or Enter URL)
+                  File Source (Upload to Cloudinary or external URL)
                 </label>
                 <div className="space-y-3">
                   <div className="border border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition">
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx"
                       onChange={(e) => setFileToUpload(e.target.files[0] || null)}
                       className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
                     />
@@ -12742,15 +14194,15 @@ export default function TeacherMaterials() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 font-semibold">OR Enter External URL:</span>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 font-semibold">
+                    <LinkIcon className="w-3.5 h-3.5" /> OR enter an external URL
                   </div>
                   <input
                     type="url"
                     value={form.fileUrl}
-                    onChange={(e) => setForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+                    onChange={(e) => setForm((p) => ({ ...p, fileUrl: e.target.value }))}
                     placeholder="https://drive.google.com/... or https://example.com/notes.pdf"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
                   />
                 </div>
               </div>
@@ -12760,9 +14212,9 @@ export default function TeacherMaterials() {
                 <textarea
                   rows={2}
                   value={form.description}
-                  onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                   placeholder="Summary or chapter coverage..."
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
+                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
                 />
               </div>
 
@@ -12770,7 +14222,7 @@ export default function TeacherMaterials() {
                 <button
                   type="button"
                   onClick={() => setShowUpload(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  className="flex-1 py-2.5 border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
@@ -12788,7 +14240,6 @@ export default function TeacherMaterials() {
         </div>
       )}
 
-      {/* Delete Confirmation */}
       <ConfirmModal
         isOpen={!!materialToDelete}
         onClose={() => setMaterialToDelete(null)}
@@ -12801,6 +14252,7 @@ export default function TeacherMaterials() {
     </div>
   );
 }
+
 ```
 
 ---
@@ -13091,533 +14543,196 @@ export default function TeacherPerformance() {
 
 ---
 
-# FILE: `client\src\pages\teacher\TeacherQuestions.jsx`
+# FILE: `client\src\utils\alert.js`
 
-```jsx
-import { useState, useEffect } from "react";
-import api from "../../config/api";
-import { HelpCircle, Plus, Search, CheckCircle, XCircle, Filter, Pencil, Trash2, X, Save } from "lucide-react";
-import toast from "react-hot-toast";
-import ConfirmModal from "../../components/shared/ConfirmModal";
+```javascript
+import Swal from "sweetalert2";
 
-const difficultyColors = {
-  Easy: "bg-green-100 text-green-700",
-  Medium: "bg-yellow-100 text-yellow-700",
-  Hard: "bg-red-100 text-red-700",
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
+
+export const alertSuccess = (message) =>
+  Toast.fire({ icon: "success", title: message });
+
+export const alertError = (message) =>
+  Toast.fire({ icon: "error", title: message });
+
+export const alertInfo = (message) =>
+  Toast.fire({ icon: "info", title: message });
+
+export const alertWarning = (message) =>
+  Toast.fire({ icon: "warning", title: message });
+
+export const confirmDialog = async ({
+  title = "Are you sure?",
+  text = "This action cannot be undone.",
+  confirmText = "Yes, do it",
+  cancelText = "Cancel",
+  danger = true,
+} = {}) => {
+  const result = await Swal.fire({
+    title,
+    text,
+    icon: danger ? "warning" : "question",
+    showCancelButton: true,
+    confirmButtonColor: danger ? "#ef4444" : "#18A66A",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+    reverseButtons: true,
+  });
+  return result.isConfirmed;
 };
 
-export default function TeacherQuestions() {
-  const [questions, setQuestions] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-  const [questionToDelete, setQuestionToDelete] = useState(null);
-  const [savingQuestion, setSavingQuestion] = useState(false);
-
-  const [form, setForm] = useState({
-    questionText: "",
-    subject: "",
-    difficulty: "Medium",
-    marks: 4,
-    negativeMarks: 1,
-    source: "",
-    year: "",
-    explanation: "",
-    options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
-    correctAnswer: 0,
+export const successModal = (title, html) =>
+  Swal.fire({
+    icon: "success",
+    title,
+    html,
+    confirmButtonColor: "#18A66A",
   });
 
-  const fetchQuestions = async () => {
-    try {
-      const { data } = await api.get("/questions");
-      setQuestions(data.data?.questions || []);
-    } catch {
-      setQuestions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSubjects = async () => {
-    try {
-      const { data } = await api.get("/academics/subjects");
-      setSubjects(data.data?.subjects || []);
-    } catch {
-      setSubjects([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchQuestions();
-    fetchSubjects();
-  }, []);
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!form.subject) {
-      toast.error("Please select a subject");
-      return;
-    }
-    setSavingQuestion(true);
-    try {
-      await api.post("/questions", {
-        ...form,
-        marks: Number(form.marks || 4),
-        negativeMarks: Number(form.negativeMarks || 1),
-        year: form.year ? Number(form.year) : undefined,
-      });
-      toast.success("Question created and added to question bank");
-      setShowCreate(false);
-      setForm({
-        questionText: "",
-        subject: subjects[0]?._id || "",
-        difficulty: "Medium",
-        marks: 4,
-        negativeMarks: 1,
-        source: "",
-        year: "",
-        explanation: "",
-        options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
-        correctAnswer: 0,
-      });
-      fetchQuestions();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create question");
-    } finally {
-      setSavingQuestion(false);
-    }
-  };
-
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!editingQuestion) return;
-    setSavingQuestion(true);
-    try {
-      await api.put(`/questions/${editingQuestion._id}`, {
-        questionText: editingQuestion.questionText,
-        subject: editingQuestion.subject?._id || editingQuestion.subject,
-        difficulty: editingQuestion.difficulty,
-        marks: Number(editingQuestion.marks || 4),
-        negativeMarks: Number(editingQuestion.negativeMarks || 1),
-        source: editingQuestion.source,
-        year: editingQuestion.year ? Number(editingQuestion.year) : undefined,
-        explanation: editingQuestion.explanation,
-        options: editingQuestion.options,
-        correctAnswer: Number(editingQuestion.correctAnswer ?? 0),
-      });
-      toast.success("Question updated successfully");
-      setEditingQuestion(null);
-      fetchQuestions();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update question");
-    } finally {
-      setSavingQuestion(false);
-    }
-  };
-
-  const confirmDeleteQuestion = async () => {
-    if (!questionToDelete) return;
-    try {
-      await api.delete(`/questions/${questionToDelete._id}`);
-      toast.success("Question deleted");
-      setQuestionToDelete(null);
-      fetchQuestions();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete question");
-    }
-  };
-
-  const filtered = questions.filter((q) => {
-    const matchSearch = q.questionText?.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "All" || q.difficulty === filter;
-    return matchSearch && matchFilter;
+export const errorModal = (title, html) =>
+  Swal.fire({
+    icon: "error",
+    title,
+    html,
+    confirmButtonColor: "#ef4444",
   });
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-extrabold text-2xl text-slate-900">Question Bank</h1>
-          <p className="text-slate-500 text-sm mt-1">Create and manage MCQ questions for exams and DPPs</p>
-        </div>
-        <button
-          onClick={() => {
-            if (!form.subject && subjects.length > 0) {
-              setForm((prev) => ({ ...prev, subject: subjects[0]._id }));
-            }
-            setShowCreate(true);
-          }}
-          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
-        >
-          <Plus className="w-4 h-4" /> Add Question
-        </button>
-      </div>
+export default Swal;
+```
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search questions..."
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-          />
-        </div>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 bg-white"
-        >
-          {["All", "Easy", "Medium", "Hard"].map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-      </div>
+---
 
-      {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-          <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="font-bold text-slate-600 mb-1">No questions found</h3>
-          <p className="text-slate-400 text-sm">Create your first question using the button above.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((q, i) => (
-            <div key={q._id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition group">
-              <div className="flex items-start gap-4">
-                <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {q.difficulty && (
-                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${difficultyColors[q.difficulty] || "bg-slate-100 text-slate-600"}`}>
-                        {q.difficulty}
-                      </span>
-                    )}
-                    {q.source && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
-                        {q.source}
-                      </span>
-                    )}
-                    {q.year && (
-                      <span className="text-xs text-slate-400">({q.year})</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-800 font-medium line-clamp-2">{q.questionText}</p>
-                  <div className="mt-3 grid grid-cols-2 gap-1.5">
-                    {q.options?.map((opt, idx) => (
-                      <div key={idx} className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg ${idx === q.correctAnswer ? "bg-green-50 text-green-700 font-semibold" : "bg-slate-50 text-slate-600"}`}>
-                        {idx === q.correctAnswer ? <CheckCircle className="w-3 h-3 flex-shrink-0" /> : <div className="w-3 h-3 flex-shrink-0" />}
-                        <span className="line-clamp-1">{opt.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <button
-                    onClick={() => setEditingQuestion(q)}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition"
-                    title="Edit Question"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setQuestionToDelete(q)}
-                    className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition"
-                    title="Delete Question"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+# FILE: `client\src\utils\csv.js`
 
-      {/* Create Question Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Author New MCQ</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Author a 4-option question for your subject.</p>
-              </div>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
-                <textarea
-                  required
-                  rows={3}
-                  value={form.questionText}
-                  onChange={(e) => setForm((prev) => ({ ...prev, questionText: e.target.value }))}
-                  placeholder="Enter the complete question statement..."
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
+```javascript
+/**
+ * Minimal, dependency-free CSV parser for exam question import.
+ * Expected columns (header row required, case-insensitive):
+ *   question, optionA, optionB, optionC, optionD, correct(A/B/C/D), marks,
+ *   negativeMarks, difficulty, explanation, questionImageUrl,
+ *   optionAImageUrl, optionBImageUrl, optionCImageUrl, optionDImageUrl
+ *
+ * Returns rows shaped for the API: { questionText, options[4], correctAnswer, ... }
+ */
+export function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject *</label>
-                  <select
-                    required
-                    value={form.subject}
-                    onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option value="">Select subject</option>
-                    {subjects.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Difficulty</label>
-                  <select
-                    value={form.difficulty}
-                    onChange={(e) => setForm((prev) => ({ ...prev, difficulty: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Source / Tag</label>
-                  <input
-                    value={form.source}
-                    onChange={(e) => setForm((prev) => ({ ...prev, source: e.target.value }))}
-                    placeholder="e.g. NCERT Exemplar"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-              </div>
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (c === "\r") {
+      // ignore
+    } else {
+      field += c;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
-                  Options (select radio for correct answer)
-                </label>
-                <div className="space-y-2">
-                  {form.options.map((opt, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="correctAnswer"
-                        checked={form.correctAnswer === idx}
-                        onChange={() => setForm((prev) => ({ ...prev, correctAnswer: idx }))}
-                        className="w-4 h-4 text-green-600 focus:ring-green-500"
-                        title="Mark as correct answer"
-                      />
-                      <span className="w-6 text-xs font-bold text-slate-500 text-center">
-                        {String.fromCharCode(65 + idx)}.
-                      </span>
-                      <input
-                        required
-                        value={opt.text}
-                        onChange={(e) => {
-                          const newOpts = [...form.options];
-                          newOpts[idx] = { ...newOpts[idx], text: e.target.value };
-                          setForm((prev) => ({ ...prev, options: newOpts }));
-                        }}
-                        placeholder={`Option ${String.fromCharCode(65 + idx)} text`}
-                        className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+  if (rows.length < 2) return [];
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
-                <textarea
-                  rows={2}
-                  value={form.explanation}
-                  onChange={(e) => setForm((prev) => ({ ...prev, explanation: e.target.value }))}
-                  placeholder="Solution steps, formula applied, or NCERT reference..."
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const idx = (name) => header.indexOf(name);
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreate(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingQuestion}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {savingQuestion ? "Saving..." : "Save MCQ"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+  const col = {
+    question: idx("question") >= 0 ? idx("question") : idx("questiontext"),
+    a: idx("optiona"),
+    b: idx("optionb"),
+    c: idx("optionc"),
+    d: idx("optiond"),
+    correct: idx("correct"),
+    marks: idx("marks"),
+    negative: idx("negativemarks"),
+    difficulty: idx("difficulty"),
+    explanation: idx("explanation"),
+    qImage: idx("questionimageurl"),
+    ai: idx("optionaimageurl"),
+    bi: idx("optionbimageurl"),
+    ci: idx("optioncimageurl"),
+    di: idx("optiondimageurl"),
+  };
 
-      {/* Edit Question Modal */}
-      {editingQuestion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Edit Question</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Update statement, answer options, or explanation.</p>
-              </div>
-              <button
-                onClick={() => setEditingQuestion(null)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
-                <textarea
-                  required
-                  rows={3}
-                  value={editingQuestion.questionText}
-                  onChange={(e) => setEditingQuestion((prev) => ({ ...prev, questionText: e.target.value }))}
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
+  const toLetterIndex = (v) => {
+    if (v === undefined || v === null) return 0;
+    const s = String(v).trim().toUpperCase();
+    if (["A", "B", "C", "D"].includes(s)) return s.charCodeAt(0) - 65;
+    const n = parseInt(s, 10);
+    if (!isNaN(n) && n >= 0 && n <= 3) return n;
+    return 0;
+  };
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject</label>
-                  <select
-                    value={editingQuestion.subject?._id || editingQuestion.subject}
-                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, subject: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    {subjects.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Difficulty</label>
-                  <select
-                    value={editingQuestion.difficulty}
-                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, difficulty: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Source</label>
-                  <input
-                    value={editingQuestion.source || ""}
-                    onChange={(e) => setEditingQuestion((prev) => ({ ...prev, source: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                  />
-                </div>
-              </div>
+  const get = (r, i) => (i >= 0 ? (r[i] || "").trim() : "");
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
-                  Answer Options
-                </label>
-                <div className="space-y-2">
-                  {editingQuestion.options?.map((opt, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="editTeacherCorrectAnswer"
-                        checked={Number(editingQuestion.correctAnswer) === idx}
-                        onChange={() => setEditingQuestion((prev) => ({ ...prev, correctAnswer: idx }))}
-                        className="w-4 h-4 text-green-600 focus:ring-green-500"
-                        title="Mark as correct answer"
-                      />
-                      <span className="w-6 text-xs font-bold text-slate-500 text-center">
-                        {String.fromCharCode(65 + idx)}.
-                      </span>
-                      <input
-                        required
-                        value={opt.text}
-                        onChange={(e) => {
-                          const newOpts = [...editingQuestion.options];
-                          newOpts[idx] = { ...newOpts[idx], text: e.target.value };
-                          setEditingQuestion((prev) => ({ ...prev, options: newOpts }));
-                        }}
-                        className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+  return rows
+    .slice(1)
+    .map((r) => ({
+      questionText: get(r, col.question),
+      options: [
+        { text: get(r, col.a), imageUrl: get(r, col.ai) || undefined },
+        { text: get(r, col.b), imageUrl: get(r, col.bi) || undefined },
+        { text: get(r, col.c), imageUrl: get(r, col.ci) || undefined },
+        { text: get(r, col.d), imageUrl: get(r, col.di) || undefined },
+      ],
+      correctAnswer: toLetterIndex(get(r, col.correct)),
+      marks: col.marks >= 0 ? Number(get(r, col.marks)) || 4 : 4,
+      negativeMarks: col.negative >= 0 ? Number(get(r, col.negative)) || 1 : 1,
+      difficulty: get(r, col.difficulty) || "Medium",
+      explanation: get(r, col.explanation) || undefined,
+      questionImageUrl: get(r, col.qImage) || undefined,
+    }))
+    .filter((q) => q.questionText && q.options.some((o) => o.text));
+}
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
-                <textarea
-                  rows={2}
-                  value={editingQuestion.explanation || ""}
-                  onChange={(e) => setEditingQuestion((prev) => ({ ...prev, explanation: e.target.value }))}
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
+export const CSV_TEMPLATE =
+  "question,optionA,optionB,optionC,optionD,correct,marks,negativeMarks,difficulty,explanation,questionImageUrl,optionAImageUrl,optionBImageUrl,optionCImageUrl,optionDImageUrl\n" +
+  '"Which organelle is the powerhouse of the cell?",Mitochondria,Ribosome,Nucleus,Golgi body,A,4,1,Medium,"Mitochondria produce ATP via respiration.",,,,,\n' +
+  '"Dimensions of Planck\'s constant are:",MLT-1,ML2T-1,ML2T-2,MLT,2,4,1,Easy,"[p] = kg m2 s-1",,,,,\n';
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingQuestion(null)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingQuestion}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {savingQuestion ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      <ConfirmModal
-        isOpen={!!questionToDelete}
-        onClose={() => setQuestionToDelete(null)}
-        onConfirm={confirmDeleteQuestion}
-        title="Delete Question"
-        message="Are you sure you want to remove this question from your question bank?"
-        confirmLabel="Delete Question"
-        danger={true}
-      />
-    </div>
-  );
+export function downloadCSVTemplate() {
+  const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "neetvidya-questions-template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 ```
 
@@ -14074,6 +15189,268 @@ if __name__ == "__main__":
 
 ---
 
+# FILE: `docs\IMPLEMENTATION_PLAN.md`
+
+```markdown
+# NEETVIDYA — Implementation Plan (from `implimentation.md`)
+
+> Batch = Course. Question Bank = Archive of finished exams. Every exam carries its own
+> question set + batch + publishing rules. Materials flow Unit → Chapter → Material.
+
+This document maps every requested change to concrete files and code. It is the single
+source of truth while executing.
+
+---
+
+## 0. Diagnosis of reported bugs
+
+| # | Symptom | Root cause (verified in code) |
+|---|---|---|
+| 1 | `/admin/settings` → **System Info** shows "Something went wrong" | `AdminSettings.jsx` line 277 uses `process.version` in the browser. `process` is undefined in Vite/browser → `ReferenceError` thrown during render → `ErrorBoundary` catches → generic error screen. |
+| 2 | No pagination; long sidebar scrolls away; logout buttons far down; bad mobile scrolling | Layouts use `min-h-screen` + `lg:static` sidebar inside a page-level scroll container. Sidebar is not fixed/independently scrollable, content isn't its own scroll region, no mobile bottom safe-area padding. Lists (students, questions, exams) fetch everything at once. |
+| 3 | Question Bank used as manual source | `Exam.questions` optional; `attempt.service.js` falls back to random pool when empty. `TeacherDashboard` has a manual "Author New MCQ". `AdminQuestions` is a manual bank. |
+| 4 | Dummy material preview | `cloudinary.service.js` resolves a fake `images.unsplash.com` URL on error instead of failing/real upload. No Unit/Chapter wiring in material UI. |
+| 5 | No batch on exam / no result-publish rule / no outsider permission | `Exam.batch` optional. No `resultPublishMode`. No per-student exam permission model. `getExams` for students only filters `status = LIVE` (fine) but no batch filtering on attempts. |
+
+---
+
+## 1. Data-model changes (server/src/models)
+
+### 1.1 `Exam.js` — extend
+- `batch` → **required** (batch-specific exams).
+- `questions` → **required, min length 1** (own question set).
+- Add `resultPublishMode`: `"IMMEDIATE" | "MANUAL" | "SCHEDULED"` (default `MANUAL`).
+- Add `resultPublishAt`: `Date` (used when `SCHEDULED`), `resultsPublishedAt: Date`.
+- Add `status` lifecycle with archive: `DRAFT | PUBLISHED | LIVE | CLOSED | ARCHIVED`.
+- Add `visibility` for the Question Bank archive: `studyVisible: Boolean` (default false),
+  `archivedAt: Date`, `isArchived: Boolean`.
+- Add `permittedStudents: [ObjectId(User)]` — admin-granted outsider access to this one exam.
+- Add `subject`, `totalMarks` stays; keep `eligibleBatches` for backward compat but batch is the primary.
+- Index: `{ batch: 1, status: 1 }`, `{ isArchived: 1, studyVisible: 1 }`.
+
+### 1.2 New model `ExamPermission.js` (explicit, auditable)
+```
+student: ObjectId(User) required
+exam: ObjectId(Exam) required
+grantedBy: ObjectId(User)
+reason: String
+isActive: Boolean default true
+unique index { student, exam }
+```
+Used when a student is NOT in the exam's batch but admin allows them for that specific exam.
+
+### 1.3 `Material.js` — enforce Unit → Chapter
+- Add `unit` required, `chapter` required (already present but optional) → make them required in the
+  create path; keep `batch` required. Keep `course` optional (legacy).
+
+### 1.4 `Student.js`
+- Permission surface is handled by `ExamPermission` (keeps Student lean). Add convenience:
+  `examPermissions: [ObjectId(Exam)]` mirror for fast display on dashboards.
+
+---
+
+## 2. Backend logic
+
+### 2.1 Exam lifecycle & archive — `exam.service.js` / `exam.controller.js`
+- `createExam(data,user)`:
+  - Validate `batch` present, `questions.length ≥ 1`, `startTime < endTime`.
+  - `status = "PUBLISHED"` if `publishNow` else `"DRAFT"`.
+  - Persist `resultPublishMode`, `resultPublishAt`.
+- `publishExam` → sets `PUBLISHED`/`LIVE`, `publishedAt`.
+- `closeExam` → `CLOSED`, then **auto-archive**: set `isArchived=true`, `archivedAt=now`.
+  (Archive = Question Bank entry. No separate Question docs created — the exam *is* the
+  question set.)
+- `archiveExam(id)` / `unarchiveExam(id)` explicit endpoints.
+- `setStudyVisibility(id, bool)` — hide/unhide archive from students.
+- `reconductExam(id, {startTime,endTime,batch})` — clone exam + questions into a new DRAFT/LIVE exam.
+- `downloadExam(id)` — returns JSON exam pack (questions+options+correct answers) for export.
+- `getQuestionBank()` — list archived exams.
+- `grantExamPermission({studentId, examId, reason})` / `revokeExamPermission`.
+
+### 2.2 Access enforcement — new `middleware/examAccess.middleware.js`
+`canAccessExam(user, exam)`:
+- admin/teacher → allow.
+- student: `exam.status ∈ {PUBLISHED, LIVE}` **AND**
+  ( student's `batches` includes `exam.batch` **OR** active `ExamPermission` exists ).
+- **Draft/secret exams: never visible to students** regardless of batch.
+Applied in `attempt.service.startAttempt`, `exam.controller.getExamById/getExams`,
+`result.routes` result/solutions endpoints.
+
+### 2.3 Result publishing — `result.routes.js` + `evaluation.service.js`
+- On evaluation, `Result.isPublished` derived from exam rule:
+  - `IMMEDIATE` → `isPublished = true`.
+  - else → `false` until published.
+- Add fields `isPublished: Boolean`, `publishedAt: Date` to `Result.js`.
+- Student result endpoints return only `isPublished` results (or masked "result pending").
+- New endpoints: `PUT /exams/:id/publish-results`, `PUT /exams/:id/publish-results` (bulk), and a
+  scheduler helper `publishScheduledResults()` invoked on server tick / on request.
+
+### 2.4 Question Bank = archive — `question.routes.js`
+- `/questions/bank` re-implemented to return **archived exams** (exam papers), not loose questions.
+- Remove manual bank creation emphasis; keep `POST /questions/with` **scoped to an exam**
+  (`examId` required) → questions belong to that exam only.
+- CSV import: `POST /exams/:id/import-questions` (JSON rows) and CSV parsing on client → same endpoint.
+
+### 2.5 Materials
+- `material.controller.js`: require `unit`,`chapter`,`batch`; real Cloudinary upload.
+- `cloudinary.service.js`: **remove dummy unsplash fallback** — reject on failure (502) so UI shows real error.
+- `academic.routes.js`: add authenticated CRUD `POST /academics/units`, `POST /academics/chapters`,
+  `GET /academics/units?subject=`, `GET /academics/chapters?unit=`.
+- New `GET /materials/tree?batch=` returns Unit→Chapter→Materials nested for the student course view.
+
+### 2.6 Dashboards — `dashboard.service.js`
+- `getStudentDashboard`: include `batch` clearly, scope `upcomingTests` to student's batch and LIVE/PUBLISHED,
+  scope `recentMaterials` to student's batch + unit/chapter, `recentResults` only published.
+- `getTeacherDashboard`: replace `questionCount` (manual bank) with `examCount`/`materialCount`.
+
+### 2.7 System Info fix (server)
+- Harden `/admin/system-health` with try/catch returning safe defaults (already has try/catch, keep).
+- Frontend fix is the actual fix (see §3.1).
+
+---
+
+## 3. Frontend
+
+### 3.1 `AdminSettings.jsx` — fix System Info crash
+- Replace `process.version` → `systemHealth?.server?.nodeVersion || "—"`.
+- Replace API base label → use `import.meta.env.VITE_API_BASE_URL || "/api"`.
+- Wrap every `systemHealth` access in optional chaining + fallbacks (already partly done).
+- Add a small `ErrorBoundary` around the tab content so one bad field can't blank the page.
+
+### 3.2 Layouts (Admin/Teacher/Student) — scroll + sidebar + mobile
+- Restructure to: `h-screen overflow-hidden flex` root; `<aside className="... lg:sticky top-0 h-screen overflow-y-auto">`;
+  content column `flex-1 flex-col min-w-0 overflow-hidden`; header sticky; `<main className="flex-1 overflow-y-auto p-4 pb-24 lg:pb-8">`.
+- Logout + user block move to a **fixed bottom of sidebar** (always visible).
+- Add `env(safe-area-inset-bottom)` padding + `pb-24` on mobile so nothing hides behind browser bars.
+- Add a reusable `ScrollableTable`/`Pagination` shared component.
+
+### 3.3 Shared components (new)
+- `client/src/components/shared/Pagination.jsx` — page controls + page-size.
+- `client/src/components/shared/DataTable.jsx` — sticky header, horizontal scroll wrapper, empty state.
+- `client/src/components/shared/Toast` (already have `utils/alert.js`, reuse).
+
+### 3.4 Teacher/Admin Exam workflow — `TeacherExams.jsx` (+ `AdminExams.jsx`)
+- **Create Exam** wizard: Basic details (batch required, subject, duration, marks, negative marking,
+  start/end) → **Add Questions** (two modes: *Create in UI* with text+image for question & options, or
+  *Import CSV*) → **Settings** (result publish rule: immediate / manual / scheduled; visibility).
+- Remove “Select Questions from Bank”. Questions are created for **this exam** (`examId`).
+- CSV column spec + client-side parse; then editable rows (add images after import).
+- Exam cards: Results, Publish, Close→Archive, Reconduct, Download.
+- Question Bank tab becomes **Archived Exam Papers** with Study-visibility toggle + Download.
+
+### 3.5 `TeacherDashboard.jsx`
+- Remove "Recently Authored MCQs" section and "Author New MCQ" modal + `questionCount` KPI.
+- Autosave/duration/negative marking rules config (also surfaced in exam wizard).
+
+### 3.6 Materials authoring — `TeacherMaterials.jsx`
+- Add flow: Subject → select/create **Unit** → select/create **Chapter** → Add Material (upload to Cloudinary).
+- Real preview (thumbnail for images, icon for PDF) — no dummy image.
+- Tree/accordion listing grouped Unit → Chapter → Materials.
+
+### 3.7 Student
+- `StudentDashboard.jsx`: prominent **batch banner** at top.
+- `LearnPage.jsx`: render **Unit → Chapter → Material** accordion course view with view.
+- `TestsPage.jsx`: list only accessible (batch/permitted) PUBLISHED/LIVE exams; respect pagination.
+
+### 3.8 Public `/courses` + admin courses
+- Public `CoursesPage.jsx` shows **batches** (Batch = Course showcase).
+- Remove "Courses" nav item + route from `AdminLayout.jsx` / `App.jsx`; fold into Batches.
+- `AdminBatches.jsx` gains the showcase fields (title/description/features/fee/duration) from courses.
+
+### 3.9 Pagination everywhere
+- Students, Teachers, Exams, Materials, Enquiries, Questions, Results: server accepts `page/limit`,
+  returns meta; UI uses `Pagination`.
+
+### 3.10 Digital Learning Center
+- `LearnPage.jsx` becomes the redesigned Batch → Unit → Chapter → Material experience (no subject-only grid).
+
+---
+
+## 4. Execution order
+
+1. Server models (Exam, ExamPermission, Result, Material).
+2. Server exam service/controller/routes + access middleware + archive + permissions.
+3. Server question archive endpoints + CSV import.
+4. Server materials/academic tree + Cloudinary hardening + dashboards.
+5. Client shared components (Pagination, DataTable).
+6. Client layouts (scroll/mobile).
+7. Client AdminSettings fix.
+8. Client exam workflow (Teacher + Admin).
+9. Client Teacher dashboard cleanup.
+10. Client materials authoring + student Learn/Tests/Dashboard.
+11. Client courses/batches consolidation + remove admin Courses.
+12. Pagination sweep.
+13. Build + verify.
+
+---
+
+## 5. Non-goals / compatibility
+- Keep legacy `course` refs working (nullable) to avoid breaking existing data.
+- Existing seeded exams without `batch`/`questions` still load for admin/teacher (read-only) but
+  cannot be published until fixed (validation on publish).
+---
+
+## 6. EXECUTION STATUS (completed)
+
+All changes below were implemented and verified (`client` production build passes;
+`server` all modules load and boot against MongoDB; 0 syntax errors).
+
+### Backend
+- `models/Exam.js` — batch required, own `questions` required, `resultPublishMode`
+  (IMMEDIATE/MANUAL/SCHEDULED), `resultPublishAt`, `resultsPublished`, `permittedStudents`,
+  archive fields (`isArchived`, `archivedAt`, `studyVisible`, `reconductedFrom`).
+- `models/ExamPermission.js` — NEW. Explicit per-student, per-exam access grants.
+- `models/Result.js` — `isPublished`, `publishedAt`.
+- `models/Material.js` — `batch`, `unit`, `chapter` required.
+- `models/Student.js` — `examPermissions` mirror.
+- `services/exam.service.js` — full lifecycle: create (validation), publish, close→**archive**,
+  archive/unarchive, study visibility, reconduct, download pack, Question Bank listing,
+  result publishing (immediate/manual/scheduled sweep), grant/revoke/list permissions,
+  `canAccessExam`/`assertExamAccess` (draft never visible; batch OR permission), attempt bootstrap
+  uses only the exam's own questions.
+- `services/attempt.service.js` — access enforced, own-question-set only, no random bank pool.
+- `services/evaluation.service.js` — result visibility set from the exam's publishing rule.
+- `services/dashboard.service.js` — student dashboard batch-scoped; teacher dashboard no longer
+  exposes a question-bank count.
+- `services/cloudinary.service.js` — dummy Unsplash fallback removed; real uploads or a 502 error.
+- `controllers/exam.controller.js` + `routes/exam.routes.js` — all new endpoints wired
+  (`/bank`, `/archive`, `/study-visibility`, `/reconduct`, `/download`, `/publish-results`,
+  `/:id/questions` (UI+image), `/:id/import-questions` (CSV payload), `/:id/permissions`).
+- `controllers/material.controller.js` + `routes/material.routes.js` — Unit/Chapter required,
+  new `GET /materials/tree` (Unit → Chapter → Materials).
+- `routes/academic.routes.js` — `GET/POST /units`, `GET/POST /chapters`.
+- `routes/question.routes.js` — `/bank` now returns archived exam papers.
+- `routes/result.routes.js` — students only see published results and their own.
+- `controllers/student.controller.js` — student detail includes `examPermissions`.
+
+### Frontend
+- `AdminSettings.jsx` — **System Info fixed** (removed browser-unsafe `process.version`/`process.env`).
+- `layouts/Admin|Teacher|Student` — `h-screen` fixed sidebar, independent content scroll,
+  always-visible logout, mobile safe-area bottom padding (`pb-24`).
+- `components/shared/Pagination.jsx` — NEW reusable pagination.
+- `utils/csv.js` — NEW CSV parser + template downloader.
+- `pages/teacher/TeacherExams.jsx` — 3-step Create-Exam wizard (Basic → Add Questions (UI + CSV) →
+  Settings incl. result publishing rule), Exam Manager with Publish/Close&Archive/Publish Results,
+  and a **Question Bank** tab (archived papers: reconduct / publish-for-study / download).
+- `pages/teacher/TeacherDashboard.jsx` — “Recently Authored MCQs” and the manual MCQ modal removed;
+  KPIs now Active Exams / Archived Papers / Study Materials + “How exams work” + assigned batches.
+- `pages/teacher/TeacherMaterials.jsx` — Subject → Unit → Chapter → Material authoring (create or pick),
+  real Cloudinary upload, tree listing.
+- `pages/student/StudentDashboard.jsx` — prominent **batch banner**.
+- `pages/student/LearnPage.jsx` — redesigned Digital Learning Center: Unit → Chapter → Material.
+- `pages/student/TestsPage.jsx` — shows only accessible exams + archived study papers, paginated.
+- `pages/public/CoursesPage.jsx` — now a **batch/course showcase** (Batch = Course).
+- `App.jsx` / `AdminLayout.jsx` — separate “Courses” removed from admin (folded into Batches);
+  admin Exam/Question-Bank routes use the unified Exam Manager.
+- `pages/admin/AdminStudents.jsx` — grant/revoke **per-exam access** for exam-only/guest students.
+
+### Not changed (intentionally)
+- `pages/admin/AdminExams.jsx` and `AdminQuestions.jsx`/`AdminCourses.jsx` files remain on disk but
+  their routes are redirected to the unified pages, so no duplicate system is reachable.
+```
+
+---
+
 # FILE: `HOWTORUN.md`
 
 ```markdown
@@ -14141,1528 +15518,12 @@ This seed creates:
 # FILE: `implimentation.md`
 
 ```markdown
-# NEETVIDYA — Complete Implementation Guide for Coding IDE
+1. batches cannot be selected while ceating exam or any other type of work like adding metarials to course .
 
-> This document provides ALL code needed to complete the NEETVIDYA platform.
-> Each section contains complete, copy-paste-ready code. Create/replace files exactly as specified.
+2. remove the separate video uploading section from admin , techers, students video viewing .. videos should be added as like as study metarials , using links of drive or any link or direct upload to cloudinary but never , add a waring noit to use direct upload much use drive link or other links more for less memory consmption
 
----
-
-## SECTION 1: MISSING BACKEND SERVICES
-
-### File: `server/src/services/batch.service.js`
-
-```javascript
-const Batch = require("../models/Batch");
-const Student = require("../models/Student");
-const ApiError = require("../utils/apiError");
-
-const createBatch = async (data, userId) => {
-  const existing = await Batch.findOne({ code: data.code });
-  if (existing) throw new ApiError(400, "Batch code already exists");
-  const batch = await Batch.create({ ...data, createdBy: userId });
-  return batch;
-};
-
-const getBatches = async (filter = {}) => {
-  const batches = await Batch.find({ isActive: true, ...filter })
-    .populate("course", "name slug")
-    .populate("assignedTeachers.teacher", "name")
-    .populate("assignedTeachers.subject", "name")
-    .sort({ createdAt: -1 });
-  return batches;
-};
-
-const getBatchById = async (id) => {
-  const batch = await Batch.findById(id)
-    .populate("course", "name slug")
-    .populate("assignedTeachers.teacher", "name email")
-    .populate("assignedTeachers.subject", "name")
-    .populate("students", "name email");
-  if (!batch) throw new ApiError(404, "Batch not found");
-  return batch;
-};
-
-const updateBatch = async (id, data) => {
-  const batch = await Batch.findByIdAndUpdate(id, data, { new: true });
-  if (!batch) throw new ApiError(404, "Batch not found");
-  return batch;
-};
-
-const deleteBatch = async (id) => {
-  const batch = await Batch.findByIdAndUpdate(id, { isActive: false });
-  if (!batch) throw new ApiError(404, "Batch not found");
-  await Student.updateMany({ batches: id }, { $pull: { batches: id } });
-  return batch;
-};
-
-const addStudentsToBatch = async (batchId, studentUserIds) => {
-  const batch = await Batch.findById(batchId);
-  if (!batch) throw new ApiError(404, "Batch not found");
-  batch.students = [...new Set([...batch.students.map(String), ...studentUserIds.map(String)])];
-  await batch.save();
-  await Student.updateMany(
-    { user: { $in: studentUserIds } },
-    { $addToSet: { batches: batchId } }
-  );
-  return batch;
-};
-
-const removeStudentFromBatch = async (batchId, studentUserId) => {
-  await Batch.findByIdAndUpdate(batchId, { $pull: { students: studentUserId } });
-  await Student.updateMany(
-    { user: studentUserId },
-    { $pull: { batches: batchId } }
-  );
-};
-
-module.exports = {
-  createBatch,
-  getBatches,
-  getBatchById,
-  updateBatch,
-  deleteBatch,
-  addStudentsToBatch,
-  removeStudentFromBatch,
-};
-```
-
-### File: `server/src/services/course.service.js`
-
-```javascript
-const Course = require("../models/Course");
-const Subject = require("../models/Subject");
-const generateSlug = require("../utils/slug");
-const ApiError = require("../utils/apiError");
-
-const createCourse = async (data, userId) => {
-  const slug = generateSlug(data.name);
-  const existing = await Course.findOne({ slug });
-  if (existing) throw new ApiError(400, "Course with this name already exists");
-  const course = await Course.create({ ...data, slug, createdBy: userId });
-  return course;
-};
-
-const getCourses = async (filter = {}) => {
-  const courses = await Course.find({ isActive: true, ...filter })
-    .populate("subjects", "name code")
-    .sort({ displayOrder: 1 });
-  return courses;
-};
-
-const getCourseById = async (id) => {
-  const course = await Course.findById(id).populate("subjects");
-  if (!course) throw new ApiError(404, "Course not found");
-  return course;
-};
-
-const updateCourse = async (id, data) => {
-  if (data.name) data.slug = generateSlug(data.name);
-  const course = await Course.findByIdAndUpdate(id, data, { new: true });
-  if (!course) throw new ApiError(404, "Course not found");
-  return course;
-};
-
-const deleteCourse = async (id) => {
-  await Course.findByIdAndUpdate(id, { isActive: false });
-};
-
-const addSubjectToCourse = async (courseId, subjectData) => {
-  const subject = await Subject.create({ ...subjectData, course: courseId });
-  await Course.findByIdAndUpdate(courseId, { $push: { subjects: subject._id } });
-  return subject;
-};
-
-module.exports = {
-  createCourse,
-  getCourses,
-  getCourseById,
-  updateCourse,
-  deleteCourse,
-  addSubjectToCourse,
-};
-```
-
-### File: `server/src/services/question.service.js`
-
-```javascript
-const Question = require("../models/Question");
-const ApiError = require("../utils/apiError");
-
-const createQuestion = async (data, userId) => {
-  if (!data.questionText || !data.options || data.options.length < 4) {
-    throw new ApiError(400, "Question text and 4 options are required");
-  }
-  if (data.correctAnswer === undefined || data.correctAnswer < 0 || data.correctAnswer > 3) {
-    throw new ApiError(400, "Valid correct answer index (0-3) is required");
-  }
-  const question = await Question.create({ ...data, createdBy: userId });
-  return question;
-};
-
-const getQuestions = async (filter = {}, page = 1, limit = 20) => {
-  const skip = (page - 1) * limit;
-  const questions = await Question.find({ isActive: true, ...filter })
-    .populate("subject", "name code")
-    .populate("chapter", "name")
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 });
-  const total = await Question.countDocuments({ isActive: true, ...filter });
-  return { questions, total, page, limit, pages: Math.ceil(total / limit) };
-};
-
-const updateQuestion = async (id, data) => {
-  const question = await Question.findByIdAndUpdate(id, data, { new: true });
-  if (!question) throw new ApiError(404, "Question not found");
-  return question;
-};
-
-const deleteQuestion = async (id) => {
-  await Question.findByIdAndUpdate(id, { isActive: false });
-};
-
-const addExplanation = async (id, explanation) => {
-  const question = await Question.findByIdAndUpdate(
-    id,
-    { explanation },
-    { new: true }
-  );
-  if (!question) throw new ApiError(404, "Question not found");
-  return question;
-};
-
-const bulkImport = async (questions, userId) => {
-  const valid = questions.filter(
-    (q) => q.questionText && q.options?.length >= 4 && q.correctAnswer !== undefined
-  );
-  if (valid.length === 0) throw new ApiError(400, "No valid questions in payload");
-  const created = await Question.insertMany(
-    valid.map((q) => ({ ...q, createdBy: userId }))
-  );
-  return { imported: created.length, total: questions.length, skipped: questions.length - valid.length };
-};
-
-const getRandomQuestions = async (filter = {}, count = 10) => {
-  const questions = await Question.aggregate([
-    { $match: { isActive: true, ...filter } },
-    { $sample: { size: count } },
-  ]);
-  return questions;
-};
-
-module.exports = {
-  createQuestion,
-  getQuestions,
-  updateQuestion,
-  deleteQuestion,
-  addExplanation,
-  bulkImport,
-  getRandomQuestions,
-};
-```
-
-### File: `server/src/services/exam.service.js`
-
-```javascript
-const Exam = require("../models/Exam");
-const Attempt = require("../models/Attempt");
-const Question = require("../models/Question");
-const { shuffleArray, generateOptionOrder } = require("../utils/shuffle");
-const ApiError = require("../utils/apiError");
-
-const createExam = async (data, userId) => {
-  const exam = await Exam.create({ ...data, createdBy: userId, status: "DRAFT" });
-  return exam;
-};
-
-const getExams = async (filter = {}) => {
-  const exams = await Exam.find(filter)
-    .populate("course", "name")
-    .populate("subjects", "name")
-    .populate("testSeries", "title")
-    .sort({ createdAt: -1 });
-  return exams;
-};
-
-const getExamById = async (id) => {
-  const exam = await Exam.findById(id)
-    .populate("course", "name")
-    .populate("subjects", "name");
-  if (!exam) throw new ApiError(404, "Exam not found");
-  return exam;
-};
-
-const updateExam = async (id, data) => {
-  const exam = await Exam.findByIdAndUpdate(id, data, { new: true });
-  if (!exam) throw new ApiError(404, "Exam not found");
-  return exam;
-};
-
-const publishExam = async (id) => {
-  const exam = await Exam.findById(id);
-  if (!exam) throw new ApiError(404, "Exam not found");
-  exam.status = "LIVE";
-  exam.publishedAt = new Date();
-  await exam.save();
-  return exam;
-};
-
-const closeExam = async (id) => {
-  await Exam.findByIdAndUpdate(id, { status: "CLOSED" });
-};
-
-const startAttempt = async (examId, studentId) => {
-  const exam = await Exam.findById(examId);
-  if (!exam) throw new ApiError(404, "Exam not found");
-  if (exam.status !== "LIVE") throw new ApiError(400, "Exam is not live");
-
-  const now = new Date();
-  if (now < exam.startTime) throw new ApiError(400, "Exam has not started yet");
-  if (now > exam.endTime) throw new ApiError(400, "Exam has ended");
-
-  const existingInProgress = await Attempt.findOne({
-    exam: examId,
-    student: studentId,
-    status: "IN_PROGRESS",
-  });
-  if (existingInProgress) {
-    return { resumed: true, attempt: existingInProgress };
-  }
-
-  const completedAttempts = await Attempt.countDocuments({
-    exam: examId,
-    student: studentId,
-    status: { $in: ["SUBMITTED", "AUTO_SUBMITTED"] },
-  });
-  if (completedAttempts >= (exam.maxAttempts || 1)) {
-    throw new ApiError(400, "Maximum attempts reached");
-  }
-
-  let questions = await Question.find({
-    subject: { $in: exam.subjects },
-    isActive: true,
-  }).limit(exam.totalQuestions || 30);
-
-  if (questions.length === 0) {
-    questions = await Question.find({ isActive: true }).limit(exam.totalQuestions || 10);
-  }
-
-  let questionOrder = questions.map((q) => q._id);
-  if (exam.randomizeQuestions) {
-    questionOrder = shuffleArray(questionOrder);
-  }
-
-  const optionOrders = questionOrder.map(() =>
-    exam.randomizeOptions ? generateOptionOrder(4) : [0, 1, 2, 3]
-  );
-
-  const serverEndTime = new Date(now.getTime() + (exam.duration || 60) * 60 * 1000);
-
-  const answers = questionOrder.map((qId) => ({
-    question: qId,
-    selectedOption: null,
-    markedForReview: false,
-    timeSpent: 0,
-  }));
-
-  const attempt = await Attempt.create({
-    exam: examId,
-    student: studentId,
-    startedAt: now,
-    serverEndTime,
-    status: "IN_PROGRESS",
-    answers,
-    questionOrder,
-    optionOrders,
-  });
-
-  const questionsData = questionOrder.map((qId) => {
-    const q = questions.find((qq) => qq._id.toString() === qId.toString());
-    if (!q) return null;
-    return {
-      _id: q._id,
-      questionText: q.questionText,
-      questionImageUrl: q.questionImageUrl,
-      options: q.options,
-      marks: q.marks,
-      negativeMarks: q.negativeMarks,
-      difficulty: q.difficulty,
-      subject: q.subject,
-      chapter: q.chapter,
-    };
-  }).filter(Boolean);
-
-  return {
-    resumed: false,
-    attemptId: attempt._id,
-    serverEndTime,
-    duration: exam.duration,
-    totalQuestions: questionOrder.length,
-    totalMarks: exam.totalMarks,
-    marksPerCorrect: exam.marksPerCorrect,
-    negativePerWrong: exam.negativePerWrong,
-    instructions: exam.instructions,
-    questions: questionsData,
-    optionOrders,
-    answers,
-  };
-};
-
-module.exports = {
-  createExam,
-  getExams,
-  getExamById,
-  updateExam,
-  publishExam,
-  closeExam,
-  startAttempt,
-};
-```
-
-### File: `server/src/services/notification.service.js`
-
-```javascript
-const Notification = require("../models/Notification");
-
-const createNotification = async (data) => {
-  return await Notification.create(data);
-};
-
-const getNotificationsForUser = async (userId, userRole) => {
-  return await Notification.find({
-    $or: [
-      { targetRole: "all" },
-      { targetRole: userRole },
-      { targetStudents: userId },
-    ],
-    isActive: true,
-  })
-    .sort({ createdAt: -1 })
-    .limit(30);
-};
-
-const getUnreadCount = async (userId, userRole) => {
-  return await Notification.countDocuments({
-    $or: [
-      { targetRole: "all" },
-      { targetRole: userRole },
-      { targetStudents: userId },
-    ],
-    isActive: true,
-    readBy: { $ne: userId },
-  });
-};
-
-const markAsRead = async (notificationId, userId) => {
-  await Notification.findByIdAndUpdate(notificationId, {
-    $addToSet: { readBy: userId },
-  });
-};
-
-const markAllAsRead = async (userId, userRole) => {
-  await Notification.updateMany(
-    {
-      $or: [{ targetRole: "all" }, { targetRole: userRole }],
-      isActive: true,
-    },
-    { $addToSet: { readBy: userId } }
-  );
-};
-
-module.exports = {
-  createNotification,
-  getNotificationsForUser,
-  getUnreadCount,
-  markAsRead,
-  markAllAsRead,
-};
-```
-
-### File: `server/src/services/dashboard.service.js`
-
-```javascript
-const Student = require("../models/Student");
-const Teacher = require("../models/Teacher");
-const Exam = require("../models/Exam");
-const Attempt = require("../models/Attempt");
-const Question = require("../models/Question");
-const Course = require("../models/Course");
-const Batch = require("../models/Batch");
-const Material = require("../models/Material");
-const Lecture = require("../models/Lecture");
-const Enquiry = require("../models/Enquiry");
-const Result = require("../models/Result");
-
-const getAdminDashboard = async () => {
-  const [
-    studentCount,
-    teacherCount,
-    examCount,
-    attemptCount,
-    questionCount,
-    courseCount,
-    batchCount,
-    materialCount,
-    lectureCount,
-    enquiryCount,
-  ] = await Promise.all([
-    Student.countDocuments({ isActive: true }),
-    Teacher.countDocuments({ isActive: true }),
-    Exam.countDocuments(),
-    Attempt.countDocuments(),
-    Question.countDocuments({ isActive: true }),
-    Course.countDocuments({ isActive: true }),
-    Batch.countDocuments({ isActive: true }),
-    Material.countDocuments({ isActive: true }),
-    Lecture.countDocuments({ isActive: true }),
-    Enquiry.countDocuments({ status: "PENDING" }),
-  ]);
-
-  const recentAttempts = await Attempt.find()
-    .populate("student", "name email")
-    .populate("exam", "title testType")
-    .sort({ createdAt: -1 })
-    .limit(5);
-
-  const recentStudents = await Student.find()
-    .populate("user", "name email")
-    .sort({ createdAt: -1 })
-    .limit(5);
-
-  return {
-    studentCount,
-    teacherCount,
-    examCount,
-    attemptCount,
-    questionCount,
-    courseCount,
-    batchCount,
-    materialCount,
-    lectureCount,
-    enquiryCount,
-    recentAttempts,
-    recentStudents,
-  };
-};
-
-const getStudentDashboard = async (studentUserId) => {
-  const student = await Student.findOne({ user: studentUserId }).populate("batches", "name code batchType");
-
-  const upcomingTests = await Exam.find({
-    status: "LIVE",
-    endTime: { $gt: new Date() },
-  }).limit(3).select("title testType duration totalQuestions totalMarks startTime endTime");
-
-  const recentMaterials = await Material.find({ isActive: true })
-    .populate("subject", "name")
-    .sort({ createdAt: -1 })
-    .limit(4);
-
-  const recentResults = await Result.find({ student: studentUserId })
-    .populate("exam", "title testType")
-    .sort({ createdAt: -1 })
-    .limit(3);
-
-  return { student, upcomingTests, recentMaterials, recentResults };
-};
-
-const getTeacherDashboard = async (teacherUserId) => {
-  const teacher = await Teacher.findOne({ user: teacherUserId }).populate("subject", "name");
-
-  const [questionCount, materialCount, lectureCount, examCount] = await Promise.all([
-    Question.countDocuments({ createdBy: teacherUserId, isActive: true }),
-    Material.countDocuments({ uploadedBy: teacherUserId, isActive: true }),
-    Lecture.countDocuments({ teacher: teacherUserId, isActive: true }),
-    Exam.countDocuments({ createdBy: teacherUserId }),
-  ]);
-
-  return { teacher, questionCount, materialCount, lectureCount, examCount };
-};
-
-module.exports = { getAdminDashboard, getStudentDashboard, getTeacherDashboard };
-```
-
-### File: `server/src/services/website.service.js`
-
-```javascript
-const WebsiteContent = require("../models/WebsiteContent");
-const Course = require("../models/Course");
-const Teacher = require("../models/Teacher");
-const Testimonial = require("../models/Testimonial");
-const Achievement = require("../models/Achievement");
-
-const getHomepageData = async () => {
-  const [hero, about, methodology, announcementBar, courses, teachers, testimonials, achievements] =
-    await Promise.all([
-      WebsiteContent.findOne({ section: "HERO" }),
-      WebsiteContent.findOne({ section: "ABOUT" }),
-      WebsiteContent.findOne({ section: "METHODOLOGY" }),
-      WebsiteContent.findOne({ section: "ANNOUNCEMENT_BAR" }),
-      Course.find({ isActive: true }).sort({ displayOrder: 1 }).limit(6),
-      Teacher.find({ isActive: true }).populate("user", "name avatar").populate("subject", "name"),
-      Testimonial.find({ isActive: true }).sort({ displayOrder: 1 }),
-      Achievement.find({ isActive: true, featured: true }).sort({ displayOrder: 1 }),
-    ]);
-
-  return {
-    hero,
-    about,
-    methodology,
-    announcementBar: announcementBar?.announcementBar || null,
-    courses,
-    teachers,
-    testimonials,
-    achievements,
-  };
-};
-
-const getSection = async (sectionName) => {
-  return await WebsiteContent.findOne({ section: sectionName });
-};
-
-const updateSection = async (sectionName, data) => {
-  return await WebsiteContent.findOneAndUpdate(
-    { section: sectionName },
-    { $set: data },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
-  );
-};
-
-module.exports = { getHomepageData, getSection, updateSection };
-```
-
----
-
-## SECTION 2: COMPLETE BACKEND CONTROLLERS (Replace Existing)
-
-### File: `server/src/controllers/dashboard.controller.js`
-
-```javascript
-const { getAdminDashboard, getStudentDashboard, getTeacherDashboard } = require("../services/dashboard.service");
-const apiResponse = require("../utils/apiResponse");
-
-const adminDashboard = async (req, res, next) => {
-  try {
-    const data = await getAdminDashboard();
-    return apiResponse(res, 200, "Admin dashboard", data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const studentDashboard = async (req, res, next) => {
-  try {
-    const data = await getStudentDashboard(req.user._id);
-    return apiResponse(res, 200, "Student dashboard", data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const teacherDashboard = async (req, res, next) => {
-  try {
-    const data = await getTeacherDashboard(req.user._id);
-    return apiResponse(res, 200, "Teacher dashboard", data);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = { adminDashboard, studentDashboard, teacherDashboard };
-```
-
-### File: `server/src/controllers/contactSettings.controller.js`
-
-```javascript
-const mongoose = require("mongoose");
-const apiResponse = require("../utils/apiResponse");
-
-const ContactSettings = mongoose.model("ContactSettings") || mongoose.model("ContactSettings", new mongoose.Schema({
-  instituteEmail: { type: String, default: "admissions@neetvidya.com" },
-  institutePhone: { type: String, default: "+91 98765 43210" },
-  address: { type: String, default: "" },
-  city: { type: String, default: "" },
-  state: { type: String, default: "" },
-  telegramChannelLink: { type: String, default: "https://t.me/neetvidya_official" },
-  whatsappGroupLink: { type: String, default: "" },
-  whatsappNumber: { type: String, default: "919876543210" },
-  whatsappDefaultMessage: { type: String, default: "Hello NEETVIDYA! I have a query." },
-  facebookLink: { type: String, default: "" },
-  instagramLink: { type: String, default: "" },
-  youtubeLink: { type: String, default: "" },
-  officeHours: { type: String, default: "Mon - Sat: 9:00 AM - 6:00 PM" },
-  mapEmbedUrl: { type: String, default: "" },
-}, { timestamps: true }));
-
-const getSettings = async (req, res, next) => {
-  try {
-    let settings = await ContactSettings.findOne();
-    if (!settings) settings = await ContactSettings.create({});
-    return apiResponse(res, 200, "Contact settings", { settings });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateSettings = async (req, res, next) => {
-  try {
-    const settings = await ContactSettings.findOneAndUpdate(
-      {},
-      { $set: req.body },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-    return apiResponse(res, 200, "Contact settings updated", { settings });
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = { getSettings, updateSettings, ContactSettings };
-```
-
----
-
-## SECTION 3: COMPLETE ROUTES INDEX (Replace)
-
-### File: `server/src/routes/index.js`
-
-```javascript
-const express = require("express");
-const router = express.Router();
-
-router.use("/auth", require("./auth.routes"));
-router.use("/students", require("./student.routes"));
-router.use("/teachers", require("./teacher.routes"));
-router.use("/batches", require("./batch.routes"));
-router.use("/enrollments", require("./enrollment.routes"));
-router.use("/courses", require("./course.routes"));
-router.use("/academics", require("./academic.routes"));
-router.use("/materials", require("./material.routes"));
-router.use("/lectures", require("./lecture.routes"));
-router.use("/resources", require("./resource.routes"));
-router.use("/questions", require("./question.routes"));
-router.use("/test-series", require("./testSeries.routes"));
-router.use("/exams", require("./exam.routes"));
-router.use("/attempts", require("./attempt.routes"));
-router.use("/results", require("./result.routes"));
-router.use("/notifications", require("./notification.routes"));
-router.use("/achievements", require("./achievement.routes"));
-router.use("/testimonials", require("./testimonial.routes"));
-router.use("/enquiries", require("./enquiry.routes"));
-router.use("/website", require("./website.routes"));
-router.use("/upload", require("./upload.routes"));
-router.use("/telegram", require("./telegram.routes"));
-router.use("/admin", require("./admin.routes"));
-router.use("/dashboard", require("./dashboard.routes"));
-router.use("/contact-settings", require("./contactSettings.routes"));
-
-module.exports = router;
-```
-
----
-
-## SECTION 4: MISSING FRONTEND COMPONENTS
-
-### File: `client/src/components/exam/ExamInstructions.jsx`
-
-```jsx
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Clock, AlertTriangle, ArrowRight, FileText, Shield } from "lucide-react";
-import api from "../../config/api";
-import toast from "react-hot-toast";
-
-export default function ExamInstructions() {
-  const { examId } = useParams();
-  const navigate = useNavigate();
-  const [agreed, setAgreed] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [exam, setExam] = useState(null);
-
-  useState(() => {
-    api.get(`/exams/${examId}`)
-      .then(({ data }) => setExam(data.data?.exam))
-      .catch(() => navigate("/student/tests"));
-  }, []);
-
-  const handleStart = async () => {
-    if (!agreed) return;
-    setStarting(true);
-    try {
-      navigate(`/exam/${examId}/attempt`);
-    } catch (err) {
-      toast.error("Could not start exam");
-      setStarting(false);
-    }
-  };
-
-  if (!exam) return null;
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg max-w-2xl w-full overflow-hidden">
-        <div className="bg-brand-black text-white p-6">
-          <h1 className="font-heading font-extrabold text-xl">{exam.title}</h1>
-          <p className="text-gray-300 text-sm mt-1">Read all instructions carefully before starting</p>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <Clock className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-              <div className="font-bold text-lg">{exam.duration} min</div>
-              <div className="text-xs text-gray-500">Duration</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <FileText className="w-5 h-5 mx-auto mb-1 text-purple-600" />
-              <div className="font-bold text-lg">{exam.totalQuestions}</div>
-              <div className="text-xs text-gray-500">Questions</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <div className="font-bold text-lg text-green-600">+{exam.marksPerCorrect}</div>
-              <div className="text-xs text-gray-500">Per Correct</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <div className="font-bold text-lg text-red-600">-{exam.negativePerWrong}</div>
-              <div className="text-xs text-gray-500">Per Wrong</div>
-            </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-amber-800 space-y-1.5">
-                <p className="font-semibold">Important Instructions:</p>
-                <ul className="list-disc list-inside space-y-1 text-xs">
-                  <li>Timer starts immediately and is server-enforced</li>
-                  <li>Test auto-submits when time expires</li>
-                  <li>Tab switching is recorded and reported</li>
-                  <li>Maximum {exam.maxAttempts || 1} attempt(s) allowed</li>
-                  <li>Use Mark for Review to flag questions for later review</li>
-                  <li>Unanswered questions carry zero marks</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {exam.instructions && (
-            <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700">
-              <p className="font-semibold mb-2">Additional Instructions:</p>
-              <p>{exam.instructions}</p>
-            </div>
-          )}
-
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="w-4 h-4 rounded accent-green-600"
-            />
-            <span className="text-sm text-gray-700">
-              I have read and understood all instructions. I agree to the exam rules.
-            </span>
-          </label>
-
-          <button
-            onClick={handleStart}
-            disabled={!agreed || starting}
-            className="w-full bg-brand-green hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
-          >
-            {starting ? "Starting..." : "Start Examination"}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-### File: `client/src/components/exam/ExamResumeScreen.jsx`
-
-```jsx
-import { Clock, RefreshCw } from "lucide-react";
-
-export default function ExamResumeScreen({ timeLeft, onResume }) {
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
-        <RefreshCw className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-        <h1 className="font-heading font-extrabold text-xl text-gray-900 mb-2">Exam Session Found</h1>
-        <p className="text-gray-500 text-sm mb-6">
-          You have an exam in progress. Your answers have been saved automatically.
-        </p>
-        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <Clock className="w-6 h-6 mx-auto mb-1 text-gray-400" />
-          <div className="font-mono font-bold text-3xl text-gray-800">{formatTime(timeLeft)}</div>
-          <div className="text-xs text-gray-400 mt-1">Time Remaining</div>
-        </div>
-        <button
-          onClick={onResume}
-          className="w-full bg-brand-green hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition"
-        >
-          Resume Exam
-        </button>
-      </div>
-    </div>
-  );
-}
-```
-
-### File: `client/src/components/shared/FileUpload.jsx`
-
-```jsx
-import { useState, useRef } from "react";
-import { Upload, CheckCircle, X } from "lucide-react";
-import toast from "react-hot-toast";
-
-export default function FileUpload({ onUpload, accept = ".pdf", maxSizeMB = 20, label = "Upload File" }) {
-  const [dragging, setDragging] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [uploaded, setUploaded] = useState(false);
-  const inputRef = useRef();
-
-  const handleFile = async (file) => {
-    if (!file) return;
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`File too large. Max ${maxSizeMB}MB allowed.`);
-      return;
-    }
-    setUploading(true);
-    setProgress(10);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const result = await onUpload(formData);
-      setProgress(100);
-      setUploaded(true);
-      toast.success("File uploaded successfully");
-      return result;
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Upload failed");
-      setProgress(0);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files[0]); }}
-      onClick={() => inputRef.current?.click()}
-      className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-        dragging ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-green-300 hover:bg-gray-50"
-      }`}
-    >
-      <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
-      {uploaded ? (
-        <div className="flex items-center justify-center gap-2 text-green-600">
-          <CheckCircle className="w-6 h-6" />
-          <span className="font-semibold text-sm">Uploaded Successfully</span>
-        </div>
-      ) : uploading ? (
-        <div className="space-y-3">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
-          </div>
-          <span className="text-sm text-gray-500">{progress}%</span>
-        </div>
-      ) : (
-        <>
-          <Upload className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-gray-600">{label}</p>
-          <p className="text-xs text-gray-400 mt-1">Drag and drop or click to browse (Max {maxSizeMB}MB)</p>
-        </>
-      )}
-    </div>
-  );
-}
-```
-
-### File: `client/src/components/shared/PDFViewer.jsx`
-
-```jsx
-import { useState } from "react";
-import { Download, X, Maximize2 } from "lucide-react";
-
-export default function PDFViewer({ url, title, onClose }) {
-  if (!url) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
-      <div className="bg-white px-4 py-3 flex items-center justify-between">
-        <h3 className="font-bold text-gray-800 text-sm truncate max-w-[60%]">{title || "Document Viewer"}</h3>
-        <div className="flex items-center gap-2">
-          <a href={url} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-            <Maximize2 className="w-4 h-4" />
-          </a>
-          <a href={url} download className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-            <Download className="w-4 h-4" />
-          </a>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      <iframe src={url} className="flex-1 w-full bg-white" title={title} />
-    </div>
-  );
-}
-```
-
-### File: `client/src/components/shared/SkeletonLoader.jsx`
-
-```jsx
-export default function SkeletonLoader({ rows = 3, type = "card" }) {
-  if (type === "card") {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse">
-            <div className="h-40 bg-gray-100 rounded-xl mb-4" />
-            <div className="h-4 bg-gray-100 rounded w-3/4 mb-3" />
-            <div className="h-3 bg-gray-100 rounded w-1/2" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (type === "table") {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0">
-            <div className="w-10 h-10 bg-gray-100 rounded-full flex-shrink-0" />
-            <div className="flex-1">
-              <div className="h-3 bg-gray-100 rounded w-1/3 mb-2" />
-              <div className="h-2 bg-gray-100 rounded w-1/4" />
-            </div>
-            <div className="h-6 bg-gray-100 rounded-full w-16" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4 animate-pulse">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-4 bg-gray-100 rounded" style={{ width: `${80 - i * 10}%` }} />
-      ))}
-    </div>
-  );
-}
-```
-
----
-
-## SECTION 5: COMPLETE FRONTEND PAGES (Replace Existing)
-
-### File: `client/src/pages/student/StudentDashboard.jsx`
-
-```jsx
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight, Clock } from "lucide-react";
-import api from "../../config/api";
-import StudentBadge from "../../components/shared/StudentBadge";
-import SkeletonLoader from "../../components/shared/SkeletonLoader";
-
-export default function StudentDashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get("/dashboard/student")
-      .then(({ data }) => setData(data.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div className="p-6"><SkeletonLoader rows={4} type="card" /></div>;
-
-  const { student, upcomingTests, recentMaterials, recentResults } = data || {};
-
-  return (
-    <div className="space-y-8">
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="font-heading font-extrabold text-2xl text-brand-dark">
-              Hello, {student?.user?.name || "Student"}!
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">Continue your NEET preparation journey</p>
-          </div>
-          {student?.studentType && (
-            <StudentBadge batchType={student.studentType === "REGULAR_OFFLINE" ? "OFFLINE" : student.studentType === "REGULAR_ONLINE" ? "ONLINE" : "HYBRID"} />
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Enrolled</p>
-              <p className="font-bold text-brand-dark">{student?.batches?.[0]?.name || "No batch"}</p>
-            </div>
-          </div>
-        </div>
-        <div className="card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center">
-              <ClipboardList className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Live Tests</p>
-              <p className="font-bold text-brand-dark">{upcomingTests?.length || 0} Available</p>
-            </div>
-          </div>
-        </div>
-        <div className="card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Materials</p>
-              <p className="font-bold text-brand-dark">{recentMaterials?.length || 0} New</p>
-            </div>
-          </div>
-        </div>
-        <div className="card p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Tests Taken</p>
-              <p className="font-bold text-brand-dark">{recentResults?.length || 0}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-bold text-lg">Upcoming Tests</h3>
-            <Link to="/student/tests" className="text-xs text-brand-green font-semibold hover:underline">View All</Link>
-          </div>
-          {upcomingTests?.length > 0 ? (
-            <div className="space-y-3">
-              {upcomingTests.map((test) => (
-                <div key={test._id} className="p-4 rounded-xl bg-gray-50 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-sm text-gray-800">{test.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {test.duration} min | {test.totalQuestions} Qs
-                    </p>
-                  </div>
-                  <Link to={`/exam/${test._id}`} className="text-xs bg-brand-green text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-700 transition">
-                    Start
-                  </Link>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 text-center py-8">No upcoming tests</p>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-bold text-lg">Recent Materials</h3>
-            <Link to="/student/learn" className="text-xs text-brand-green font-semibold hover:underline">View All</Link>
-          </div>
-          {recentMaterials?.length > 0 ? (
-            <div className="space-y-3">
-              {recentMaterials.map((mat) => (
-                <div key={mat._id} className="p-3 rounded-xl bg-gray-50 flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm text-gray-800 truncate">{mat.title}</p>
-                    <p className="text-xs text-gray-400">{mat.subject?.name}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-400 text-center py-8">No materials yet</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
----
-
-## SECTION 6: ADMIN CONTACT SETTINGS PAGE (New)
-
-### File: `client/src/pages/admin/AdminContactSettings.jsx`
-
-```jsx
-import { useState, useEffect } from "react";
-import api from "../../config/api";
-import { Save, Globe, Phone, Mail, Send, MessageCircle, MapPin } from "lucide-react";
-import toast from "react-hot-toast";
-
-export default function AdminContactSettings() {
-  const [form, setForm] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get("/contact-settings")
-      .then(({ data }) => { if (data.data?.settings) setForm(data.data.settings); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      await api.put("/contact-settings", form);
-      toast.success("Contact settings saved");
-    } catch (err) {
-      toast.error("Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) return <div className="p-6 animate-pulse"><div className="h-64 bg-gray-100 rounded-2xl" /></div>;
-
-  const inputCls = "w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition";
-  const labelCls = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
-
-  return (
-    <div className="space-y-6">
-      <h1 className="font-heading font-extrabold text-2xl">Contact & Link Settings</h1>
-      <form onSubmit={handleSave} className="space-y-6">
-        <div className="card space-y-4">
-          <h2 className="font-bold flex items-center gap-2"><Mail className="w-4 h-4 text-green-600" /> Basic Contact</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label className={labelCls}>Email</label><input name="instituteEmail" value={form.instituteEmail || ""} onChange={handleChange} className={inputCls} /></div>
-            <div><label className={labelCls}>Phone</label><input name="institutePhone" value={form.institutePhone || ""} onChange={handleChange} className={inputCls} /></div>
-          </div>
-          <div><label className={labelCls}>Address</label><input name="address" value={form.address || ""} onChange={handleChange} className={inputCls} /></div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label className={labelCls}>City</label><input name="city" value={form.city || ""} onChange={handleChange} className={inputCls} /></div>
-            <div><label className={labelCls}>Office Hours</label><input name="officeHours" value={form.officeHours || ""} onChange={handleChange} className={inputCls} /></div>
-          </div>
-        </div>
-
-        <div className="card space-y-4">
-          <h2 className="font-bold flex items-center gap-2"><Send className="w-4 h-4 text-sky-600" /> Channel Links</h2>
-          <div><label className={labelCls}>Telegram Channel Link</label><input name="telegramChannelLink" value={form.telegramChannelLink || ""} onChange={handleChange} className={inputCls} placeholder="https://t.me/neetvidya_official" /></div>
-          <div><label className={labelCls}>WhatsApp Group Link</label><input name="whatsappGroupLink" value={form.whatsappGroupLink || ""} onChange={handleChange} className={inputCls} placeholder="https://chat.whatsapp.com/..." /></div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label className={labelCls}>WhatsApp Number</label><input name="whatsappNumber" value={form.whatsappNumber || ""} onChange={handleChange} className={inputCls} placeholder="919876543210" /></div>
-            <div><label className={labelCls}>WhatsApp Default Message</label><input name="whatsappDefaultMessage" value={form.whatsappDefaultMessage || ""} onChange={handleChange} className={inputCls} /></div>
-          </div>
-        </div>
-
-        <div className="card space-y-4">
-          <h2 className="font-bold flex items-center gap-2"><Globe className="w-4 h-4 text-purple-600" /> Social Links</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label className={labelCls}>Facebook</label><input name="facebookLink" value={form.facebookLink || ""} onChange={handleChange} className={inputCls} /></div>
-            <div><label className={labelCls}>Instagram</label><input name="instagramLink" value={form.instagramLink || ""} onChange={handleChange} className={inputCls} /></div>
-            <div><label className={labelCls}>YouTube</label><input name="youtubeLink" value={form.youtubeLink || ""} onChange={handleChange} className={inputCls} /></div>
-            <div><label className={labelCls}>Map Embed URL</label><input name="mapEmbedUrl" value={form.mapEmbedUrl || ""} onChange={handleChange} className={inputCls} /></div>
-          </div>
-        </div>
-
-        <button type="submit" disabled={saving} className="btn-primary">
-          <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save All Settings"}
-        </button>
-      </form>
-    </div>
-  );
-}
-```
-
----
-
-## SECTION 7: UPDATED APP ROUTES
-
-### File: `client/src/App.jsx`
-
-```jsx
-import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
-import ProtectedRoute from "./components/shared/ProtectedRoute";
-import PublicLayout from "./layouts/PublicLayout";
-import StudentLayout from "./layouts/StudentLayout";
-import TeacherLayout from "./layouts/TeacherLayout";
-import AdminLayout from "./layouts/AdminLayout";
-import ExamLayout from "./layouts/ExamLayout";
-import SkeletonLoader from "./components/shared/SkeletonLoader";
-
-import HomePage from "./pages/public/HomePage";
-import AboutPage from "./pages/public/AboutPage";
-import CoursesPage from "./pages/public/CoursesPage";
-import FacultyPage from "./pages/public/FacultyPage";
-import TestSeriesPage from "./pages/public/TestSeriesPage";
-import ResultsPage from "./pages/public/ResultsPage";
-import ContactPage from "./pages/public/ContactPage";
-import LoginPage from "./pages/public/LoginPage";
-import RegisterPage from "./pages/public/RegisterPage";
-import VerifyEmailPage from "./pages/public/VerifyEmailPage";
-import ForgotPasswordPage from "./pages/public/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/public/ResetPasswordPage";
-
-import StudentDashboard from "./pages/student/StudentDashboard";
-import LearnPage from "./pages/student/LearnPage";
-import TestsPage from "./pages/student/TestsPage";
-import StudentResults from "./pages/student/ResultPage";
-import PerformancePage from "./pages/student/PerformancePage";
-import StudentProfile from "./pages/student/ProfilePage";
-import ExamPage from "./pages/student/ExamPage";
-import ExamInstructions from "./components/exam/ExamInstructions";
-
-import TeacherDashboard from "./pages/teacher/TeacherDashboard";
-import TeacherMaterials from "./pages/teacher/TeacherMaterials";
-import TeacherClasses from "./pages/teacher/TeacherClasses";
-import TeacherQuestions from "./pages/teacher/TeacherQuestions";
-import TeacherExams from "./pages/teacher/TeacherExams";
-import TeacherPerformance from "./pages/teacher/TeacherPerformance";
-
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminStudents from "./pages/admin/AdminStudents";
-import AdminTeachers from "./pages/admin/AdminTeachers";
-import AdminBatches from "./pages/admin/AdminBatches";
-import AdminCourses from "./pages/admin/AdminCourses";
-import AdminQuestions from "./pages/admin/AdminQuestions";
-import AdminExams from "./pages/admin/AdminExams";
-import AdminEnquiries from "./pages/admin/AdminEnquiries";
-import AdminAchievements from "./pages/admin/AdminAchievements";
-import AdminContactSettings from "./pages/admin/AdminContactSettings";
-import AdminSettings from "./pages/admin/AdminSettings";
-
-import NotFound from "./pages/errors/NotFound";
-import Unauthorized from "./pages/errors/Unauthorized";
-
-export default function App() {
-  return (
-    <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/courses" element={<CoursesPage />} />
-        <Route path="/faculty" element={<FacultyPage />} />
-        <Route path="/test-series" element={<TestSeriesPage />} />
-        <Route path="/results" element={<ResultsPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-      </Route>
-
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-      <Route path="/student" element={<ProtectedRoute role="student"><StudentLayout /></ProtectedRoute>}>
-        <Route index element={<StudentDashboard />} />
-        <Route path="learn" element={<LearnPage />} />
-        <Route path="tests" element={<TestsPage />} />
-        <Route path="results" element={<StudentResults />} />
-        <Route path="performance" element={<PerformancePage />} />
-        <Route path="profile" element={<StudentProfile />} />
-      </Route>
-
-      <Route path="/exam/:examId" element={<ProtectedRoute role="student"><ExamLayout /></ProtectedRoute>}>
-        <Route index element={<ExamInstructions />} />
-        <Route path="attempt" element={<ExamPage />} />
-      </Route>
-
-      <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherLayout /></ProtectedRoute>}>
-        <Route index element={<TeacherDashboard />} />
-        <Route path="materials" element={<TeacherMaterials />} />
-        <Route path="classes" element={<TeacherClasses />} />
-        <Route path="questions" element={<TeacherQuestions />} />
-        <Route path="exams" element={<TeacherExams />} />
-        <Route path="performance" element={<TeacherPerformance />} />
-      </Route>
-
-      <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="students" element={<AdminStudents />} />
-        <Route path="teachers" element={<AdminTeachers />} />
-        <Route path="batches" element={<AdminBatches />} />
-        <Route path="courses" element={<AdminCourses />} />
-        <Route path="questions" element={<AdminQuestions />} />
-        <Route path="exams" element={<AdminExams />} />
-        <Route path="enquiries" element={<AdminEnquiries />} />
-        <Route path="achievements" element={<AdminAchievements />} />
-        <Route path="contact-settings" element={<AdminContactSettings />} />
-        <Route path="settings" element={<AdminSettings />} />
-      </Route>
-
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
-```
-
----
-
-## SECTION 8: UPDATED TAILWIND CONFIG
-
-### File: `client/tailwind.config.js`
-
-```javascript
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          black: "#0B0F0D",
-          lime: "#A8C900",
-          green: "#18A66A",
-          white: "#FFFFFF",
-          soft: "#F6F8F7",
-          dark: "#111714",
-        },
-      },
-      fontFamily: {
-        heading: ["Manrope", "sans-serif"],
-        body: ["Inter", "sans-serif"],
-        mono: ["JetBrains Mono", "monospace"],
-      },
-      borderRadius: {
-        card: "12px",
-        btn: "8px",
-      },
-      boxShadow: {
-        card: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-        "card-hover": "0 4px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08)",
-      },
-    },
-  },
-  plugins: [],
-};
-```
-
----
-
-## SECTION 9: UPDATED INDEX CSS
-
-### File: `client/src/index.css`
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    @apply font-body text-brand-dark bg-white antialiased;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight;
-  }
-  * {
-    @apply transition-colors duration-150;
-  }
-}
-
-@layer components {
-  .btn-primary {
-    @apply bg-brand-green text-white px-6 py-2.5 rounded-btn font-medium
-           hover:bg-emerald-700 active:scale-[0.97] transition-all duration-200
-           inline-flex items-center justify-center gap-2 shadow-sm;
-  }
-  .btn-secondary {
-    @apply border-2 border-brand-green text-brand-green px-6 py-2.5 rounded-btn
-           font-medium hover:bg-brand-green hover:text-white active:scale-[0.97]
-           transition-all duration-200 inline-flex items-center justify-center gap-2;
-  }
-  .btn-dark {
-    @apply bg-brand-black text-white px-6 py-2.5 rounded-btn font-medium
-           hover:bg-gray-800 active:scale-[0.97] transition-all duration-200
-           inline-flex items-center justify-center gap-2;
-  }
-  .btn-lime {
-    @apply bg-brand-lime text-brand-black px-6 py-2.5 rounded-btn font-semibold
-           hover:brightness-105 active:scale-[0.97] transition-all duration-200
-           inline-flex items-center justify-center gap-2;
-  }
-  .btn-danger {
-    @apply bg-red-600 text-white px-6 py-2.5 rounded-btn font-medium
-           hover:bg-red-700 active:scale-[0.97] transition-all duration-200
-           inline-flex items-center justify-center gap-2;
-  }
-  .card {
-    @apply bg-white rounded-card border border-gray-100 p-6 shadow-card;
-  }
-  .card-hover {
-    @apply hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300;
-  }
-  .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-200 rounded-btn text-sm
-           focus:outline-none focus:ring-2 focus:ring-brand-green/20
-           focus:border-brand-green transition-all bg-white;
-  }
-  .section-padding {
-    @apply py-16 md:py-24;
-  }
-  .badge {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
-           text-xs font-semibold tracking-wide;
-  }
-}
-```
-
----
-
-## SECTION 10: IMPLEMENTATION CHECKLIST
-
-Execute in this exact order:
-
-| Step | Action | Files |
-|---|---|---|
-| 1 | Create backend services | All files in Section 1 |
-| 2 | Replace backend controllers | Section 2 files |
-| 3 | Replace routes/index.js | Section 3 |
-| 4 | Create exam components | Section 4 exam files |
-| 5 | Create shared components | Section 4 shared files |
-| 6 | Replace StudentDashboard | Section 5 |
-| 7 | Create AdminContactSettings | Section 6 |
-| 8 | Replace App.jsx | Section 7 |
-| 9 | Replace tailwind.config.js | Section 8 |
-| 10 | Replace index.css | Section 9 |
-| 11 | Run `npm run dev` and test | All routes |
-| 12 | Fix any remaining errors | Per error message |
-
----
-
-This document provides complete, copy-paste-ready code for every missing or broken piece. The coding IDE should create/replace each file exactly as specified, then run the app to verify.
+3. evrything should be saved in mongo db , and others media in cloudinary aready adde env things .. 
+i think already implimented but you can cheak and fix if needed .
 ```
 
 ---
@@ -16079,8 +15940,8 @@ const {
 
 const startAttempt = async (req, res, next) => {
   try {
-    const result = await startAttemptService(req.params.examId, req.user._id);
-    return apiResponse(res, 200, "Resuming existing attempt", result);
+    const result = await startAttemptService(req.params.examId, req.user._id, req.user);
+    return apiResponse(res, 200, result.resumed ? "Resuming existing attempt" : "Attempt started", result);
   } catch (error) {
     next(error);
   }
@@ -16577,19 +16438,29 @@ const Result = require("../models/Result");
 const Attempt = require("../models/Attempt");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
+const svc = require("../services/exam.service");
 
 const getExams = async (req, res, next) => {
   try {
-    const filter = {};
-    if (req.user.role === "student") filter.status = "LIVE";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    if (req.user.role === "student") {
+      // Students only ever see released exams for their batch / permitted exams.
+      const data = await svc.getStudentExams(req.user, { page, limit });
+      return apiResponse(res, 200, "Exams retrieved", data);
+    }
+
+    const filter = req.query.archived === "true"
+      ? { isArchived: true }
+      : { isArchived: { $ne: true } };
     if (req.query.status) filter.status = req.query.status;
     if (req.query.testType) filter.testType = req.query.testType;
-    const exams = await Exam.find(filter)
-      .populate("course", "name")
-      .populate("subjects", "name")
-      .populate("testSeries", "title")
-      .sort({ createdAt: -1 });
-    return apiResponse(res, 200, "Exams retrieved", { exams });
+    if (req.query.batch) filter.batch = req.query.batch;
+    if (req.query.search) filter.title = { $regex: req.query.search, $options: "i" };
+
+    const data = await svc.getExams(filter, { page, limit });
+    return apiResponse(res, 200, "Exams retrieved", data);
   } catch (error) {
     next(error);
   }
@@ -16597,10 +16468,11 @@ const getExams = async (req, res, next) => {
 
 const getExamById = async (req, res, next) => {
   try {
-    const exam = await Exam.findById(req.params.id)
-      .populate("subjects", "name")
-      .populate("course", "name");
-    if (!exam) throw new ApiError(404, "Exam not found");
+    const exam = await svc.getExamById(req.params.id);
+    if (req.user.role === "student") {
+      await svc.assertExamAccess(req.user, exam);
+      // Students never receive correct answers of a live/secret exam.
+    }
     return apiResponse(res, 200, "Exam details", { exam });
   } catch (error) {
     next(error);
@@ -16609,7 +16481,7 @@ const getExamById = async (req, res, next) => {
 
 const createExam = async (req, res, next) => {
   try {
-    const exam = await Exam.create({ ...req.body, createdBy: req.user._id, status: "DRAFT" });
+    const exam = await svc.createExam(req.body, req.user._id);
     return apiResponse(res, 201, "Exam created", { exam });
   } catch (error) {
     next(error);
@@ -16618,8 +16490,7 @@ const createExam = async (req, res, next) => {
 
 const updateExam = async (req, res, next) => {
   try {
-    const exam = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!exam) throw new ApiError(404, "Exam not found");
+    const exam = await svc.updateExam(req.params.id, req.body);
     return apiResponse(res, 200, "Exam updated", { exam });
   } catch (error) {
     next(error);
@@ -16628,11 +16499,7 @@ const updateExam = async (req, res, next) => {
 
 const publishExam = async (req, res, next) => {
   try {
-    const exam = await Exam.findById(req.params.id);
-    if (!exam) throw new ApiError(404, "Exam not found");
-    exam.status = "LIVE";
-    exam.publishedAt = new Date();
-    await exam.save();
+    const exam = await svc.publishExam(req.params.id);
     return apiResponse(res, 200, "Exam published", { exam });
   } catch (error) {
     next(error);
@@ -16641,9 +16508,228 @@ const publishExam = async (req, res, next) => {
 
 const closeExam = async (req, res, next) => {
   try {
-    const exam = await Exam.findByIdAndUpdate(req.params.id, { status: "CLOSED" }, { new: true });
+    const exam = await svc.closeExam(req.params.id);
+    return apiResponse(res, 200, "Exam closed and archived into Question Bank", { exam });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const archiveExam = async (req, res, next) => {
+  try {
+    const exam = await svc.archiveExam(req.params.id);
+    return apiResponse(res, 200, "Exam archived", { exam });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setStudyVisibility = async (req, res, next) => {
+  try {
+    const exam = await svc.setStudyVisibility(req.params.id, req.body.studyVisible);
+    return apiResponse(res, 200, "Study visibility updated", { exam });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const reconductExam = async (req, res, next) => {
+  try {
+    const exam = await svc.reconductExam(req.params.id, req.body || {}, req.user._id);
+    return apiResponse(res, 201, "Exam reconducted as new draft", { exam });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const downloadExam = async (req, res, next) => {
+  try {
+    const pack = await svc.buildExamPack(req.params.id);
+    return apiResponse(res, 200, "Exam pack", { pack });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getQuestionBank = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const data = await svc.getQuestionBank({ page, limit, search: req.query.search || "" });
+    return apiResponse(res, 200, "Question bank (archived exam papers)", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const publishResults = async (req, res, next) => {
+  try {
+    const exam = await svc.publishResults(req.params.id, {
+      publish: req.body.publish !== false,
+    });
+    return apiResponse(res, 200, "Results published", { exam });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const grantPermission = async (req, res, next) => {
+  try {
+    const perm = await svc.grantExamPermission(
+      { studentId: req.body.studentId, examId: req.params.id, reason: req.body.reason },
+      req.user._id
+    );
+    return apiResponse(res, 201, "Exam permission granted", { permission: perm });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const revokePermission = async (req, res, next) => {
+  try {
+    await svc.revokeExamPermission({ studentId: req.params.studentId, examId: req.params.id });
+    return apiResponse(res, 200, "Exam permission revoked");
+  } catch (error) {
+    next(error);
+  }
+};
+
+const listPermissions = async (req, res, next) => {
+  try {
+    const permissions = await svc.listExamPermissions(req.params.id);
+    return apiResponse(res, 200, "Exam permissions", { permissions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const importQuestions = async (req, res, next) => {
+  try {
+    const Question = require("../models/Question");
+    const { questions = [] } = req.body;
+    const exam = await Exam.findById(req.params.id);
     if (!exam) throw new ApiError(404, "Exam not found");
-    return apiResponse(res, 200, "Exam closed");
+
+    const valid = questions.filter(
+      (q) => q.questionText && q.options?.length >= 4 && q.correctAnswer !== undefined
+    );
+    if (valid.length === 0) throw new ApiError(400, "No valid questions found");
+
+    const created = await Question.insertMany(
+      valid.map((q) => ({
+        questionText: q.questionText,
+        questionImageUrl: q.questionImageUrl,
+        options: q.options.map((o, i) => ({ text: o.text, imageUrl: o.imageUrl, order: i })),
+        correctAnswer: Number(q.correctAnswer),
+        explanation: q.explanation,
+        difficulty: q.difficulty || "Medium",
+        marks: Number(q.marks || exam.marksPerCorrect || 4),
+        negativeMarks: Number(q.negativeMarks || exam.negativePerWrong || 1),
+        subject: q.subject || undefined,
+        chapter: q.chapter || undefined,
+        batch: exam.batch,
+        createdBy: req.user._id,
+      }))
+    );
+    exam.questions = [...(exam.questions || []), ...created.map((c) => c._id)];
+    exam.totalQuestions = exam.questions.length;
+    if (!exam.totalMarks || exam.totalMarks === 0) {
+      exam.totalMarks = exam.totalQuestions * (exam.marksPerCorrect || 4);
+    }
+    await exam.save();
+
+    return apiResponse(res, 201, `${created.length} questions imported into exam`, {
+      count: created.length,
+      exam,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create a single question that belongs to this exam only
+const createExamQuestion = async (req, res, next) => {
+  try {
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) throw new ApiError(404, "Exam not found");
+
+    const { uploadFile } = require("../services/cloudinary.service");
+    const FOLDERS = require("../constants/cloudinaryFolders");
+    const Question = require("../models/Question");
+
+    const body = { ...req.body };
+    let options = JSON.parse(body.options || "[]");
+
+    if (req.files?.questionImage?.[0]) {
+      const r = await uploadFile(req.files.questionImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.questionImageUrl = r.url;
+      body.questionImagePublicId = r.publicId;
+    }
+    if (req.files?.explanationImage?.[0]) {
+      const r = await uploadFile(req.files.explanationImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.explanationImageUrl = r.url;
+      body.explanationImagePublicId = r.publicId;
+    }
+    for (let i = 0; i < 4; i++) {
+      const key = `optionImage_${i}`;
+      if (req.files?.[key]?.[0]) {
+        const r = await uploadFile(req.files[key][0].buffer, FOLDERS.QUESTIONS, "image");
+        if (options[i]) options[i].imageUrl = r.url;
+      }
+    }
+
+    const question = await Question.create({
+      questionText: body.questionText,
+      questionImageUrl: body.questionImageUrl,
+      questionImagePublicId: body.questionImagePublicId,
+      options: options.map((o, i) => ({ text: o.text, imageUrl: o.imageUrl, order: i })),
+      correctAnswer: Number(body.correctAnswer || 0),
+      explanation: body.explanation,
+      explanationImageUrl: body.explanationImageUrl,
+      explanationImagePublicId: body.explanationImagePublicId,
+      difficulty: body.difficulty || "Medium",
+      marks: Number(body.marks || exam.marksPerCorrect || 4),
+      negativeMarks: Number(body.negativeMarks || exam.negativePerWrong || 1),
+      subject: body.subject || undefined,
+      chapter: body.chapter || undefined,
+      batch: exam.batch,
+      createdBy: req.user._id,
+    });
+
+    exam.questions = [...(exam.questions || []), question._id];
+    exam.totalQuestions = exam.questions.length;
+    await exam.save();
+
+    return apiResponse(res, 201, "Question added to exam", { question });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getExamQuestions = async (req, res, next) => {
+  try {
+    const Question = require("../models/Question");
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) throw new ApiError(404, "Exam not found");
+    const questions = await Question.find({ _id: { $in: exam.questions }});
+    return apiResponse(res, 200, "Exam questions", { questions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteExamQuestion = async (req, res, next) => {
+  try {
+    const Question = require("../models/Question");
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) throw new ApiError(404, "Exam not found");
+    exam.questions = (exam.questions || []).filter(
+      (q) => q.toString() !== req.params.questionId
+    );
+    exam.totalQuestions = exam.questions.length;
+    await exam.save();
+    await Question.findByIdAndUpdate(req.params.questionId, { isActive: false });
+    return apiResponse(res, 200, "Question removed from exam");
   } catch (error) {
     next(error);
   }
@@ -16694,6 +16780,19 @@ module.exports = {
   updateExam,
   publishExam,
   closeExam,
+  archiveExam,
+  setStudyVisibility,
+  reconductExam,
+  downloadExam,
+  getQuestionBank,
+  publishResults,
+  grantPermission,
+  revokePermission,
+  listPermissions,
+  importQuestions,
+  createExamQuestion,
+  getExamQuestions,
+  deleteExamQuestion,
   deleteExam,
   getExamResults,
 };
@@ -16763,17 +16862,31 @@ module.exports = { getLectures, createLecture, updateLecture, deleteLecture };
 
 ```javascript
 const Material = require("../models/Material");
+const Student = require("../models/Student");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
+const { uploadFile } = require("../services/cloudinary.service");
+const FOLDERS = require("../constants/cloudinaryFolders");
 
 const getMaterials = async (req, res, next) => {
   try {
     const filter = { isActive: true };
+    if (req.query.batch) filter.batch = req.query.batch;
     if (req.query.course) filter.course = req.query.course;
     if (req.query.subject) filter.subject = req.query.subject;
     if (req.query.chapter) filter.chapter = req.query.chapter;
+
+    // For students: only show materials from their batch
+    if (req.user && req.user.role === "student") {
+      const student = await Student.findOne({ user: req.user._id });
+      if (student?.batches?.length > 0) {
+        filter.$or = [{ batch: { $in: student.batches } }, { batch: { $exists: false } }];
+      }
+    }
+
     const materials = await Material.find(filter)
       .populate("subject", "name")
+      .populate("batch", "name code")
       .populate("chapter", "name")
       .populate("uploadedBy", "name")
       .sort({ createdAt: -1 });
@@ -16783,9 +16896,67 @@ const getMaterials = async (req, res, next) => {
   }
 };
 
+const getMyBatchMaterials = async (req, res, next) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    const filter = { isActive: true };
+    if (student?.batches?.length > 0) {
+      filter.$or = [{ batch: { $in: student.batches } }, { batch: { $exists: false } }];
+    }
+
+    const materials = await Material.find(filter)
+      .populate("subject", "name")
+      .populate("batch", "name code")
+      .populate("chapter", "name")
+      .populate("uploadedBy", "name")
+      .sort({ createdAt: -1 });
+    return apiResponse(res, 200, "My batch materials", { materials });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createMaterial = async (req, res, next) => {
   try {
-    const material = await Material.create({ ...req.body, uploadedBy: req.user._id });
+    const { title, subject, batch, course, unit, chapter, type, fileUrl, description } = req.body;
+
+    // Unit → Chapter → Material is mandatory so students see a course structure.
+    if (!batch) throw new ApiError(400, "A batch is required");
+    if (!unit) throw new ApiError(400, "A unit is required");
+    if (!chapter) throw new ApiError(400, "A chapter is required");
+
+    let finalUrl = fileUrl;
+    let filePublicId = "external";
+
+    // If file was uploaded via multipart (multer) → real Cloudinary upload
+    if (req.file) {
+      const resourceType =
+        req.file.mimetype && req.file.mimetype.startsWith("image") ? "image" : "raw";
+      const result = await uploadFile(req.file.buffer, FOLDERS.MATERIALS, resourceType);
+      finalUrl = result.url;
+      filePublicId = result.publicId;
+    }
+
+    if (!finalUrl) {
+      throw new ApiError(400, "Either upload a file or provide an external URL");
+    }
+
+    const materialData = {
+      title,
+      type: type || "PDF",
+      fileUrl: finalUrl,
+      filePublicId,
+      description,
+      batch,
+      unit,
+      chapter,
+      uploadedBy: req.user._id,
+    };
+    if (subject) materialData.subject = subject;
+    if (course) materialData.course = course;
+    if (req.file) materialData.fileSize = req.file.size;
+
+    const material = await Material.create(materialData);
     return apiResponse(res, 201, "Material created", { material });
   } catch (error) {
     next(error);
@@ -16802,7 +16973,58 @@ const deleteMaterial = async (req, res, next) => {
   }
 };
 
-module.exports = { getMaterials, createMaterial, deleteMaterial };
+// Student course-like view: Unit → Chapter → Materials for the student's batch
+const getMaterialTree = async (req, res, next) => {
+  try {
+    const Unit = require("../models/Unit");
+    const Chapter = require("../models/Chapter");
+
+    let batchIds = [];
+    if (req.user.role === "student") {
+      const student = await Student.findOne({ user: req.user._id });
+      batchIds = (student?.batches || []).map((b) => b.toString());
+    }
+    const batchFilter = req.query.batch
+      ? { batch: req.query.batch }
+      : batchIds.length
+      ? { batch: { $in: batchIds } }
+      : {};
+
+    const materials = await Material.find({ isActive: true, ...batchFilter })
+      .populate("subject", "name")
+      .sort({ createdAt: -1 });
+
+    const unitIds = [...new Set(materials.map((m) => m.unit?.toString()).filter(Boolean))];
+    const chapterIds = [...new Set(materials.map((m) => m.chapter?.toString()).filter(Boolean))];
+    const units = await Unit.find({ _id: { $in: unitIds } }).sort({ displayOrder: 1 });
+    const chapters = await Chapter.find({ _id: { $in: chapterIds } }).sort({ displayOrder: 1 });
+
+    const tree = units.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      description: u.description,
+      chapters: chapters
+        .filter((c) => c.unit?.toString() === u._id.toString())
+        .map((c) => ({
+          _id: c._id,
+          name: c.name,
+          materials: materials.filter((m) => m.chapter?.toString() === c._id.toString()),
+        })),
+    }));
+
+    return apiResponse(res, 200, "Material tree", { tree });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getMaterials,
+  getMyBatchMaterials,
+  createMaterial,
+  deleteMaterial,
+  getMaterialTree,
+};
 ```
 
 ---
@@ -16956,7 +17178,61 @@ const bulkImport = async (req, res, next) => {
   }
 };
 
-module.exports = { getQuestions, createQuestion, updateQuestion, deleteQuestion, addExplanation, bulkImport };
+const { uploadFile } = require("../services/cloudinary.service");
+const FOLDERS = require("../constants/cloudinaryFolders");
+const Question = require("../models/Question");
+
+const createQuestionWithImages = async (req, res, next) => {
+  try {
+    const body = { ...req.body };
+    let options = JSON.parse(body.options || "[]");
+
+    // Upload question image
+    if (req.files?.questionImage?.[0]) {
+      const result = await uploadFile(req.files.questionImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.questionImageUrl = result.url;
+      body.questionImagePublicId = result.publicId;
+    }
+
+    // Upload explanation image
+    if (req.files?.explanationImage?.[0]) {
+      const result = await uploadFile(req.files.explanationImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.explanationImageUrl = result.url;
+      body.explanationImagePublicId = result.publicId;
+    }
+
+    // Upload option images
+    for (let i = 0; i < 4; i++) {
+      const key = `optionImage_${i}`;
+      if (req.files?.[key]?.[0]) {
+        const result = await uploadFile(req.files[key][0].buffer, FOLDERS.QUESTIONS, "image");
+        if (options[i]) options[i].imageUrl = result.url;
+      }
+    }
+
+    body.options = options;
+    body.correctAnswer = Number(body.correctAnswer || 0);
+    body.marks = Number(body.marks || 4);
+    body.negativeMarks = Number(body.negativeMarks || 1);
+    if (!body.subject) delete body.subject;
+    if (!body.batch) delete body.batch;
+
+    const question = await Question.create({ ...body, createdBy: req.user._id });
+    return apiResponse(res, 201, "Question with images created", { question });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getQuestions,
+  createQuestion,
+  createQuestionWithImages,
+  updateQuestion,
+  deleteQuestion,
+  addExplanation,
+  bulkImport,
+};
 ```
 
 ---
@@ -17061,7 +17337,8 @@ const getStudentById = async (req, res, next) => {
   try {
     const student = await Student.findById(req.params.id)
       .populate("user", "name email phone isActive avatar lastLogin")
-      .populate("batches", "name code batchType course schedule color");
+      .populate("batches", "name code batchType course schedule color")
+      .populate("examPermissions", "title testType status batch");
     if (!student) throw new ApiError(404, "Student not found");
     const enrollments = await Enrollment.find({ student: student.user }).populate("course", "name");
     return apiResponse(res, 200, "Student details", { student, enrollments });
@@ -18022,6 +18299,16 @@ const examSchema = new mongoose.Schema(
     },
     testSeries: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries" },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+    // Exam is ALWAYS batch-specific (Batch === Course in this platform)
+    batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },
+    // Every exam carries its OWN fixed question set. Never auto-pulled from a bank.
+    questions: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
+      validate: {
+        validator: (v) => Array.isArray(v) && v.length > 0,
+        message: "An exam must contain at least one question",
+      },
+    },
     subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
     totalQuestions: { type: Number, required: true },
     totalMarks: { type: Number, required: true },
@@ -18035,10 +18322,31 @@ const examSchema = new mongoose.Schema(
     randomizeOptions: { type: Boolean, default: true },
     status: {
       type: String,
-      enum: ["DRAFT", "SCHEDULED", "LIVE", "CLOSED"],
+      enum: ["DRAFT", "SCHEDULED", "PUBLISHED", "LIVE", "CLOSED", "ARCHIVED"],
       default: "DRAFT",
     },
     instructions: { type: String },
+
+    // ── Result publishing rule ─────────────────
+    resultPublishMode: {
+      type: String,
+      enum: ["IMMEDIATE", "MANUAL", "SCHEDULED"],
+      default: "MANUAL",
+    },
+    resultPublishAt: { type: Date },
+    resultsPublishedAt: { type: Date },
+    resultsPublished: { type: Boolean, default: false },
+
+    // ── Outsider / specific-student access (admin granted) ─────
+    permittedStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+    // ── Question Bank archive metadata (archive = finished exam paper) ──
+    isArchived: { type: Boolean, default: false },
+    archivedAt: { type: Date },
+    studyVisible: { type: Boolean, default: false },
+    reconductedFrom: { type: mongoose.Schema.Types.ObjectId, ref: "Exam" },
+
+    // legacy compatibility
     eligibleBatches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Batch" }],
     eligibleStudentTypes: [{ type: String }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -18047,7 +18355,35 @@ const examSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+examSchema.index({ batch: 1, status: 1 });
+examSchema.index({ isArchived: 1, studyVisible: 1 });
+
 module.exports = mongoose.model("Exam", examSchema);
+```
+
+---
+
+# FILE: `server\src\models\ExamPermission.js`
+
+```javascript
+const mongoose = require("mongoose");
+
+// Explicit, auditable grant that lets a student who is NOT in the exam's batch
+// access that specific exam only (e.g. EXAM_ONLY / GUEST candidates).
+const examPermissionSchema = new mongoose.Schema(
+  {
+    student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
+    grantedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reason: { type: String },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+examPermissionSchema.index({ student: 1, exam: 1 }, { unique: true });
+
+module.exports = mongoose.model("ExamPermission", examPermissionSchema);
 ```
 
 ---
@@ -18092,9 +18428,11 @@ const materialSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-    subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
-    unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit" },
-    chapter: { type: mongoose.Schema.Types.ObjectId, ref: "Chapter" },
+    // Batch = Course. Materials are always published to a batch (Unit → Chapter).
+    batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },
+    subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
+    unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", required: true },
+    chapter: { type: mongoose.Schema.Types.ObjectId, ref: "Chapter", required: true },
     topic: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
     type: { type: String, enum: ["PDF", "DOC", "PPT", "IMAGE"], default: "PDF" },
     fileUrl: { type: String, required: true },
@@ -18162,7 +18500,8 @@ const questionSchema = new mongoose.Schema(
     explanation: { type: String },
     explanationImageUrl: { type: String },
     explanationImagePublicId: { type: String },
-    subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
+    subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
+    batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch" },
     unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit" },
     chapter: { type: mongoose.Schema.Types.ObjectId, ref: "Chapter" },
     topic: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
@@ -18207,6 +18546,9 @@ const resultSchema = new mongoose.Schema(
     percentage: { type: Number },
     rank: { type: Number },
     percentile: { type: Number },
+    // Result publishing gate — hidden from students until the exam's rule releases it
+    isPublished: { type: Boolean, default: false },
+    publishedAt: { type: Date },
     subjectBreakdown: [
       {
         subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },
@@ -18258,6 +18600,8 @@ const studentSchema = new mongoose.Schema(
     whatsappNumber: { type: String },
     tags: [{ type: String }],
     notes: { type: String },
+    // Mirror of active ExamPermission grants for fast dashboard display
+    examPermissions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exam" }],
     avatarBase64: { type: String },
     isActive: { type: Boolean, default: true },
   },
@@ -18460,6 +18804,7 @@ const userSchema = new mongoose.Schema(
     emailVerified: { type: Boolean, default: false },
     emailVerificationToken: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },
+    lastVerifiedToken: { type: String, select: false },
     passwordResetToken: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
   },
@@ -18559,6 +18904,7 @@ const Topic = require("../models/Topic");
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 const apiResponse = require("../utils/apiResponse");
+const ApiError = require("../utils/apiError");
 
 router.get("/subjects", async (req, res, next) => {
   try {
@@ -18575,8 +18921,67 @@ router.get("/chapters", async (req, res, next) => {
   try {
     const filter = { isActive: true };
     if (req.query.subject) filter.subject = req.query.subject;
+    if (req.query.unit) filter.unit = req.query.unit;
     const chapters = await Chapter.find(filter).sort({ displayOrder: 1 });
     return apiResponse(res, 200, "Chapters retrieved", { chapters });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/units", async (req, res, next) => {
+  try {
+    const filter = { isActive: true };
+    if (req.query.subject) filter.subject = req.query.subject;
+    const units = await Unit.find(filter)
+      .populate("subject", "name")
+      .sort({ displayOrder: 1 });
+    return apiResponse(res, 200, "Units retrieved", { units });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Create / manage academic structure (admin + teacher) ────
+router.post("/units", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const { name, subject, description, displayOrder } = req.body;
+    if (!name || !subject) {
+      return next(new ApiError(400, "Unit name and subject are required"));
+    }
+    // Return an existing unit with the same name instead of duplicating.
+    let unit = await Unit.findOne({ name, subject });
+    if (!unit) {
+      unit = await Unit.create({ name, subject, description, displayOrder });
+    }
+    return apiResponse(res, 201, "Unit ready", { unit });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/chapters", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const { name, unit, subject, description, displayOrder } = req.body;
+    if (!name || !unit) {
+      return next(new ApiError(400, "Chapter name and unit are required"));
+    }
+    let resolvedSubject = subject;
+    if (!resolvedSubject) {
+      const parent = await Unit.findById(unit);
+      resolvedSubject = parent?.subject;
+    }
+    let chapter = await Chapter.findOne({ name, unit });
+    if (!chapter) {
+      chapter = await Chapter.create({
+        name,
+        unit,
+        subject: resolvedSubject,
+        description,
+        displayOrder,
+      });
+    }
+    return apiResponse(res, 201, "Chapter ready", { chapter });
   } catch (error) {
     next(error);
   }
@@ -18909,8 +19314,11 @@ module.exports = router;
 # FILE: `server\src\routes\exam.routes.js`
 
 ```javascript
-﻿const express = require("express");
+const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }});
+
 const {
   getExams,
   getExamById,
@@ -18918,20 +19326,74 @@ const {
   updateExam,
   publishExam,
   closeExam,
+  archiveExam,
+  setStudyVisibility,
+  reconductExam,
+  downloadExam,
+  getQuestionBank,
+  publishResults,
+  grantPermission,
+  revokePermission,
+  listPermissions,
+  importQuestions,
+  createExamQuestion,
+  getExamQuestions,
+  deleteExamQuestion,
   deleteExam,
   getExamResults,
 } = require("../controllers/exam.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
+// Question Bank = archive of finished exams
+router.get("/bank", protect, authorize("admin", "teacher"), getQuestionBank);
+
 router.get("/", protect, getExams);
-router.get("/:id", protect, getExamById);
-router.get("/:id/results", protect, authorize("admin", "teacher"), getExamResults);
 router.post("/", protect, authorize("admin", "teacher"), createExam);
+router.get("/:id", protect, getExamById);
 router.put("/:id", protect, authorize("admin", "teacher"), updateExam);
+router.delete("/:id", protect, authorize("admin"), deleteExam);
+
+// Lifecycle
 router.put("/:id/publish", protect, authorize("admin", "teacher"), publishExam);
 router.put("/:id/close", protect, authorize("admin", "teacher"), closeExam);
-router.delete("/:id", protect, authorize("admin"), deleteExam);
+router.put("/:id/archive", protect, authorize("admin", "teacher"), archiveExam);
+router.put("/:id/study-visibility", protect, authorize("admin", "teacher"), setStudyVisibility);
+router.post("/:id/reconduct", protect, authorize("admin", "teacher"), reconductExam);
+router.get("/:id/download", protect, authorize("admin", "teacher"), downloadExam);
+
+// Results publishing
+router.get("/:id/results", protect, authorize("admin", "teacher"), getExamResults);
+router.put("/:id/publish-results", protect, authorize("admin", "teacher"), publishResults);
+
+// Exam-specific questions (belong to THIS exam only)
+router.get("/:id/questions", protect, authorize("admin", "teacher"), getExamQuestions);
+router.post(
+  "/:id/questions",
+  protect,
+  authorize("admin", "teacher"),
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "explanationImage", maxCount: 1 },
+    { name: "optionImage_0", maxCount: 1 },
+    { name: "optionImage_1", maxCount: 1 },
+    { name: "optionImage_2", maxCount: 1 },
+    { name: "optionImage_3", maxCount: 1 },
+  ]),
+  createExamQuestion
+);
+router.post("/:id/import-questions", protect, authorize("admin", "teacher"), importQuestions);
+router.delete(
+  "/:id/questions/:questionId",
+  protect,
+  authorize("admin", "teacher"),
+  deleteExamQuestion
+);
+
+// Outsider / exam-only student permissions
+router.get("/:id/permissions", protect, authorize("admin", "teacher"), listPermissions);
+router.post("/:id/permissions", protect, authorize("admin"), grantPermission);
+router.delete("/:id/permissions/:studentId", protect, authorize("admin"), revokePermission);
 
 module.exports = router;
 ```
@@ -18998,12 +19460,22 @@ module.exports = router;
 ```javascript
 ﻿const express = require("express");
 const router = express.Router();
-const { getMaterials, createMaterial, deleteMaterial } = require("../controllers/material.controller");
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+const {
+  getMaterials,
+  getMyBatchMaterials,
+  createMaterial,
+  deleteMaterial,
+  getMaterialTree,
+} = require("../controllers/material.controller");
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
+router.get("/my", protect, authorize("student"), getMyBatchMaterials);
+router.get("/tree", protect, getMaterialTree);
 router.get("/", protect, getMaterials);
-router.post("/", protect, authorize("admin", "teacher"), createMaterial);
+router.post("/", protect, authorize("admin", "teacher"), upload.single("file"), createMaterial);
 router.delete("/:id", protect, authorize("admin", "teacher"), deleteMaterial);
 
 module.exports = router;
@@ -19042,9 +19514,13 @@ module.exports = router;
 ```javascript
 ﻿const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
 const {
   getQuestions,
   createQuestion,
+  createQuestionWithImages,
   updateQuestion,
   deleteQuestion,
   addExplanation,
@@ -19053,8 +19529,38 @@ const {
 const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
+const Question = require("../models/Question");
+const apiResponse = require("../utils/apiResponse");
+
+// Question Bank = archive of completed exams (exam papers), NOT a manual question store.
+router.get("/bank", protect, authorize("teacher", "admin"), async (req, res, next) => {
+  try {
+    const svc = require("../services/exam.service");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const data = await svc.getQuestionBank({ page, limit, search: req.query.search || "" });
+    return apiResponse(res, 200, "Question bank (archived exam papers)", data);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/", protect, authorize("teacher", "admin"), getQuestions);
 router.post("/", protect, authorize("teacher", "admin"), createQuestion);
+router.post(
+  "/with-images",
+  protect,
+  authorize("teacher", "admin"),
+  upload.fields([
+    { name: "questionImage", maxCount: 1 },
+    { name: "explanationImage", maxCount: 1 },
+    { name: "optionImage_0", maxCount: 1 },
+    { name: "optionImage_1", maxCount: 1 },
+    { name: "optionImage_2", maxCount: 1 },
+    { name: "optionImage_3", maxCount: 1 },
+  ]),
+  createQuestionWithImages
+);
 router.post("/bulk-import", protect, authorize("admin"), bulkImport);
 router.put("/:id", protect, authorize("teacher", "admin"), updateQuestion);
 router.put("/:id/explanation", protect, authorize("teacher", "admin"), addExplanation);
@@ -19099,7 +19605,11 @@ const ApiError = require("../utils/apiError");
 
 router.get("/my", protect, authorize("student", "admin"), async (req, res, next) => {
   try {
-    const results = await Result.find({ student: req.user._id })
+    // Students only ever see results the exam rule has released.
+    const isStudent = req.user.role === "student";
+    const filter = { student: req.user._id };
+    if (isStudent) filter.isPublished = true;
+    const results = await Result.find(filter)
       .populate("exam", "title testType duration totalMarks")
       .sort({ createdAt: -1 });
     return apiResponse(res, 200, "Results retrieved", { results });
@@ -19114,6 +19624,15 @@ router.get("/:attemptId", protect, async (req, res, next) => {
       .populate("exam", "title testType duration totalMarks")
       .populate("subjectBreakdown.subject", "name");
     if (!result) throw new ApiError(404, "Result not found");
+    // A student cannot read someone else's result, nor an unpublished result they own.
+    if (req.user.role === "student") {
+      if (String(result.student) !== String(req.user._id)) {
+        throw new ApiError(403, "Not authorized to view this result");
+      }
+      if (!result.isPublished) {
+        return apiResponse(res, 200, "Result not published yet", { result: null, pending: true });
+      }
+    }
     return apiResponse(res, 200, "Result retrieved", { result });
   } catch (error) {
     next(error);
@@ -19124,6 +19643,9 @@ router.get("/:attemptId/solutions", protect, async (req, res, next) => {
   try {
     const attempt = await Attempt.findById(req.params.attemptId);
     if (!attempt) throw new ApiError(404, "Attempt not found");
+    if (req.user.role === "student" && String(attempt.student) !== String(req.user._id)) {
+      throw new ApiError(403, "Not authorized to view these solutions");
+    }
 
     const solutions = [];
     for (const answer of attempt.answers) {
@@ -19583,7 +20105,7 @@ process.on("unhandledRejection", (err) => {
 # FILE: `server\src\services\attempt.service.js`
 
 ```javascript
-const Attempt = require("../models/Attempt");
+﻿const Attempt = require("../models/Attempt");
 const Exam = require("../models/Exam");
 const Question = require("../models/Question");
 const Result = require("../models/Result");
@@ -19604,9 +20126,13 @@ const getMyAttempts = async (studentId) => {
   return attempts;
 };
 
-const startAttempt = async (examId, studentId) => {
+const startAttempt = async (examId, studentId, user) => {
   const exam = await Exam.findById(examId);
   if (!exam) throw new ApiError(404, "Exam not found");
+
+  // Enforce access (batch membership or explicit admin permission) on the backend.
+  const { assertExamAccess } = require("./exam.service");
+  await assertExamAccess(user || { _id: studentId, role: "student" }, exam);
 
   const existingInProgress = await Attempt.findOne({
     exam: examId,
@@ -19659,15 +20185,13 @@ const startAttempt = async (examId, studentId) => {
     throw new ApiError(400, "Maximum attempts reached for this exam");
   }
 
-  let questions = await Question.find({
-    $or: [
-      { subject: { $in: exam.subjects || [] } },
-      { isActive: true },
-    ],
-  }).limit(exam.totalQuestions || 10);
-
+  // Every exam runs on its OWN fixed question set - never a random bank pool.
+  const questions = await Question.find({
+    _id: { $in: exam.questions || [] },
+    isActive: true,
+  });
   if (questions.length === 0) {
-    questions = await Question.find({ isActive: true }).limit(10);
+    throw new ApiError(400, "This exam has no questions configured");
   }
 
   let questionOrder = questions.map((q) => q._id);
@@ -19846,10 +20370,16 @@ const register = async (name, email, password, phone) => {
 const verifyEmail = async (token) => {
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
   const user = await User.findOne({ emailVerificationToken: hashedToken }).select(
-    "+emailVerificationToken +emailVerificationExpires"
+    "+emailVerificationToken +emailVerificationExpires +lastVerifiedToken"
   );
 
   if (!user || !user.emailVerificationExpires || new Date(user.emailVerificationExpires).getTime() <= Date.now()) {
+    // If the token was already used to verify this account, return idempotent success
+    const alreadyVerifiedUser = await User.findOne({ lastVerifiedToken: hashedToken });
+    if (alreadyVerifiedUser && alreadyVerifiedUser.emailVerified) {
+      return { message: "Email is already verified. You can now log in." };
+    }
+
     if (user) {
       user.emailVerificationToken = undefined;
       user.emailVerificationExpires = undefined;
@@ -19859,6 +20389,7 @@ const verifyEmail = async (token) => {
   }
 
   user.emailVerified = true;
+  user.lastVerifiedToken = hashedToken;
   user.emailVerificationToken = undefined;
   user.emailVerificationExpires = undefined;
   await user.save({ validateBeforeSave: false });
@@ -19991,7 +20522,7 @@ const adminCreateStudent = async (data) => {
     user: user._id,
     studentId,
     studentType: data.studentType || "REGULAR_OFFLINE",
-    batches: data.batches || [],
+    batches: data.batch ? [data.batch] : (data.batches || []),
     enrollmentDate: new Date(),
     parentName: data.parentName,
     parentPhone: data.parentPhone,
@@ -20164,13 +20695,12 @@ const uploadFile = (fileBuffer, folder, resourceType = "auto") => {
       },
       (error, result) => {
         if (error) {
-          // If Cloudinary credentials are mock/default, provide fallback url
-          return resolve({
-            url: `https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80`,
-            publicId: `mock_${Date.now()}`,
-            size: fileBuffer.length,
-            format: "jpg",
-          });
+          // Production behaviour: surface the real failure instead of a dummy preview.
+          const message =
+            error.message || "Cloudinary upload failed. Check storage credentials.";
+          const err = new Error(message);
+          err.statusCode = 502;
+          return reject(err);
         }
         resolve({
           url: result.secure_url,
@@ -20324,37 +20854,71 @@ const getAdminDashboard = async () => {
 };
 
 const getStudentDashboard = async (studentUserId) => {
-  const student = await Student.findOne({ user: studentUserId }).populate("batches", "name code batchType");
+  const { publishScheduledResults } = require("./exam.service");
+  const ExamPermission = require("../models/ExamPermission");
 
+  // Release any scheduled results whose time has come before reading.
+  await publishScheduledResults().catch(() => {});
+  const student = await Student.findOne({ user: studentUserId }).populate(
+    "batches",
+    "name code batchType startDate endDate schedule"
+  );
+  const batchIds = (student?.batches || []).map((b) => b._id || b);
+  const perms = await ExamPermission.find({ student: studentUserId, isActive: true }).select("exam");
+  const permittedExamIds = perms.map((p) => p.exam);
+
+  // Only released exams for the student's batch (or permitted exams).
   const upcomingTests = await Exam.find({
-    status: "LIVE",
+    $or: [
+      { batch: { $in: batchIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+      { _id: { $in: permittedExamIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+    ],
     endTime: { $gt: new Date() },
-  }).limit(3).select("title testType duration totalQuestions totalMarks startTime endTime");
+  })
+    .limit(5)
+    .select("title testType duration totalQuestions totalMarks startTime endTime batch");
 
-  const recentMaterials = await Material.find({ isActive: true })
+  // Materials are batch-scoped (Batch = Course).
+  const recentMaterials = await Material.find({
+    isActive: true,
+    ...(batchIds.length ? { batch: { $in: batchIds } } : {}),
+  })
     .populate("subject", "name")
+    .populate("unit", "name")
+    .populate("chapter", "name")
     .sort({ createdAt: -1 })
-    .limit(4);
+    .limit(5);
 
-  const recentResults = await Result.find({ student: studentUserId })
+  // Students only see released results.
+  const recentResults = await Result.find({ student: studentUserId, isPublished: true })
     .populate("exam", "title testType")
     .sort({ createdAt: -1 })
     .limit(3);
 
-  return { student, upcomingTests, recentMaterials, recentResults };
+  // Archived exams published for study.
+  const studyPapers = await Exam.find({
+    isArchived: true,
+    studyVisible: true,
+  })
+    .limit(5)
+    .select("title testType totalQuestions duration archivedAt");
+
+  return { student, upcomingTests, recentMaterials, recentResults, studyPapers };
 };
 
 const getTeacherDashboard = async (teacherUserId) => {
   const teacher = await Teacher.findOne({ user: teacherUserId }).populate("subject", "name");
 
-  const [questionCount, materialCount, lectureCount, examCount] = await Promise.all([
-    Question.countDocuments({ createdBy: teacherUserId, isActive: true }),
+  // NOTE: there is no manual "question bank" for teachers — questions live inside exams.
+  const [materialCount, lectureCount, examCount, archivedCount, batchCount] = await Promise.all([
     Material.countDocuments({ uploadedBy: teacherUserId, isActive: true }),
     Lecture.countDocuments({ teacher: teacherUserId, isActive: true }),
-    Exam.countDocuments({ createdBy: teacherUserId }),
+    Exam.countDocuments({ createdBy: teacherUserId, isArchived: { $ne: true } }),
+    Exam.countDocuments({ createdBy: teacherUserId, isArchived: true }),
+    Batch.countDocuments({ "assignedTeachers.teacher": teacherUserId, isActive: true }),
   ]);
 
-  return { teacher, questionCount, materialCount, lectureCount, examCount };
+  return { teacher, materialCount, lectureCount, examCount, archivedCount, batchCount };
 };
 
 module.exports = { getAdminDashboard, getStudentDashboard, getTeacherDashboard };
@@ -20641,6 +21205,10 @@ const evaluateAttempt = async (attempt) => {
   const exam = await Exam.findById(attempt.exam);
   const totalMarks = exam ? exam.totalMarks : totalQuestions * 4;
 
+  // Respect the exam's result publishing rule.
+  // IMMEDIATE → result visible now. MANUAL / SCHEDULED → hidden until released.
+  const publishNow = exam?.resultPublishMode === "IMMEDIATE";
+
   const result = await Result.create({
     attempt: attempt._id,
     exam: attempt.exam,
@@ -20655,11 +21223,15 @@ const evaluateAttempt = async (attempt) => {
     percentage: totalMarks > 0 ? Math.max(0, Math.round((totalScore / totalMarks) * 100)) : 0,
     subjectBreakdown: Object.values(subjectMap),
     chapterBreakdown: Object.values(chapterMap),
+    isPublished: publishNow,
+    publishedAt: publishNow ? new Date() : undefined,
   });
 
   await Notification.create({
-    title: "Result Available",
-    message: `Your result for "${exam ? exam.title : "Exam"}" is ready. Score: ${totalScore}/${totalMarks}`,
+    title: publishNow ? "Result Available" : "Exam Submitted",
+    message: publishNow
+      ? `Your result for "${exam ? exam.title : "Exam"}" is ready. Score: ${totalScore}/${totalMarks}`
+      : `Your response for "${exam ? exam.title : "Exam"}" was submitted. Results will be published soon.`,
     type: "RESULT",
     targetStudents: [attempt.student],
   }).catch(() => {});
@@ -20678,33 +21250,139 @@ module.exports = { evaluateAttempt };
 const Exam = require("../models/Exam");
 const Attempt = require("../models/Attempt");
 const Question = require("../models/Question");
+const Result = require("../models/Result");
+const ExamPermission = require("../models/ExamPermission");
 const { shuffleArray, generateOptionOrder } = require("../utils/shuffle");
 const ApiError = require("../utils/apiError");
 
+/**
+ * Batch = Course. Exams are batch-specific.
+ * Question Bank = archive of finished exams (the exam paper IS the question set).
+ */
+
+// ── Access rule ───────────────────
+// Draft/secret exams are NEVER visible to students.
+// A student may access an exam only when it is released (PUBLISHED/LIVE)
+// AND ( they belong to the exam's batch  OR  an active ExamPermission exists ).
+const canAccessExam = async (user, exam) => {
+  if (!user) return false;
+  if (user.role === "admin" || user.role === "teacher") return true;
+  if (!exam) return false;
+  if (!["PUBLISHED", "LIVE"].includes(exam.status)) return false;
+
+  const Student = require("../models/Student");
+  const student = await Student.findOne({ user: user._id });
+  const batchId = exam.batch?._id || exam.batch;
+  if (student?.batches?.some((b) => b.toString() === batchId?.toString())) return true;
+
+  const perm = await ExamPermission.findOne({
+    student: user._id,
+    exam: exam._id || exam.id,
+    isActive: true,
+  });
+  return !!perm;
+};
+
+const assertExamAccess = async (user, exam) => {
+  const allowed = await canAccessExam(user, exam);
+  if (!allowed) throw new ApiError(403, "You do not have access to this exam");
+};
+
+// ── Create ─────────────────
 const createExam = async (data, userId) => {
-  const exam = await Exam.create({ ...data, createdBy: userId, status: "DRAFT" });
+  const {
+    questions = [],
+    publishNow = false,
+    resultPublishMode = "MANUAL",
+    resultPublishAt,
+    startTime,
+    endTime,
+    batch,
+  } = data;
+
+  if (!batch) throw new ApiError(400, "A batch must be selected for every exam");
+  if (!questions || questions.length === 0) {
+    throw new ApiError(400, "An exam must contain its own question set (add at least one question)");
+  }
+  if (startTime && endTime && new Date(startTime) >= new Date(endTime)) {
+    throw new ApiError(400, "Exam end time must be after the start time");
+  }
+  if (resultPublishMode === "SCHEDULED" && !resultPublishAt) {
+    throw new ApiError(400, "Scheduled result publishing requires a publish date/time");
+  }
+
+  const exam = await Exam.create({
+    ...data,
+    questions,
+    totalQuestions: data.totalQuestions || questions.length,
+    createdBy: userId,
+    status: publishNow ? "LIVE" : "DRAFT",
+    resultPublishMode,
+    resultPublishAt: resultPublishAt || undefined,
+    publishedAt: publishNow ? new Date() : undefined,
+  });
   return exam;
 };
 
-const getExams = async (filter = {}) => {
-  const exams = await Exam.find(filter)
-    .populate("course", "name")
-    .populate("subjects", "name")
-    .populate("testSeries", "title")
-    .sort({ createdAt: -1 });
-  return exams;
+// ── Read ─────────────────
+const getExams = async (filter = {}, { page = 1, limit = 20 } = {}) => {
+  const skip = (page - 1) * limit;
+  const query = { ...filter };
+  const [exams, total] = await Promise.all([
+    Exam.find(query)
+      .populate("course", "name")
+      .populate("batch", "name code batchType")
+      .populate("subjects", "name")
+      .populate("testSeries", "title")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Exam.countDocuments(query),
+  ]);
+  return { exams, total, page, limit, pages: Math.ceil(total / limit) || 1 };
+};
+
+// Exams visible to a specific student (batch + permissions + study archive)
+const getStudentExams = async (user, { page = 1, limit = 20 } = {}) => {
+  const Student = require("../models/Student");
+  const student = await Student.findOne({ user: user._id });
+  const batchIds = (student?.batches || []).map((b) => b.toString());
+
+  const perms = await ExamPermission.find({ student: user._id, isActive: true }).select("exam");
+  const permittedExamIds = perms.map((p) => p.exam);
+
+  const filter = {
+    $or: [
+      { batch: { $in: batchIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+      { _id: { $in: permittedExamIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+      { status: { $in: ["CLOSED", "ARCHIVED"] }, isArchived: true, studyVisible: true },
+    ],
+  };
+
+  const skip = (page - 1) * limit;
+  const [exams, total] = await Promise.all([
+    Exam.find(filter)
+      .populate("batch", "name code")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Exam.countDocuments(filter),
+  ]);
+  return { exams, total, page, limit, pages: Math.ceil(total / limit) || 1 };
 };
 
 const getExamById = async (id) => {
   const exam = await Exam.findById(id)
     .populate("course", "name")
-    .populate("subjects", "name");
+    .populate("batch", "name code batchType")
+    .populate("subjects", "name")
+    .populate("permittedStudents", "name email");
   if (!exam) throw new ApiError(404, "Exam not found");
   return exam;
 };
 
 const updateExam = async (id, data) => {
-  const exam = await Exam.findByIdAndUpdate(id, data, { new: true });
+  const exam = await Exam.findByIdAndUpdate(id, data, { new: true, runValidators: false });
   if (!exam) throw new ApiError(404, "Exam not found");
   return exam;
 };
@@ -20712,14 +21390,185 @@ const updateExam = async (id, data) => {
 const publishExam = async (id) => {
   const exam = await Exam.findById(id);
   if (!exam) throw new ApiError(404, "Exam not found");
+  if (!exam.questions || exam.questions.length === 0) {
+    throw new ApiError(400, "Cannot publish an exam without a question set");
+  }
   exam.status = "LIVE";
   exam.publishedAt = new Date();
   await exam.save();
   return exam;
 };
 
+// Close → archive into the Question Bank (the exam paper becomes reusable)
 const closeExam = async (id) => {
-  await Exam.findByIdAndUpdate(id, { status: "CLOSED" });
+  const exam = await Exam.findById(id);
+  if (!exam) throw new ApiError(404, "Exam not found");
+  exam.status = "CLOSED";
+  exam.isArchived = true;
+  exam.archivedAt = new Date();
+  await exam.save();
+  return exam;
+};
+
+const archiveExam = async (id) => {
+  const exam = await Exam.findById(id);
+  if (!exam) throw new ApiError(404, "Exam not found");
+  exam.isArchived = true;
+  exam.archivedAt = exam.archivedAt || new Date();
+  if (exam.status !== "CLOSED") exam.status = "CLOSED";
+  await exam.save();
+  return exam;
+};
+
+const setStudyVisibility = async (id, visible) => {
+  const exam = await Exam.findById(id);
+  if (!exam) throw new ApiError(404, "Exam not found");
+  exam.studyVisible = !!visible;
+  if (visible && !exam.isArchived) {
+    exam.isArchived = true;
+    exam.archivedAt = new Date();
+  }
+  await exam.save();
+  return exam;
+};
+
+// Reconduct: clone an archived exam into a fresh exam (own copy of questions)
+const reconductExam = async (id, overrides = {}, userId) => {
+  const source = await Exam.findById(id);
+  if (!source) throw new ApiError(404, "Exam not found");
+  const now = new Date();
+  const clone = await Exam.create({
+    title: overrides.title || `${source.title} (Reconduct)`,
+    description: source.description,
+    testType: source.testType,
+    batch: overrides.batch || source.batch,
+    questions: source.questions,
+    subjects: source.subjects,
+    totalQuestions: source.totalQuestions,
+    totalMarks: source.totalMarks,
+    marksPerCorrect: source.marksPerCorrect,
+    negativePerWrong: source.negativePerWrong,
+    duration: source.duration,
+    startTime: overrides.startTime ? new Date(overrides.startTime) : now,
+    endTime: overrides.endTime
+      ? new Date(overrides.endTime)
+      : new Date(now.getTime() + 60 * 60 * 1000),
+    maxAttempts: source.maxAttempts,
+    randomizeQuestions: source.randomizeQuestions,
+    randomizeOptions: source.randomizeOptions,
+    instructions: source.instructions,
+    resultPublishMode: source.resultPublishMode,
+    createdBy: userId,
+    status: "DRAFT",
+    reconductedFrom: source._id,
+  });
+  return clone;
+};
+
+// Downloadable exam pack (JSON)
+const buildExamPack = async (id) => {
+  const exam = await Exam.findById(id).populate("batch", "name code");
+  if (!exam) throw new ApiError(404, "Exam not found");
+  const questions = await Question.find({ _id: { $in: exam.questions }});
+  return {
+    title: exam.title,
+    testType: exam.testType,
+    batch: exam.batch?.name || null,
+    totalMarks: exam.totalMarks,
+    marksPerCorrect: exam.marksPerCorrect,
+    negativePerWrong: exam.negativePerWrong,
+    duration: exam.duration,
+    questions: questions.map((q) => ({
+      questionText: q.questionText,
+      questionImageUrl: q.questionImageUrl || null,
+      options: q.options.map((o) => ({ text: o.text, imageUrl: o.imageUrl || null })),
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation || null,
+      marks: q.marks,
+      negativeMarks: q.negativeMarks,
+      difficulty: q.difficulty,
+    })),
+  };
+};
+
+// ── Question Bank (archive of finished exams) ─────────
+const getQuestionBank = async ({ page = 1, limit = 20, search = "" } = {}) => {
+  const filter = { isArchived: true };
+  if (search) filter.title = { $regex: search, $options: "i" };
+  const skip = (page - 1) * limit;
+  const [exams, total] = await Promise.all([
+    Exam.find(filter)
+      .populate("batch", "name code")
+      .populate("createdBy", "name")
+      .sort({ archivedAt: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Exam.countDocuments(filter),
+  ]);
+  return { exams, total, page, limit, pages: Math.ceil(total / limit) || 1 };
+};
+
+// ── Results publishing ────────────
+const publishResults = async (id, { publish = true } = {}) => {
+  const exam = await Exam.findById(id);
+  if (!exam) throw new ApiError(404, "Exam not found");
+  exam.resultsPublished = publish;
+  exam.resultsPublishedAt = publish ? new Date() : undefined;
+  await exam.save();
+  await Result.updateMany(
+    { exam: id },
+    { isPublished: publish, publishedAt: publish ? new Date() : undefined }
+  );
+  return exam;
+};
+
+// Called on each read/tick — releases SCHEDULED results whose time has come.
+const publishScheduledResults = async () => {
+  const now = new Date();
+  const due = await Exam.find({
+    resultPublishMode: "SCHEDULED",
+    resultsPublished: false,
+    resultPublishAt: { $lte: now },
+  });
+  for (const exam of due) {
+    exam.resultsPublished = true;
+    exam.resultsPublishedAt = now;
+    await exam.save();
+    await Result.updateMany({ exam: exam._id }, { isPublished: true, publishedAt: now });
+  }
+  return due.length;
+};
+
+// ── Exam permissions (outsider exam-only students) ────────
+const grantExamPermission = async ({ studentId, examId, reason }, grantedBy) => {
+  const Student = require("../models/Student");
+  const perm = await ExamPermission.findOneAndUpdate(
+    { student: studentId, exam: examId },
+    { student: studentId, exam: examId, reason, grantedBy, isActive: true },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  );
+  await Student.findOneAndUpdate(
+    { user: studentId },
+    { $addToSet: { examPermissions: examId } }
+  );
+  return perm;
+};
+
+const revokeExamPermission = async ({ studentId, examId }) => {
+  const Student = require("../models/Student");
+  await ExamPermission.findOneAndUpdate(
+    { student: studentId, exam: examId },
+    { isActive: false }
+  );
+  await Student.findOneAndUpdate({ user: studentId }, { $pull: { examPermissions: examId }});
+  return { revoked: true };
+};
+
+const listExamPermissions = async (examId) => {
+  return ExamPermission.find({ exam: examId, isActive: true }).populate(
+    "student",
+    "name email"
+  );
 };
 
 const startAttempt = async (examId, studentId) => {
@@ -20749,14 +21598,15 @@ const startAttempt = async (examId, studentId) => {
     throw new ApiError(400, "Maximum attempts reached");
   }
 
-  let questions = await Question.find({
-    subject: { $in: exam.subjects },
+  // Only the exam's own question set — no random bank selection
+  const ownQuestions = await Question.find({
+    _id: { $in: exam.questions || [] },
     isActive: true,
-  }).limit(exam.totalQuestions || 30);
-
-  if (questions.length === 0) {
-    questions = await Question.find({ isActive: true }).limit(exam.totalQuestions || 10);
+  });
+  if (ownQuestions.length === 0) {
+    throw new ApiError(400, "This exam has no questions configured");
   }
+  const questions = ownQuestions;
 
   let questionOrder = questions.map((q) => q._id);
   if (exam.randomizeQuestions) {
@@ -20820,12 +21670,25 @@ const startAttempt = async (examId, studentId) => {
 };
 
 module.exports = {
+  canAccessExam,
+  assertExamAccess,
   createExam,
   getExams,
+  getStudentExams,
   getExamById,
   updateExam,
   publishExam,
   closeExam,
+  archiveExam,
+  setStudyVisibility,
+  reconductExam,
+  buildExamPack,
+  getQuestionBank,
+  publishResults,
+  publishScheduledResults,
+  grantExamPermission,
+  revokeExamPermission,
+  listExamPermissions,
   startAttempt,
 };
 ```

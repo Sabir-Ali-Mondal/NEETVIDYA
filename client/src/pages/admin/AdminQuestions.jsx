@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { HelpCircle, Plus, Search, CheckCircle, Pencil, Trash2, Filter, X, Save, BookOpen, Upload, Download, FileSpreadsheet } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const difficultyColors = {
@@ -72,7 +72,7 @@ export default function AdminQuestions() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.subject) {
-      toast.error("Please select a subject");
+      alertError("Please select a subject");
       return;
     }
     setSavingQuestion(true);
@@ -83,7 +83,7 @@ export default function AdminQuestions() {
         negativeMarks: Number(form.negativeMarks || 1),
         year: form.year ? Number(form.year) : undefined,
       });
-      toast.success("Question authored and saved to bank");
+      alertSuccess("Question authored and saved to bank");
       setShowCreate(false);
       setForm({
         questionText: "",
@@ -99,7 +99,7 @@ export default function AdminQuestions() {
       });
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to author question");
+      alertError(err.response?.data?.message || "Failed to author question");
     } finally {
       setSavingQuestion(false);
     }
@@ -122,11 +122,11 @@ export default function AdminQuestions() {
         options: editingQuestion.options,
         correctAnswer: Number(editingQuestion.correctAnswer ?? 0),
       });
-      toast.success("Question updated successfully");
+      alertSuccess("Question updated successfully");
       setEditingQuestion(null);
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update question");
+      alertError(err.response?.data?.message || "Failed to update question");
     } finally {
       setSavingQuestion(false);
     }
@@ -136,11 +136,11 @@ export default function AdminQuestions() {
     if (!questionToDelete) return;
     try {
       await api.delete(`/questions/${questionToDelete._id}`);
-      toast.success("Question deleted");
+      alertSuccess("Question deleted");
       setQuestionToDelete(null);
       fetchQuestions();
     } catch {
-      toast.error("Failed to delete question");
+      alertError("Failed to delete question");
     }
   };
 
@@ -156,19 +156,19 @@ export default function AdminQuestions() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("CSV template downloaded");
+    alertSuccess("CSV template downloaded");
   };
 
   const handleBulkImportSubmit = async (e) => {
     e.preventDefault();
     if (!bulkCsvText.trim()) {
-      toast.error("Please paste CSV data or choose a CSV file");
+      alertError("Please paste CSV data or choose a CSV file");
       return;
     }
 
     const lines = bulkCsvText.trim().split("\n");
     if (lines.length < 2) {
-      toast.error("CSV must contain at least a header and 1 question row");
+      alertError("CSV must contain at least a header and 1 question row");
       return;
     }
 
@@ -198,18 +198,18 @@ export default function AdminQuestions() {
       }
 
       if (parsedQuestions.length === 0) {
-        toast.error("No valid questions parsed from CSV. Please check formatting.");
+        alertError("No valid questions parsed from CSV. Please check formatting.");
         setBulkImporting(false);
         return;
       }
 
       const { data } = await api.post("/questions/bulk-import", { questions: parsedQuestions });
-      toast.success(`Successfully imported ${data.data?.imported || parsedQuestions.length} questions!`);
+      alertSuccess(`Successfully imported ${data.data?.imported || parsedQuestions.length} questions!`);
       setShowBulkImport(false);
       setBulkCsvText("");
       fetchQuestions();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Bulk import failed");
+      alertError(err.response?.data?.message || "Bulk import failed");
     } finally {
       setBulkImporting(false);
     }

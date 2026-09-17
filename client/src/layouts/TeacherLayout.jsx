@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, FileText, Video, HelpCircle, ClipboardList, Link, BarChart3, User, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, HelpCircle, ClipboardList, Link, BarChart3, User, LogOut, Menu, X } from "lucide-react";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import NotificationBell from "../components/shared/NotificationBell";
@@ -7,9 +7,7 @@ import NotificationBell from "../components/shared/NotificationBell";
 const navItems = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard, end: true },
   { label: "Study Materials", path: "/teacher/materials", icon: FileText },
-  { label: "Video Classes", path: "/teacher/classes", icon: Video },
-  { label: "Question Bank", path: "/teacher/questions", icon: HelpCircle },
-  { label: "Exam Manager", path: "/teacher/exams", icon: ClipboardList },
+  { label: "Exam & Question Manager", path: "/teacher/exams", icon: ClipboardList },
   { label: "Student Performance", path: "/teacher/performance", icon: BarChart3 },
 ];
 
@@ -24,8 +22,8 @@ export default function TeacherLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-dark text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-dark text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -64,7 +62,7 @@ export default function TeacherLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-btn w-full transition-colors"
@@ -77,8 +75,8 @@ export default function TeacherLayout() {
 
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -88,7 +86,7 @@ export default function TeacherLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
           <Outlet />
         </main>
       </div>

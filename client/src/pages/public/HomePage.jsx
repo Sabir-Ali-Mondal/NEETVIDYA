@@ -7,33 +7,15 @@ import { useState, useEffect } from "react";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import TelegramLink from "../../components/shared/TelegramLink";
 import useContactSettings from "../../hooks/useContactSettings";
+import homeBackgroundVideo from "../../assets/video/green_black_background.mp4";
 
 export default function HomePage() {
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const { settings } = useContactSettings();
 
-  const approvedBatches = [
-    {
-      _id: "dropper-sankalp",
-      name: "SANKALP",
-      description: "Duration: Complete 1 Year | Fees: ₹20,000",
-      targetClass: "Dropper / 12th",
-      feeAmount: 20000,
-      coverImageUrl: images.courseClassXii,
-    },
-    {
-      _id: "11th-udaan",
-      name: "UDAAN",
-      description: "Duration: Complete 2 Years | Fees: ₹35,000",
-      targetClass: "11th",
-      feeAmount: 35000,
-      coverImageUrl: images.courseClassXi,
-    },
-  ];
-
   useEffect(() => {
-    api.get("/courses").then(({ data }) => setCourses(approvedBatches)).catch(() => setCourses(approvedBatches));
+    api.get("/courses").then(({ data }) => setCourses(data.data?.courses || [])).catch(() => setCourses([]));
     api.get("/teachers/public").then(({ data }) => setTeachers(data.data.teachers || [])).catch(() => {});
   }, []);
 
@@ -41,7 +23,18 @@ export default function HomePage() {
     <div className="space-y-0">
       {/* Hero Section */}
       <section className="relative bg-brand-black text-white py-24 md:py-32 overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover opacity-30"
+          aria-label="Background video"
+        >
+          <source src={homeBackgroundVideo} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-r from-brand-black via-brand-dark/95 to-transparent z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(34,197,94,0.18),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(163,230,53,0.12),_transparent_30%)] z-10" />
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-brand-green/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-brand-lime/15 rounded-full blur-3xl pointer-events-none" />
 

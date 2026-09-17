@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Users, Plus, Search, BookOpen, Clock, Calendar, Pencil, Trash2, X, Save, UserMinus, ShieldAlert } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const batchTypeColors = {
@@ -63,7 +63,7 @@ export default function AdminBatches() {
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!form.course) {
-      toast.error("Please select a course before creating a batch");
+      alertError("Please select a course before creating a batch");
       return;
     }
 
@@ -73,12 +73,12 @@ export default function AdminBatches() {
         ...form,
         capacity: Number(form.capacity || 0),
       });
-      toast.success("Batch created successfully");
+      alertSuccess("Batch created successfully");
       setShowCreate(false);
       setForm({ name: "", code: "", batchType: "OFFLINE", course: "", academicYear: "", capacity: "", schedule: "", color: "#22c55e" });
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create batch");
+      alertError(err.response?.data?.message || "Failed to create batch");
     } finally {
       setCreating(false);
     }
@@ -97,7 +97,7 @@ export default function AdminBatches() {
       setAllStudents(sRes.data.data?.students || []);
     } catch {
       setBatchStudents([]);
-      toast.error("Failed to load students in this batch");
+      alertError("Failed to load students in this batch");
     } finally {
       setLoadingStudents(false);
     }
@@ -110,13 +110,13 @@ export default function AdminBatches() {
       await api.post(`/batches/${viewingBatch._id}/students`, {
         studentIds: [studentToEnroll],
       });
-      toast.success("Student enrolled into batch successfully");
+      alertSuccess("Student enrolled into batch successfully");
       const { data } = await api.get(`/batches/${viewingBatch._id}/students`);
       setBatchStudents(data.data?.students || []);
       setStudentToEnroll("");
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to enroll student");
+      alertError(err.response?.data?.message || "Failed to enroll student");
     }
   };
 
@@ -124,11 +124,11 @@ export default function AdminBatches() {
     if (!viewingBatch) return;
     try {
       await api.delete(`/batches/${viewingBatch._id}/students/${studentId}`);
-      toast.success("Student removed from batch");
+      alertSuccess("Student removed from batch");
       setBatchStudents((prev) => prev.filter((s) => s._id !== studentId));
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to remove student");
+      alertError(err.response?.data?.message || "Failed to remove student");
     }
   };
 
@@ -147,11 +147,11 @@ export default function AdminBatches() {
         schedule: editingBatch.schedule,
         color: editingBatch.color,
       });
-      toast.success("Batch updated successfully");
+      alertSuccess("Batch updated successfully");
       setEditingBatch(null);
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update batch");
+      alertError(err.response?.data?.message || "Failed to update batch");
     } finally {
       setSavingEdit(false);
     }
@@ -161,11 +161,11 @@ export default function AdminBatches() {
     if (!batchToDelete) return;
     try {
       await api.delete(`/batches/${batchToDelete._id}`);
-      toast.success("Batch deleted successfully");
+      alertSuccess("Batch deleted successfully");
       setBatchToDelete(null);
       fetchBatches();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete batch");
+      alertError(err.response?.data?.message || "Failed to delete batch");
     }
   };
 

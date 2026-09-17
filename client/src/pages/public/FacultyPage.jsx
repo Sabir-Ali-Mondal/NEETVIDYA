@@ -1,22 +1,29 @@
 
+import { useState, useEffect } from "react";
+import api from "../../config/api";
 import images from "../../config/images";
 
-const facultyProfiles = [
-  {
-    id: "ramij-khan",
-    name: "Ramij Khan",
-    image: images.teacher2,
-    number: "01",
-  },
-  {
-    id: "bheshma-das",
-    name: "Bheshma Das",
-    image: images.teacher1,
-    number: "02",
-  },
-];
+const getTeacherFallbackImage = (teacher) => {
+  const teacherName = teacher?.user?.name || teacher?.name || "";
+
+  if (teacherName.toLowerCase().includes("ramij")) return images.teacher2;
+  if (teacherName.toLowerCase().includes("bheshma")) return images.teacher1;
+
+  const imageList = [images.teacher1, images.teacher2, images.teacher3, images.teacher4, images.teacher5, images.teacher6];
+  const index = teacherName ? teacherName.length % imageList.length : 0;
+  return imageList[index];
+};
 
 export default function FacultyPage() {
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/teachers/public")
+      .then(({ data }) => setTeachers(data.data?.teachers || []))
+      .catch(() => setTeachers([]))
+      .finally(() => setLoading(false));
+  }, []);
   return (
     <main className="relative min-h-screen overflow-hidden bg-brand-soft">
       {/* Decorative background */}
@@ -61,69 +68,80 @@ export default function FacultyPage() {
         </div>
 
         {/* Faculty cards */}
-        <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-10">
-          {facultyProfiles.map((teacher) => (
-            <article
-              key={teacher.id}
-              className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
-            >
-              {/* Full poster image */}
-              <div className="overflow-hidden rounded-[1.5rem] bg-white">
-                <img
-                  src={teacher.image}
-                  alt={`Faculty profile of ${teacher.name}`}
-                  loading="lazy"
-                  className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-brand-green border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : teachers.length === 0 ? (
+          <div className="text-center py-20 text-slate-500">
+            <p className="font-semibold text-lg text-brand-dark mb-1">No faculty profiles available at the moment</p>
+            <p className="text-sm">Please check back soon.</p>
+          </div>
+        ) : (
+          <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-10">
+            {teachers.map((teacher) => (
+              <article
+                key={teacher._id}
+                className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
+              >
+                {/* Full poster image */}
+                <div className="overflow-hidden rounded-[1.5rem] bg-white">
+                  <img
+                    src={teacher.photoUrl || teacher.user?.avatar || getTeacherFallbackImage(teacher)}
+                    alt={`Faculty profile of ${teacher.user?.name || teacher.name}`}
+                    loading="lazy"
+                    className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                </div>
 
-              {/* Faculty information */}
-              <div className="px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">
-                      Meet Your Mentor
+                {/* Faculty information */}
+                <div className="px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">
+                        {teacher.specialisation || "Faculty"}
+                      </p>
+
+                      <h2 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl">
+                        {teacher.user?.name || teacher.name}
+                      </h2>
+                    </div>
+
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-green transition-all duration-300 group-hover:bg-brand-green group-hover:text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 17 17 7" />
+                        <path d="M7 7h10v10" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 h-px w-full bg-slate-100" />
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-slate-500">
+                      {teacher.qualification || "Guiding your next step."}
                     </p>
 
-                    <h2 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl">
-                      {teacher.name}
-                    </h2>
-                  </div>
-
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-green transition-all duration-300 group-hover:bg-brand-green group-hover:text-white">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M7 17 17 7" />
-                      <path d="M7 7h10v10" />
-                    </svg>
+                    <span className="whitespace-nowrap text-xs font-bold tracking-wide text-brand-green">
+                      NEETVIDYA
+                    </span>
                   </div>
                 </div>
-
-                <div className="mt-5 h-px w-full bg-slate-100" />
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-slate-500">
-                    Guiding your next step.
-                  </p>
-
-                  <span className="whitespace-nowrap text-xs font-bold tracking-wide text-brand-green">
-                    NEETVIDYA
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
 
         {/* Bottom message */}
         <div className="mx-auto mt-16 max-w-2xl text-center sm:mt-20">

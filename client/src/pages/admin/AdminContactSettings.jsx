@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Save, Globe, Mail, Send, RotateCcw, ExternalLink } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 
 const defaultSettings = {
   instituteEmail: "contact@neetvidya.com",
@@ -52,10 +52,15 @@ export default function AdminContactSettings() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleReset = () => {
-    if (confirm("Reset all contact settings to institute defaults?")) {
+  const handleReset = async () => {
+    const confirmed = await confirmDialog({
+      title: "Reset Settings?",
+      text: "Reset all contact settings to institute defaults?",
+      confirmText: "Yes, reset",
+    });
+    if (confirmed) {
       setForm(defaultSettings);
-      toast.success("Settings reset to defaults. Click 'Save All Settings' to persist.");
+      alertSuccess("Settings reset to defaults. Click 'Save All Settings' to persist.");
     }
   };
 
@@ -64,9 +69,9 @@ export default function AdminContactSettings() {
     setSaving(true);
     try {
       await api.put("/contact-settings", form);
-      toast.success("Contact settings saved successfully");
+      alertSuccess("Contact settings saved successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to save");
+      alertError(err.response?.data?.message || "Failed to save");
     } finally {
       setSaving(false);
     }

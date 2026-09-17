@@ -9,8 +9,8 @@ const {
 
 const startAttempt = async (req, res, next) => {
   try {
-    const result = await startAttemptService(req.params.examId, req.user._id);
-    return apiResponse(res, 200, "Resuming existing attempt", result);
+    const result = await startAttemptService(req.params.examId, req.user._id, req.user);
+    return apiResponse(res, 200, result.resumed ? "Resuming existing attempt" : "Attempt started", result);
   } catch (error) {
     next(error);
   }

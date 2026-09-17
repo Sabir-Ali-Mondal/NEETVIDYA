@@ -7,7 +7,7 @@ import {
   X, Save, Clock, ChevronRight, Eye, Calendar, BookOpen
 } from "lucide-react";
 import StudentBadge from "../../components/shared/StudentBadge";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -48,9 +48,8 @@ export default function AdminDashboard() {
     setCreating(true);
     try {
       const { data } = await api.post("/auth/admin/create-student", newStudent);
-      toast.success(
-        `Student created! ID: ${data.data.studentId} • Temp password copied to clipboard`,
-        { duration: 5000 }
+      alertSuccess(
+        `Student created! ID: ${data.data.studentId} • Temp password copied to clipboard`
       );
       try {
         navigator.clipboard?.writeText(data.data.tempPassword);
@@ -67,7 +66,7 @@ export default function AdminDashboard() {
       });
       loadData();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create student");
+      alertError(err.response?.data?.message || "Failed to create student");
     } finally {
       setCreating(false);
     }

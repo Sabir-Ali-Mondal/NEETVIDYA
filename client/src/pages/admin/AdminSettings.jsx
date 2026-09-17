@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../config/api";
 import { Settings, ShieldCheck, Bell, Key, Database, Globe, Save, CheckCircle, RefreshCw, Activity, Server } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminSettings() {
   const { user, updateUser } = useContext(AuthContext);
@@ -24,7 +24,7 @@ export default function AdminSettings() {
     setLoadingHealth(true);
     try {
       const { data } = await api.get("/admin/system-health");
-      setSystemHealth(data.data);
+      setSystemHealth(data?.data || null);
     } catch {
       setSystemHealth(null);
     } finally {
@@ -32,13 +32,20 @@ export default function AdminSettings() {
     }
   };
 
+  // Safe accessors — never let a missing field crash the render (browser has no `process`).
+  const health = systemHealth || {};
+  const dbInfo = health.database || {};
+  const serverInfo = health.server || {};
+  const runtimeEnv = (import.meta.env && import.meta.env.MODE) || "production";
+  const apiBase = (import.meta.env && import.meta.env.VITE_API_BASE_URL) || "/api";
+
   const handleClearCache = async () => {
     setClearingCache(true);
     try {
       await api.post("/admin/clear-cache");
-      toast.success("Cache cleared successfully");
+      alertSuccess("Cache cleared successfully");
     } catch {
-      toast.error("Failed to clear cache");
+      alertError("Failed to clear cache");
     } finally {
       setClearingCache(false);
     }
@@ -50,9 +57,9 @@ export default function AdminSettings() {
     try {
       const { data } = await api.put("/auth/profile", profileForm);
       updateUser(data.data.user);
-      toast.success("Profile updated successfully");
+      alertSuccess("Profile updated successfully");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update profile");
+      alertError(err.response?.data?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -61,11 +68,11 @@ export default function AdminSettings() {
   const handlePasswordSave = async (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("New passwords do not match");
+      alertError("New passwords do not match");
       return;
     }
     if (passwordForm.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      alertError("Password must be at least 8 characters");
       return;
     }
     setSaving(true);
@@ -74,10 +81,10 @@ export default function AdminSettings() {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      toast.success("Password changed successfully");
+      alertSuccess("Password changed successfully");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+      alertError(err.response?.data?.message || "Failed to change password");
     } finally {
       setSaving(false);
     }
@@ -259,7 +266,7 @@ export default function AdminSettings() {
                   </button>
                   <button
                     onClick={() => {
-                      toast.success("SMTP connection verified — mailer service operational");
+                      alertSuccess("SMTP connection verified — mailer service operational");
                     }}
                     className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition"
                   >
@@ -272,13 +279,13 @@ export default function AdminSettings() {
               <div className="p-6 space-y-4">
                 {[
                   { label: "Platform", value: "NEETVIDYA v1.0.0" },
-                  { label: "Environment", value: import.meta.env.MODE || "development" },
-                  { label: "Database Status", value: systemHealth?.database?.status ? `${systemHealth.database.status} (${systemHealth.database.connectionState})` : "Healthy (MongoDB)" },
-                  { label: "Server Node", value: systemHealth?.server?.nodeVersion || process.version || "Node.js v20+" },
-                  { label: "Server Uptime", value: systemHealth?.server?.uptime ? `${Math.round(systemHealth.server.uptime / 60)} minutes` : "Active" },
-                  { label: "Memory Usage", value: systemHealth?.server?.memoryUsageMB ? `${systemHealth.server.memoryUsageMB} MB` : "Normal" },
-                  { label: "API Base", value: import.meta.env.VITE_API_URL || "http://localhost:5000/api" },
-                  { label: "Logged in as", value: user?.email },
+                  { label: "Environment", value: runtimeEnv },
+                  { label: "Database Status", value: dbInfo.status ? `${dbInfo.status} (${dbInfo.connectionState || "Unknown"})` : "Unavailable" },
+                  { label: "Server Node", value: serverInfo.nodeVersion || "—" },
+                  { label: "Server Uptime", value: serverInfo.uptime ? `${Math.round(serverInfo.uptime / 60)} minutes` : "—" },
+                  { label: "Memory Usage", value: serverInfo.memoryUsageMB ? `${serverInfo.memoryUsageMB} MB` : "—" },
+                  { label: "API Base", value: apiBase },
+                  { label: "Logged in as", value: user?.email || "—" },
                   { label: "Role", value: "Administrator" },
                   { label: "Last login", value: user?.lastLogin ? new Date(user.lastLogin).toLocaleString("en-IN") : "—" },
                 ].map((item) => (

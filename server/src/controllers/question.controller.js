@@ -82,4 +82,58 @@ const bulkImport = async (req, res, next) => {
   }
 };
 
-module.exports = { getQuestions, createQuestion, updateQuestion, deleteQuestion, addExplanation, bulkImport };
+const { uploadFile } = require("../services/cloudinary.service");
+const FOLDERS = require("../constants/cloudinaryFolders");
+const Question = require("../models/Question");
+
+const createQuestionWithImages = async (req, res, next) => {
+  try {
+    const body = { ...req.body };
+    let options = JSON.parse(body.options || "[]");
+
+    // Upload question image
+    if (req.files?.questionImage?.[0]) {
+      const result = await uploadFile(req.files.questionImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.questionImageUrl = result.url;
+      body.questionImagePublicId = result.publicId;
+    }
+
+    // Upload explanation image
+    if (req.files?.explanationImage?.[0]) {
+      const result = await uploadFile(req.files.explanationImage[0].buffer, FOLDERS.QUESTIONS, "image");
+      body.explanationImageUrl = result.url;
+      body.explanationImagePublicId = result.publicId;
+    }
+
+    // Upload option images
+    for (let i = 0; i < 4; i++) {
+      const key = `optionImage_${i}`;
+      if (req.files?.[key]?.[0]) {
+        const result = await uploadFile(req.files[key][0].buffer, FOLDERS.QUESTIONS, "image");
+        if (options[i]) options[i].imageUrl = result.url;
+      }
+    }
+
+    body.options = options;
+    body.correctAnswer = Number(body.correctAnswer || 0);
+    body.marks = Number(body.marks || 4);
+    body.negativeMarks = Number(body.negativeMarks || 1);
+    if (!body.subject) delete body.subject;
+    if (!body.batch) delete body.batch;
+
+    const question = await Question.create({ ...body, createdBy: req.user._id });
+    return apiResponse(res, 201, "Question with images created", { question });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getQuestions,
+  createQuestion,
+  createQuestionWithImages,
+  updateQuestion,
+  deleteQuestion,
+  addExplanation,
+  bulkImport,
+};

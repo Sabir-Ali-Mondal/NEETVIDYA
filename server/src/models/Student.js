@@ -20,6 +20,8 @@ const studentSchema = new mongoose.Schema(
     whatsappNumber: { type: String },
     tags: [{ type: String }],
     notes: { type: String },
+    // Mirror of active ExamPermission grants for fast dashboard display
+    examPermissions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exam" }],
     avatarBase64: { type: String },
     isActive: { type: Boolean, default: true },
   },

@@ -11,8 +11,7 @@ const navItems = [
   { label: "Overview", path: "/admin", icon: LayoutDashboard, end: true },
   { label: "Students", path: "/admin/students", icon: Users },
   { label: "Faculty", path: "/admin/teachers", icon: GraduationCap },
-  { label: "Batches", path: "/admin/batches", icon: Layers },
-  { label: "Courses", path: "/admin/courses", icon: BookOpen },
+  { label: "Batches & Courses", path: "/admin/batches", icon: Layers },
   { label: "Question Bank", path: "/admin/questions", icon: HelpCircle },
   { label: "Exams & Tests", path: "/admin/exams", icon: ClipboardList },
   { label: "Enquiries", path: "/admin/enquiries", icon: MessageSquare },
@@ -32,8 +31,8 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="overflow-y-auto max-h-[calc(100vh-80px)]">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -72,7 +71,7 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             onClick={handleLogout}
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-btn w-full transition-colors"
@@ -86,7 +85,7 @@ export default function AdminLayout() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
@@ -105,8 +104,10 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

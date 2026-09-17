@@ -15,6 +15,9 @@ const resultSchema = new mongoose.Schema(
     percentage: { type: Number },
     rank: { type: Number },
     percentile: { type: Number },
+    // Result publishing gate — hidden from students until the exam's rule releases it
+    isPublished: { type: Boolean, default: false },
+    publishedAt: { type: Date },
     subjectBreakdown: [
       {
         subject: { type: mongoose.Schema.Types.ObjectId, ref: "Subject" },

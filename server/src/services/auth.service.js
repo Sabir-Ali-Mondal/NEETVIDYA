@@ -203,7 +203,7 @@ const adminCreateStudent = async (data) => {
     user: user._id,
     studentId,
     studentType: data.studentType || "REGULAR_OFFLINE",
-    batches: data.batches || [],
+    batches: data.batch ? [data.batch] : (data.batches || []),
     enrollmentDate: new Date(),
     parentName: data.parentName,
     parentPhone: data.parentPhone,

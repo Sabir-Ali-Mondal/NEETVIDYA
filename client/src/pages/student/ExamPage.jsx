@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Flag, Eraser, Send, Clock, AlertTriangle } from "lucide-react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 
 export default function ExamPage() {
   const { examId } = useParams();
@@ -35,7 +35,7 @@ export default function ExamPage() {
       setTimeLeft(remaining > 0 ? remaining : (d.duration || 30) * 60);
       setLoading(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Could not initialize exam");
+      alertError(err.response?.data?.message || "Could not initialize exam");
       navigate("/student/tests");
     }
   }, [examId, navigate]);
@@ -76,10 +76,10 @@ export default function ExamPage() {
     try {
       await api.put(`/attempts/${attemptId}/save`, { answers, currentQuestion: currentQ }).catch(() => {});
       const { data } = await api.post(`/attempts/${attemptId}/submit`);
-      toast.success(auto ? "Time expired. Exam auto-submitted." : "Exam submitted successfully!");
+      alertSuccess(auto ? "Time expired. Exam auto-submitted." : "Exam submitted successfully!");
       navigate(`/student/results`);
     } catch (err) {
-      toast.error("Error finalizing exam submission");
+      alertError("Error finalizing exam submission");
       navigate("/student/results");
     } finally {
       setSubmitting(false);
@@ -159,8 +159,13 @@ export default function ExamPage() {
             {formatTime(timeLeft)}
           </div>
           <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to submit your test now?")) {
+            onClick={async () => {
+              const confirmed = await confirmDialog({
+                title: "Submit Examination?",
+                text: "Are you sure you want to submit your test now?",
+                confirmText: "Yes, submit",
+              });
+              if (confirmed) {
                 submitExam(false);
               }
             }}
@@ -260,8 +265,13 @@ export default function ExamPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => {
-                      if (window.confirm("Submit final exam responses?")) submitExam(false);
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: "Submit Final Exam?",
+                        text: "Submit final exam responses?",
+                        confirmText: "Submit",
+                      });
+                      if (confirmed) submitExam(false);
                     }}
                     className="btn-lime text-xs !py-2 !px-4"
                   >
@@ -314,8 +324,13 @@ export default function ExamPage() {
 
           <div className="pt-6 border-t border-gray-100">
             <button
-              onClick={() => {
-                if (window.confirm("Ready to complete and grade this exam?")) submitExam(false);
+              onClick={async () => {
+                const confirmed = await confirmDialog({
+                  title: "Grade Exam?",
+                  text: "Ready to complete and grade this exam?",
+                  confirmText: "Complete & Grade",
+                });
+                if (confirmed) submitExam(false);
               }}
               disabled={submitting}
               className="btn-primary w-full text-sm !py-3"

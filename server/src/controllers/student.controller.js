@@ -52,7 +52,8 @@ const getStudentById = async (req, res, next) => {
   try {
     const student = await Student.findById(req.params.id)
       .populate("user", "name email phone isActive avatar lastLogin")
-      .populate("batches", "name code batchType course schedule color");
+      .populate("batches", "name code batchType course schedule color")
+      .populate("examPermissions", "title testType status batch");
     if (!student) throw new ApiError(404, "Student not found");
     const enrollments = await Enrollment.find({ student: student.user }).populate("course", "name");
     return apiResponse(res, 200, "Student details", { student, enrollments });

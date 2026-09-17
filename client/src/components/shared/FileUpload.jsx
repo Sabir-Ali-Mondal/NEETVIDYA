@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Upload, CheckCircle } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function FileUpload({
   onUpload,
@@ -17,7 +17,7 @@ export default function FileUpload({
   const handleFile = async (file) => {
     if (!file) return;
     if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`File too large. Max ${maxSizeMB}MB allowed.`);
+      alertError(`File too large. Max ${maxSizeMB}MB allowed.`);
       return;
     }
     setUploading(true);
@@ -29,10 +29,10 @@ export default function FileUpload({
     try {
       const response = await onUpload(formData, (p) => setProgress(p));
       setUploaded(true);
-      toast.success("File uploaded successfully");
+      alertSuccess("File uploaded successfully");
       return response;
     } catch (err) {
-      toast.error(err.response?.data?.message || "Upload failed");
+      alertError(err.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
     }

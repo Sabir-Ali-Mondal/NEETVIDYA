@@ -4,7 +4,7 @@ import {
   GraduationCap, Plus, Search, Eye, UserX, UserCheck, Mail,
   Pencil, X, Save, Phone, BookOpen, Clock, Target
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 
 export default function AdminTeachers() {
   const [teachers, setTeachers] = useState([]);
@@ -39,12 +39,12 @@ export default function AdminTeachers() {
     setCreating(true);
     try {
       const { data } = await api.post("/auth/admin/create-teacher", form);
-      toast.success(`Teacher created! Temp password: ${data.data.tempPassword}`);
+      alertSuccess(`Teacher created! Temp password: ${data.data.tempPassword}`);
       setShowCreate(false);
       setForm({ name: "", email: "", phone: "", qualification: "", experience: "", specialisation: "", bio: "" });
       fetchTeachers();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create teacher");
+      alertError(err.response?.data?.message || "Failed to create teacher");
     } finally {
       setCreating(false);
     }
@@ -53,10 +53,10 @@ export default function AdminTeachers() {
   const toggleActive = async (teacherId, currentStatus) => {
     try {
       await api.put(`/teachers/${teacherId}/toggle-active`);
-      toast.success(currentStatus ? "Faculty deactivated" : "Faculty activated");
+      alertSuccess(currentStatus ? "Faculty deactivated" : "Faculty activated");
       fetchTeachers();
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -73,11 +73,11 @@ export default function AdminTeachers() {
         specialisation: editingTeacher.specialisation,
         bio: editingTeacher.bio,
       });
-      toast.success("Teacher profile updated successfully");
+      alertSuccess("Teacher profile updated successfully");
       setEditingTeacher(null);
       fetchTeachers();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update teacher");
+      alertError(err.response?.data?.message || "Failed to update teacher");
     } finally {
       setSavingEdit(false);
     }

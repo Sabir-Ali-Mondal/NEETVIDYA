@@ -1,4 +1,4 @@
-const Attempt = require("../models/Attempt");
+﻿const Attempt = require("../models/Attempt");
 const Exam = require("../models/Exam");
 const Question = require("../models/Question");
 const Result = require("../models/Result");
@@ -19,9 +19,13 @@ const getMyAttempts = async (studentId) => {
   return attempts;
 };
 
-const startAttempt = async (examId, studentId) => {
+const startAttempt = async (examId, studentId, user) => {
   const exam = await Exam.findById(examId);
   if (!exam) throw new ApiError(404, "Exam not found");
+
+  // Enforce access (batch membership or explicit admin permission) on the backend.
+  const { assertExamAccess } = require("./exam.service");
+  await assertExamAccess(user || { _id: studentId, role: "student" }, exam);
 
   const existingInProgress = await Attempt.findOne({
     exam: examId,
@@ -74,15 +78,13 @@ const startAttempt = async (examId, studentId) => {
     throw new ApiError(400, "Maximum attempts reached for this exam");
   }
 
-  let questions = await Question.find({
-    $or: [
-      { subject: { $in: exam.subjects || [] } },
-      { isActive: true },
-    ],
-  }).limit(exam.totalQuestions || 10);
-
+  // Every exam runs on its OWN fixed question set - never a random bank pool.
+  const questions = await Question.find({
+    _id: { $in: exam.questions || [] },
+    isActive: true,
+  });
   if (questions.length === 0) {
-    questions = await Question.find({ isActive: true }).limit(10);
+    throw new ApiError(400, "This exam has no questions configured");
   }
 
   let questionOrder = questions.map((q) => q._id);

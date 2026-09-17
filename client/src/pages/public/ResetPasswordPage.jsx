@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import { Eye, EyeOff, KeyRound, CheckCircle, XCircle, ShieldCheck } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess } from "../../utils/alert";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
     try {
       await api.post(`/auth/reset-password?token=${token}`, { password });
       setSuccess(true);
-      toast.success("Password reset successfully!");
+      alertSuccess("Password reset successfully!");
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
       setError(err.response?.data?.message || "Reset failed. The link may have expired.");

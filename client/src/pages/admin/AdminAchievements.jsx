@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Trophy, Plus, Search, Star, Pencil, Trash2, Award, X, Save } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const categoryColors = {
@@ -46,12 +46,12 @@ export default function AdminAchievements() {
     setCreating(true);
     try {
       await api.post("/achievements", form);
-      toast.success("Achievement added successfully");
+      alertSuccess("Achievement added successfully");
       setShowCreate(false);
       setForm({ title: "", description: "", category: "STUDENT_RESULT", studentName: "", studentBatch: "", score: "", year: new Date().getFullYear(), featured: false });
       fetchAchievements();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to add achievement");
+      alertError(err.response?.data?.message || "Failed to add achievement");
     } finally {
       setCreating(false);
     }
@@ -63,11 +63,11 @@ export default function AdminAchievements() {
     setSavingEdit(true);
     try {
       await api.put(`/achievements/${editingAchievement._id}`, editingAchievement);
-      toast.success("Achievement updated");
+      alertSuccess("Achievement updated");
       setEditingAchievement(null);
       fetchAchievements();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update achievement");
+      alertError(err.response?.data?.message || "Failed to update achievement");
     } finally {
       setSavingEdit(false);
     }
@@ -76,10 +76,10 @@ export default function AdminAchievements() {
   const toggleFeatured = async (achievement) => {
     try {
       await api.put(`/achievements/${achievement._id}`, { featured: !achievement.featured });
-      toast.success(achievement.featured ? "Unmarked from featured" : "Marked as featured");
+      alertSuccess(achievement.featured ? "Unmarked from featured" : "Marked as featured");
       fetchAchievements();
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -87,11 +87,11 @@ export default function AdminAchievements() {
     if (!achievementToDelete) return;
     try {
       await api.delete(`/achievements/${achievementToDelete._id}`);
-      toast.success("Achievement deleted");
+      alertSuccess("Achievement deleted");
       setAchievementToDelete(null);
       fetchAchievements();
     } catch {
-      toast.error("Failed to delete");
+      alertError("Failed to delete");
     }
   };
 

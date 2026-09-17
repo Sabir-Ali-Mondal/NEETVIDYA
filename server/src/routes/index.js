@@ -9,7 +9,8 @@ router.use("/enrollments", require("./enrollment.routes"));
 router.use("/courses", require("./course.routes"));
 router.use("/academics", require("./academic.routes"));
 router.use("/materials", require("./material.routes"));
-router.use("/lectures", require("./lecture.routes"));
+// Video lectures are now published as materials (type: VIDEO) — the separate lecture
+// system has been retired. The /resources route below is unrelated (course resources).
 router.use("/resources", require("./resource.routes"));
 router.use("/questions", require("./question.routes"));
 router.use("/test-series", require("./testSeries.routes"));

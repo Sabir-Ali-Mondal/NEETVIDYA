@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { BookOpen, Plus, Search, IndianRupee, Clock, Users, ChevronRight, Pencil, Trash2, X, Save, CheckCircle2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 export default function AdminCourses() {
@@ -52,12 +52,12 @@ export default function AdminCourses() {
       };
 
       await api.post("/courses", payload);
-      toast.success("Course created successfully");
+      alertSuccess("Course created successfully");
       setShowCreate(false);
       setForm({ name: "", description: "", targetClass: "", duration: "", feeAmount: "", features: "" });
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create course");
+      alertError(err.response?.data?.message || "Failed to create course");
     } finally {
       setCreating(false);
     }
@@ -83,11 +83,11 @@ export default function AdminCourses() {
               .filter(Boolean),
       };
       await api.put(`/courses/${editingCourse._id}`, payload);
-      toast.success("Course updated successfully");
+      alertSuccess("Course updated successfully");
       setEditingCourse(null);
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update course");
+      alertError(err.response?.data?.message || "Failed to update course");
     } finally {
       setSavingEdit(false);
     }
@@ -97,11 +97,11 @@ export default function AdminCourses() {
     if (!courseToDelete) return;
     try {
       await api.delete(`/courses/${courseToDelete._id}`);
-      toast.success("Course deleted successfully");
+      alertSuccess("Course deleted successfully");
       setCourseToDelete(null);
       fetchCourses();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete course");
+      alertError(err.response?.data?.message || "Failed to delete course");
     }
   };
 

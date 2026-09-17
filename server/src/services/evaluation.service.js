@@ -67,6 +67,10 @@ const evaluateAttempt = async (attempt) => {
   const exam = await Exam.findById(attempt.exam);
   const totalMarks = exam ? exam.totalMarks : totalQuestions * 4;
 
+  // Respect the exam's result publishing rule.
+  // IMMEDIATE → result visible now. MANUAL / SCHEDULED → hidden until released.
+  const publishNow = exam?.resultPublishMode === "IMMEDIATE";
+
   const result = await Result.create({
     attempt: attempt._id,
     exam: attempt.exam,
@@ -81,11 +85,15 @@ const evaluateAttempt = async (attempt) => {
     percentage: totalMarks > 0 ? Math.max(0, Math.round((totalScore / totalMarks) * 100)) : 0,
     subjectBreakdown: Object.values(subjectMap),
     chapterBreakdown: Object.values(chapterMap),
+    isPublished: publishNow,
+    publishedAt: publishNow ? new Date() : undefined,
   });
 
   await Notification.create({
-    title: "Result Available",
-    message: `Your result for "${exam ? exam.title : "Exam"}" is ready. Score: ${totalScore}/${totalMarks}`,
+    title: publishNow ? "Result Available" : "Exam Submitted",
+    message: publishNow
+      ? `Your result for "${exam ? exam.title : "Exam"}" is ready. Score: ${totalScore}/${totalMarks}`
+      : `Your response for "${exam ? exam.title : "Exam"}" was submitted. Results will be published soon.`,
     type: "RESULT",
     targetStudents: [attempt.student],
   }).catch(() => {});

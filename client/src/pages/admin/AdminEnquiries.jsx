@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { MessageSquare, Search, CheckCircle, XCircle, Clock, Phone, Mail, Eye, Trash2, Download } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const statusColors = {
@@ -36,11 +36,11 @@ export default function AdminEnquiries() {
   const updateStatus = async (id, status) => {
     try {
       await api.put(`/enquiries/${id}`, { status });
-      toast.success("Status updated");
+      alertSuccess("Status updated");
       fetchEnquiries();
       setSelected(null);
     } catch {
-      toast.error("Failed to update status");
+      alertError("Failed to update status");
     }
   };
 
@@ -48,18 +48,18 @@ export default function AdminEnquiries() {
     if (!enquiryToDelete) return;
     try {
       await api.delete(`/enquiries/${enquiryToDelete._id}`);
-      toast.success("Enquiry deleted");
+      alertSuccess("Enquiry deleted");
       if (selected?._id === enquiryToDelete._id) setSelected(null);
       setEnquiryToDelete(null);
       fetchEnquiries();
     } catch {
-      toast.error("Failed to delete enquiry");
+      alertError("Failed to delete enquiry");
     }
   };
 
   const exportToCSV = () => {
     if (filtered.length === 0) {
-      toast.error("No enquiries to export");
+      alertError("No enquiries to export");
       return;
     }
     const headers = ["Name", "Email", "Phone", "Course Interest", "Message", "Status", "Date"];
@@ -80,7 +80,7 @@ export default function AdminEnquiries() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Enquiries exported to CSV");
+    alertSuccess("Enquiries exported to CSV");
   };
 
   const filtered = enquiries.filter((e) => {

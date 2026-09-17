@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight } from "lucide-react";
+import { BookOpen, ClipboardList, FileText, TrendingUp, ArrowRight, Clock, GraduationCap } from "lucide-react";
 import api from "../../config/api";
 import StudentBadge from "../../components/shared/StudentBadge";
 import TelegramLink from "../../components/shared/TelegramLink";
@@ -25,28 +25,58 @@ export default function StudentDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const stats = [
-    { icon: BookOpen, label: "Enrolled Course", value: student?.batches?.[0]?.course?.name || "Admin-managed course", color: "text-blue-600", bg: "bg-blue-50" },
-    { icon: ClipboardList, label: "Live Tests", value: `${dashboardData?.upcomingTests?.length || 1} Available`, color: "text-orange-600", bg: "bg-orange-50" },
-    { icon: FileText, label: "Study Materials", value: `${dashboardData?.recentMaterials?.length || 4} Uploaded`, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { icon: TrendingUp, label: "Recent Accuracy", value: "82% Avg", color: "text-purple-600", bg: "bg-purple-50" },
+    { icon: BookOpen, label: "My Batch", value: student?.batches?.[0]?.name || "Not Assigned", color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: ClipboardList, label: "Live Tests", value: `${dashboardData?.upcomingTests?.length || 0} Available`, color: "text-orange-600", bg: "bg-orange-50" },
+    { icon: FileText, label: "Study Materials", value: `${dashboardData?.recentMaterials?.length || 0} New`, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { icon: TrendingUp, label: "Tests Taken", value: `${dashboardData?.recentResults?.length || 0}`, color: "text-purple-600", bg: "bg-purple-50" },
   ];
 
   return (
     <div className="space-y-8">
-      {/* Header Profile Strip */}
+      {/* Batch banner - which batch am I in? */}
+      <div className="bg-gradient-to-r from-brand-green to-brand-lime rounded-2xl p-5 text-brand-black shadow-sm flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-white/70 flex items-center justify-center">
+            <GraduationCap className="w-5 h-5 text-brand-green" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider opacity-70">Your Batch / Course</p>
+            <p className="font-heading font-extrabold text-lg leading-tight">
+              {student?.batches?.[0]?.name || "No batch assigned"}
+            </p>
+            {student?.batches?.[0]?.code && (
+              <p className="text-[11px] font-medium opacity-70">{student.batches[0].code}</p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StudentBadge batchType={student?.studentType === "REGULAR_ONLINE" ? "ONLINE" : student?.studentType === "HYBRID" ? "HYBRID" : "OFFLINE"} />
+        </div>
+      </div>
+
+      {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading font-extrabold text-2xl text-brand-dark">
             Hello, {student?.user?.name || "Aspirant"}!
           </h1>
-          <p className="text-xs text-gray-500 mt-1">Ready for today's concept practice and test drills?</p>
+          <p className="text-xs text-gray-500 mt-1">Ready for today's practice?</p>
           <div className="flex flex-wrap items-center gap-3 mt-3">
             <StudentBadge batchType={student?.studentType === "REGULAR_ONLINE" ? "ONLINE" : student?.studentType === "HYBRID" ? "HYBRID" : "OFFLINE"} />
-            <span className="text-xs text-gray-500 font-medium">Batch: {student?.batches?.[0]?.name || "12th Batch – SANKALP"}</span>
+            {student?.batches?.[0] && (
+              <span className="text-xs text-gray-500 font-medium">Batch: {student.batches[0].name}</span>
+            )}
           </div>
         </div>
-
         <div className="flex items-center gap-3">
           <TelegramLink url={settings.telegramChannelLink} label="Doubt Desk" className="text-xs bg-sky-50 text-sky-700 px-3 py-2 rounded-lg border border-sky-200" />
           <Link to="/student/tests" className="btn-primary text-xs !py-2.5 !px-4">
@@ -72,77 +102,65 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Main Dual Grid */}
+      {/* Live Tests */}
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Live Tests Available */}
         <div className="card space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <h3 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-brand-green" /> Live Computerized Tests
+              <ClipboardList className="w-5 h-5 text-brand-green" /> Live Tests
             </h3>
             <Link to="/student/tests" className="text-xs text-brand-green font-semibold hover:underline">View All</Link>
           </div>
-
-          <div className="space-y-3">
-            {dashboardData?.upcomingTests?.length > 0 ? (
-              dashboardData.upcomingTests.map((test) => (
+          {dashboardData?.upcomingTests?.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.upcomingTests.map((test) => (
                 <div key={test._id} className="p-4 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between gap-4">
                   <div>
                     <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">{test.testType}</span>
                     <h4 className="font-semibold text-sm text-brand-dark">{test.title}</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions â€¢ {test.duration} Minutes</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{test.totalQuestions} Questions • {test.duration} Min</p>
                   </div>
-                  <Link to={`/exam/${test._id}/attempt`} className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
+                  <Link to={`/exam/${test._id}/instructions`} className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
                     Take Test
                   </Link>
                 </div>
-              ))
-            ) : (
-              <div className="p-4 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
-                <div>
-                  <span className="badge bg-emerald-100 text-emerald-800 text-[10px] mb-1">MOCK_TEST</span>
-                  <h4 className="font-semibold text-sm text-brand-dark">NEET Diagnostic Mock Test 01</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Physics & Biology â€¢ 30 Minutes</p>
-                </div>
-                <Link to="/student/tests" className="btn-primary text-xs !py-1.5 !px-3 shrink-0">
-                  Open
-                </Link>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400 text-sm">No live tests available right now.</div>
+          )}
         </div>
 
-        {/* Quick Study Materials */}
+        {/* Recent Materials */}
         <div className="card space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <h3 className="font-heading font-bold text-lg text-brand-dark flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-brand-green" /> Recent Study Notes & DPPs
+              <BookOpen className="w-5 h-5 text-brand-green" /> Recent Materials
             </h3>
             <Link to="/student/learn" className="text-xs text-brand-green font-semibold hover:underline">Go to Learn</Link>
           </div>
-
-          <div className="space-y-3">
-            {[
-              { title: "Kinematics & Vectors Revision Notes", subject: "Physics", type: "PDF" },
-              { title: "Cell Organelles & Ribosomes NCERT Flash", subject: "Biology", type: "PDF" },
-              { title: "Chemical Bonding Hybridization Chart", subject: "Chemistry", type: "PDF" },
-            ].map((mat, idx) => (
-              <div key={idx} className="p-3.5 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                    {mat.type}
+          {dashboardData?.recentMaterials?.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.recentMaterials.map((mat) => (
+                <div key={mat._id} className="p-3.5 rounded-xl bg-brand-soft border border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                      {mat.fileType || "PDF"}
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-xs text-brand-dark">{mat.title}</h5>
+                      <span className="text-[11px] text-gray-500">{mat.subject?.name || "General"}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="font-semibold text-xs text-brand-dark">{mat.title}</h5>
-                    <span className="text-[11px] text-gray-500">{mat.subject}</span>
-                  </div>
+                  <a href={mat.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-green font-medium hover:underline">
+                    Open
+                  </a>
                 </div>
-                <Link to="/student/learn" className="text-xs text-brand-green font-medium hover:underline">
-                  Download
-                </Link>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400 text-sm">No materials uploaded yet.</div>
+          )}
         </div>
       </div>
     </div>

@@ -16,11 +16,7 @@ export default function PerformancePage() {
         score: r.obtainedMarks,
         accuracy: r.accuracy,
       }))
-    : [
-        { name: "Diagnostic 01", score: 12, accuracy: 75 },
-        { name: "DPP 02", score: 14, accuracy: 85 },
-        { name: "Chapter Test 03", score: 15, accuracy: 92 },
-      ];
+    : [];
 
   return (
     <div className="space-y-8">
@@ -60,18 +56,25 @@ export default function PerformancePage() {
 
       <div className="card p-6 sm:p-8 space-y-4">
         <h3 className="font-heading font-bold text-lg text-brand-dark">Score Progression Chart</h3>
-        <div className="h-72 w-full pt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
-              <YAxis stroke="#94a3b8" fontSize={12} />
-              <Tooltip />
-              <Line type="monotone" dataKey="score" stroke="#18A66A" strokeWidth={3} dot={{ r: 5 }} name="Obtained Score" />
-              <Line type="monotone" dataKey="accuracy" stroke="#A8C900" strokeWidth={2} dot={{ r: 4 }} name="Accuracy %" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p className="font-semibold text-gray-500">No test results yet</p>
+            <p className="text-xs mt-1">Take tests to see your performance chart here.</p>
+          </div>
+        ) : (
+          <div className="h-72 w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} />
+                <YAxis stroke="#94a3b8" fontSize={12} />
+                <Tooltip />
+                <Line type="monotone" dataKey="score" stroke="#18A66A" strokeWidth={3} dot={{ r: 5 }} name="Obtained Score" />
+                <Line type="monotone" dataKey="accuracy" stroke="#A8C900" strokeWidth={2} dot={{ r: 4 }} name="Accuracy %" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     </div>
   );

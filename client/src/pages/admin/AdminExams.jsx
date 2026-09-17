@@ -4,7 +4,7 @@ import {
   ClipboardList, Plus, Search, Clock, Users, Calendar, PlayCircle,
   BarChart3, Pencil, Trash2, X, Save, CheckCircle2, AlertCircle, Trophy, Eye
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const statusColors = {
@@ -24,7 +24,6 @@ const typeColors = {
 
 export default function AdminExams() {
   const [exams, setExams] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -41,7 +40,7 @@ export default function AdminExams() {
     title: "",
     description: "",
     testType: "MOCK_TEST",
-    course: "",
+    batch: "",
     totalQuestions: 180,
     totalMarks: 720,
     marksPerCorrect: 4,
@@ -67,11 +66,8 @@ export default function AdminExams() {
 
   const fetchDependencies = async () => {
     try {
-      const [cRes, bRes] = await Promise.all([
-        api.get("/courses"),
-        api.get("/batches"),
-      ]);
-      setCourses(cRes.data.data?.courses || []);
+      const { data: bRes } = await api.get("/batches");
+
       setBatches(bRes.data.data?.batches || []);
     } catch {}
   };
@@ -83,8 +79,12 @@ export default function AdminExams() {
 
   const handleCreateExam = async (e) => {
     e.preventDefault();
+    if (!form.batch) {
+      alertError("Please select a batch — every exam belongs to one batch");
+      return;
+    }
     if (!form.startTime || !form.endTime) {
-      toast.error("Please provide both start and end times");
+      alertError("Please provide both start and end times");
       return;
     }
     setSavingExam(true);
@@ -95,13 +95,14 @@ export default function AdminExams() {
         totalMarks: Number(form.totalMarks || 40),
         duration: Number(form.duration || 60),
         maxAttempts: Number(form.maxAttempts || 1),
-        course: form.course || undefined,
+        batch: form.batch,
+        questions: form.questions || [],
       });
-      toast.success("Exam created in DRAFT status");
+      alertSuccess("Exam created in DRAFT status");
       setShowCreate(false);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create exam");
+      alertError(err.response?.data?.message || "Failed to create exam");
     } finally {
       setSavingExam(false);
     }
@@ -116,7 +117,7 @@ export default function AdminExams() {
         title: editingExam.title,
         description: editingExam.description,
         testType: editingExam.testType,
-        course: typeof editingExam.course === "object" ? editingExam.course?._id : editingExam.course,
+        batch: typeof editingExam.batch === "object" ? editingExam.batch?._id : editingExam.batch,
         totalQuestions: Number(editingExam.totalQuestions || 10),
         totalMarks: Number(editingExam.totalMarks || 40),
         duration: Number(editingExam.duration || 60),
@@ -125,11 +126,11 @@ export default function AdminExams() {
         maxAttempts: Number(editingExam.maxAttempts || 1),
         instructions: editingExam.instructions,
       });
-      toast.success("Exam updated successfully");
+      alertSuccess("Exam updated successfully");
       setEditingExam(null);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update exam");
+      alertError(err.response?.data?.message || "Failed to update exam");
     } finally {
       setSavingExam(false);
     }
@@ -138,20 +139,20 @@ export default function AdminExams() {
   const handlePublish = async (examId) => {
     try {
       await api.put(`/exams/${examId}/publish`);
-      toast.success("Exam is now LIVE for students");
+      alertSuccess("Exam is now LIVE for students");
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to publish exam");
+      alertError(err.response?.data?.message || "Failed to publish exam");
     }
   };
 
   const handleClose = async (examId) => {
     try {
       await api.put(`/exams/${examId}/close`);
-      toast.success("Exam has been closed");
+      alertSuccess("Exam has been closed");
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to close exam");
+      alertError(err.response?.data?.message || "Failed to close exam");
     }
   };
 
@@ -162,7 +163,7 @@ export default function AdminExams() {
       const { data } = await api.get(`/exams/${exam._id}/results`);
       setExamResults(data.data);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load results");
+      alertError(err.response?.data?.message || "Failed to load results");
       setExamResults(null);
     } finally {
       setLoadingResults(false);
@@ -173,11 +174,11 @@ export default function AdminExams() {
     if (!examToDelete) return;
     try {
       await api.delete(`/exams/${examToDelete._id}`);
-      toast.success("Exam deleted successfully");
+      alertSuccess("Exam deleted successfully");
       setExamToDelete(null);
       fetchExams();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete exam");
+      alertError(err.response?.data?.message || "Failed to delete exam");
     }
   };
 
@@ -378,15 +379,16 @@ export default function AdminExams() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Associated Course</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
                   <select
-                    value={form.course}
-                    onChange={(e) => setForm((prev) => ({ ...prev, course: e.target.value }))}
+                    required
+                    value={form.batch}
+                    onChange={(e) => setForm((prev) => ({ ...prev, batch: e.target.value }))}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
                   >
-                    <option value="">All Courses</option>
-                    {courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
+                    <option value="">Select a batch</option>
+                    {batches.map((b) => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
                     ))}
                   </select>
                 </div>
@@ -525,15 +527,15 @@ export default function AdminExams() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Course</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
                   <select
-                    value={editingExam.course?._id || editingExam.course || ""}
-                    onChange={(e) => setEditingExam((prev) => ({ ...prev, course: e.target.value }))}
+                    value={editingExam.batch?._id || editingExam.batch || ""}
+                    onChange={(e) => setEditingExam((prev) => ({ ...prev, batch: e.target.value }))}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
                   >
-                    <option value="">All Courses</option>
-                    {courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
+                    <option value="">Select a batch</option>
+                    {batches.map((b) => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
                     ))}
                   </select>
                 </div>

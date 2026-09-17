@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertError } from "../../utils/alert";
 import { UserPlus, Eye, EyeOff, ArrowLeft, CheckCircle, MailCheck, BadgeCheck, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 
 export default function RegisterPage() {
@@ -16,11 +16,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
+      alertError("Passwords do not match");
       return;
     }
     if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters");
+      alertError("Password must be at least 8 characters");
       return;
     }
     setLoading(true);
@@ -28,7 +28,7 @@ export default function RegisterPage() {
       await register(form.name, form.email, form.password, form.phone);
       setRegistered(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed. Please try again.");
+      alertError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

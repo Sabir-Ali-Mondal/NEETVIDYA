@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import api from "../../config/api";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import { Camera, Key, Save, BadgeCheck, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export default function ProfilePage() {
@@ -24,15 +24,15 @@ export default function ProfilePage() {
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 300 * 1024) { toast.error("Image must be under 300KB"); return; }
+    if (file.size > 300 * 1024) { alertError("Image must be under 300KB"); return; }
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const b64 = ev.target.result;
       setAvatarBase64(b64);
       try {
         await api.put("/students/my/avatar", { avatarBase64: b64 });
-        toast.success("Profile photo updated!");
-      } catch { toast.error("Failed to save photo"); }
+        alertSuccess("Profile photo updated!");
+      } catch { alertError("Failed to save photo"); }
     };
     reader.readAsDataURL(file);
   };
@@ -43,26 +43,26 @@ export default function ProfilePage() {
     try {
       const { data } = await api.put("/auth/profile", profileForm);
       updateUser(data.data.user);
-      toast.success("Profile updated!");
+      alertSuccess("Profile updated!");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Update failed");
+      alertError(err.response?.data?.message || "Update failed");
     } finally { setSaving(false); }
   };
 
   const handlePasswordSave = async (e) => {
     e.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) { toast.error("Passwords don't match"); return; }
-    if (passwordForm.newPassword.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) { alertError("Passwords don't match"); return; }
+    if (passwordForm.newPassword.length < 8) { alertError("Password must be at least 8 characters"); return; }
     setSaving(true);
     try {
       await api.put("/auth/change-password", {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      toast.success("Password changed successfully!");
+      alertSuccess("Password changed successfully!");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to change password");
+      alertError(err.response?.data?.message || "Failed to change password");
     } finally { setSaving(false); }
   };
 

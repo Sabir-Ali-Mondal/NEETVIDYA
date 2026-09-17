@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, AlertTriangle, ArrowRight } from "lucide-react";
 import api from "../../config/api";
-import toast from "react-hot-toast";
+import { alertError } from "../../utils/alert";
 
 export default function ExamInstructions() {
   const { examId } = useParams();
@@ -24,7 +24,7 @@ export default function ExamInstructions() {
       await api.post(`/attempts/exam/${examId}/start`);
       navigate(`/exam/${examId}/attempt`);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Cannot start exam");
+      alertError(err.response?.data?.message || "Cannot start exam");
       setStarting(false);
     }
   };

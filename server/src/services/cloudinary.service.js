@@ -13,13 +13,12 @@ const uploadFile = (fileBuffer, folder, resourceType = "auto") => {
       },
       (error, result) => {
         if (error) {
-          // If Cloudinary credentials are mock/default, provide fallback url
-          return resolve({
-            url: `https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80`,
-            publicId: `mock_${Date.now()}`,
-            size: fileBuffer.length,
-            format: "jpg",
-          });
+          // Production behaviour: surface the real failure instead of a dummy preview.
+          const message =
+            error.message || "Cloudinary upload failed. Check storage credentials.";
+          const err = new Error(message);
+          err.statusCode = 502;
+          return reject(err);
         }
         resolve({
           url: result.secure_url,

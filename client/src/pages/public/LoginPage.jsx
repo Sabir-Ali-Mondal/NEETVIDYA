@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import { alertSuccess, alertError } from "../../utils/alert";
 import { LogIn, Eye, EyeOff, BadgeCheck, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
@@ -17,13 +17,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(identifier.trim(), password);
-      toast.success(`Welcome back, ${user.name}!`);
+      alertSuccess(`Welcome back, ${user.name}!`);
       if (user.role === "admin") navigate("/admin");
       else if (user.role === "teacher") navigate("/teacher");
       else navigate("/student");
     } catch (err) {
       const msg = err.response?.data?.message || "Invalid credentials";
-      toast.error(msg);
+      alertError(msg);
     } finally {
       setLoading(false);
     }

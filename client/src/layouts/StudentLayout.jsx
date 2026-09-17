@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu, X, Bell } from "lucide-react";
-import { useState, useContext } from "react";
+import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu, X, Bell, GraduationCap } from "lucide-react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
+import api from "../config/api";
 import TelegramLink from "../components/shared/TelegramLink";
 import NotificationBell from "../components/shared/NotificationBell";
 import useContactSettings from "../hooks/useContactSettings";
@@ -17,9 +18,18 @@ const navItems = [
 
 export default function StudentLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [myBatch, setMyBatch] = useState(null);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const { settings } = useContactSettings();
+
+  // Show the student's batch at the top of their area.
+  useEffect(() => {
+    api
+      .get("/students/my")
+      .then(({ data }) => setMyBatch(data.data?.student?.batches?.[0] || null))
+      .catch(() => {});
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -27,9 +37,9 @@ export default function StudentLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-soft flex">
+    <div className="h-screen overflow-hidden bg-brand-soft flex">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-black text-white transform transition-transform lg:translate-x-0 lg:static flex flex-col justify-between shrink-0 h-screen ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div>
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -68,7 +78,7 @@ export default function StudentLayout() {
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10 space-y-3">
+        <div className="p-4 border-t border-white/10 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="bg-white/5 rounded-lg p-3 text-xs text-gray-400">
             <p className="font-semibold text-gray-200 mb-1">Doubt Assistance</p>
             <TelegramLink url={settings.telegramChannelLink} label="Telegram Channel" className="text-xs text-sky-400" />
@@ -86,13 +96,18 @@ export default function StudentLayout() {
       {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <header className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center justify-between lg:px-8 shrink-0 z-20">
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 ml-auto">
+            {myBatch && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 bg-brand-green/10 text-brand-green rounded-full border-brand-green/20">
+                <GraduationCap className="w-3.5 h-3.5" /> {myBatch.name}
+              </span>
+            )}
             <NotificationBell />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-brand-dark leading-tight">{user?.name}</p>
@@ -104,7 +119,7 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
           <Outlet />
         </main>
       </div>
