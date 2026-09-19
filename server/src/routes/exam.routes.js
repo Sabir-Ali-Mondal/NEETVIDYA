@@ -36,7 +36,7 @@ router.get("/", protect, getExams);
 router.post("/", protect, authorize("admin", "teacher"), createExam);
 router.get("/:id", protect, getExamById);
 router.put("/:id", protect, authorize("admin", "teacher"), updateExam);
-router.delete("/:id", protect, authorize("admin"), deleteExam);
+router.delete("/:id", protect, authorize("admin", "teacher"), deleteExam);
 
 // Lifecycle
 router.put("/:id/publish", protect, authorize("admin", "teacher"), publishExam);

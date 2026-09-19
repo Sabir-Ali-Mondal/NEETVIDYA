@@ -13,14 +13,9 @@ const examSchema = new mongoose.Schema(
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
     // Exam is ALWAYS batch-specific (Batch === Course in this platform)
     batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },
-    // Every exam carries its OWN fixed question set. Never auto-pulled from a bank.
-    questions: {
-      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
-      validate: {
-        validator: (v) => Array.isArray(v) && v.length > 0,
-        message: "An exam must contain at least one question",
-      },
-    },
+    // Every exam carries its OWN fixed question set. Drafts can be created before
+    // the questions are attached; a non-empty question set is required before publishing.
+    questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
     subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
     totalQuestions: { type: Number, required: true },
     totalMarks: { type: Number, required: true },

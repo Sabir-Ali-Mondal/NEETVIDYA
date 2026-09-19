@@ -52,8 +52,11 @@ const createExam = async (data, userId) => {
   } = data;
 
   if (!batch) throw new ApiError(400, "A batch must be selected for every exam");
-  if (!questions || questions.length === 0) {
-    throw new ApiError(400, "An exam must contain its own question set (add at least one question)");
+  if (!Array.isArray(questions)) {
+    throw new ApiError(400, "Questions must be provided as an array");
+  }
+  if (publishNow && (!questions || questions.length === 0)) {
+    throw new ApiError(400, "An exam must contain its own question set before it can be published");
   }
   if (startTime && endTime && new Date(startTime) >= new Date(endTime)) {
     throw new ApiError(400, "Exam end time must be after the start time");

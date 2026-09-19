@@ -224,8 +224,8 @@ export default function RegisterPage() {
 
             <p className="text-xs text-slate-400">
               By creating an account, you agree to our{" "}
-              <span className="text-green-600 cursor-pointer font-medium">Terms of Service</span> and{" "}
-              <span className="text-green-600 cursor-pointer font-medium">Privacy Policy</span>.
+              <Link to="/terms" className="text-green-600 hover:text-green-700 font-medium underline-offset-2 hover:underline">Terms of Service</Link> and{" "}
+              <Link to="/terms" className="text-green-600 hover:text-green-700 font-medium underline-offset-2 hover:underline">Privacy Policy</Link>.
             </p>
 
             <button

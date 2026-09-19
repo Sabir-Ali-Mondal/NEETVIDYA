@@ -172,9 +172,23 @@ export default function HomePage() {
                 </div>
               ))
             ) : (
-              <div className="col-span-3 text-center py-12 text-gray-600">
-                <p className="font-semibold text-brand-dark mb-2">Courses are managed from the admin panel.</p>
-                <p className="text-sm text-gray-500">Publish a course from the admin dashboard to display it on this page.</p>
+              <div className="col-span-full">
+                <div className="relative overflow-hidden rounded-3xl border border-dashed border-brand-green/40 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-8 sm:p-12 text-center shadow-sm">
+                  <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-brand-lime/20 blur-3xl" />
+                  <div className="absolute -bottom-16 -left-12 h-32 w-32 rounded-full bg-emerald-200/30 blur-3xl" />
+                  <div className="relative z-10">
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-green text-white shadow-lg shadow-brand-green/20">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-brand-dark mb-2">Choose the program that matches your NEET goal</h3>
+                    <p className="mx-auto max-w-2xl text-sm sm:text-base text-gray-600 mb-6">
+                      Explore foundation, target, and repeater tracks designed to help students build concepts, improve speed, and stay exam-ready.
+                    </p>
+                    <Link to="/courses" className="btn-primary inline-flex items-center justify-center gap-2 text-sm sm:text-base !py-3 !px-7">
+                      Explore Courses <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -218,10 +232,10 @@ export default function HomePage() {
                 Experience full-screen exam simulation, Question Palettes, Review tags, and comprehensive solution scorecards with accuracy charts.
               </p>
               <div className="pt-2 flex flex-wrap gap-4">
-                <Link to="/test-series" className="btn-primary text-sm">
+                <Link to="/contact#contact-form" className="btn-primary text-sm">
                   Explore Test Series <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link to="/contact" className="btn-secondary text-sm !border-white/30 !text-white hover:!bg-white/10">
+                <Link to="/contact#contact-form" className="btn-secondary text-sm !border-white/30 !text-white hover:!bg-white/10">
                   Request Sample Papers
                 </Link>
               </div>
@@ -246,7 +260,7 @@ export default function HomePage() {
             <Link to="/register" className="btn-primary text-base !py-3 !px-8">
               Register for Admission
             </Link>
-            <Link to="/contact" className="btn-secondary text-base !py-3 !px-7">
+            <Link to="/contact#contact-form" className="btn-secondary text-base !py-3 !px-7">
               Contact Admissions
             </Link>
           </div>

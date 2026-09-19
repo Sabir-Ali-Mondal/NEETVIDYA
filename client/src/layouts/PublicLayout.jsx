@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Menu, X, Phone, ArrowRight, Instagram, Facebook, Youtube } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import images from "../config/images";
 import WhatsAppLink from "../components/shared/WhatsAppLink";
 import TelegramLink from "../components/shared/TelegramLink";
@@ -21,6 +21,22 @@ export default function PublicLayout() {
   const location = useLocation();
   const { settings } = useContactSettings();
 
+  useEffect(() => {
+    const hash = location.hash;
+
+    if (hash) {
+      const element = document.getElementById(hash.replace("#", ""));
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 50);
+        return;
+      }
+    }
+
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.hash]);
+
   const socialLinks = [
     { label: "Facebook", href: settings.facebookLink, icon: Facebook },
     { label: "Instagram", href: settings.instagramLink, icon: Instagram },
@@ -30,7 +46,7 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Top Notification / Contact Strip */}
-      <div className="bg-brand-black text-xs text-gray-300 py-2 border-b border-white/10">
+      <div className="hidden sm:block bg-brand-black text-xs text-gray-300 py-2 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-brand-lime" /> +91 74396 85658</span>
@@ -45,11 +61,11 @@ export default function PublicLayout() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-brand-dark/95 backdrop-blur sticky top-0 z-50 border-b border-white/10">
+      <header className="bg-brand-dark/95 backdrop-blur sticky top-0 z-50 border-b border-brand-dark/95 sm:border-white/10 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             <Link to="/" className="flex items-center gap-3">
-              <img src={images.logo} alt="NEETVIDYA" className="h-10 sm:h-12 w-auto object-contain" />
+              <img src={images.logo} alt="NEETVIDYA" className="h-9 sm:h-12 w-auto object-contain" />
             </Link>
 
             <nav className="hidden md:flex items-center gap-7">
@@ -109,7 +125,7 @@ export default function PublicLayout() {
         )}
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pt-0">
         <Outlet />
       </main>
 

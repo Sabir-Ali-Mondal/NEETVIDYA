@@ -89,13 +89,13 @@ export default function TeacherExams() {
         api.get("/batches"),
         api.get("/academics/subjects"),
       ]);
-      setExams(examsRes.data?.exams || []);
+      setExams(examsRes.data?.data?.exams || []);
       setMeta({
-        total: examsRes.data?.total || 0,
-        pages: examsRes.data?.pages || 1,
+        total: examsRes.data?.data?.total || 0,
+        pages: examsRes.data?.data?.pages || 1,
       });
-      setBatches(batchRes.data?.batches || []);
-      setSubjects(subjRes.data?.subjects || []);
+      setBatches(batchRes.data?.data?.batches || []);
+      setSubjects(subjRes.data?.data?.subjects || []);
     } catch {
       // ignore
     }
@@ -221,6 +221,7 @@ export default function TeacherExams() {
       return;
     }
 
+    let createdExamId = null;
     setSavingExam(true);
     try {
       const totalMarks = draftQuestions.reduce(
@@ -241,7 +242,7 @@ export default function TeacherExams() {
         publishNow: false,
       });
 
-      const examId = created.data.exam._id;
+      createdExamId = created.data.exam._id;
 
       // 2) Add each question to THIS exam (with images).
       for (const q of draftQuestions) {
@@ -260,14 +261,14 @@ export default function TeacherExams() {
         q.options.forEach((opt, i) => {
           if (opt.image) fd.append(`optionImage_${i}`, opt.image);
         });
-        await api.post(`/exams/${examId}/questions`, fd, {
+        await api.post(`/exams/${createdExamId}/questions`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
 
       // 3) Publish now if requested.
       if (examForm.publishNow) {
-        await api.put(`/exams/${examId}/publish`);
+        await api.put(`/exams/${createdExamId}/publish`);
       }
 
       alertSuccess("Exam created with its own question set");
@@ -275,7 +276,14 @@ export default function TeacherExams() {
       resetWizard();
       fetchExams();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to create exam");
+      if (createdExamId) {
+        try {
+          await api.delete(`/exams/${createdExamId}`);
+        } catch {
+          // ignore cleanup failure; the exam shell is invalid and should be checked manually
+        }
+      }
+      alertError(err.response?.data?.message || "Failed to create exam. No partial exam was kept.");
     } finally {
       setSavingExam(false);
     }
