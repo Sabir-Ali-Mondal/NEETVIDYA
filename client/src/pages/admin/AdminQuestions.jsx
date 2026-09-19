@@ -319,7 +319,7 @@ export default function AdminQuestions() {
                       </div>
                     )}
                   </div>
-                  <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  <div className="flex-shrink-0 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                     <button
                       onClick={() => setEditingQuestion(q)}
                       className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-indigo-600 transition"

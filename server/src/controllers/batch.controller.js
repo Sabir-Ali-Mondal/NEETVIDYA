@@ -18,7 +18,7 @@ const getBatches = async (req, res, next) => {
     const filter = {};
     if (type) filter.batchType = type;
     if (course) filter.course = course;
-    const batches = await getBatchesService(filter);
+    const batches = await getBatchesService(filter, req.user);
     return apiResponse(res, 200, "Batches retrieved", { batches });
   } catch (error) {
     next(error);

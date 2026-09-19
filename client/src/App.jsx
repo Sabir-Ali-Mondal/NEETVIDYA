@@ -31,12 +31,12 @@ import PerformancePage from "./pages/student/PerformancePage";
 import StudentProfile from "./pages/student/ProfilePage";
 import ExamInstructions from "./pages/student/ExamInstructions";
 import ExamPage from "./pages/student/ExamPage";
+import StudyExamPage from "./pages/student/StudyExamPage";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherMaterials from "./pages/teacher/TeacherMaterials";
 import TeacherExams from "./pages/teacher/TeacherExams";
-import TeacherPerformance from "./pages/teacher/TeacherPerformance";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -82,6 +82,7 @@ export default function App() {
         <Route index element={<StudentDashboard />} />
         <Route path="learn" element={<LearnPage />} />
         <Route path="tests" element={<TestsPage />} />
+        <Route path="tests/study/:examId" element={<StudyExamPage />} />
         <Route path="results" element={<StudentResults />} />
         <Route path="performance" element={<PerformancePage />} />
         <Route path="profile" element={<StudentProfile />} />
@@ -110,7 +111,6 @@ export default function App() {
         <Route path="classes" element={<Navigate to="/teacher/materials" replace />} />
         <Route path="questions" element={<Navigate to="/teacher/exams" replace />} />
         <Route path="exams" element={<TeacherExams />} />
-        <Route path="performance" element={<TeacherPerformance />} />
       </Route>
 
       {/* ── Admin Panel ────────────────────────────────────────── */}

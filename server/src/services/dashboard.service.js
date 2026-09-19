@@ -118,13 +118,38 @@ const getStudentDashboard = async (studentUserId) => {
 const getTeacherDashboard = async (teacherUserId) => {
   const teacher = await Teacher.findOne({ user: teacherUserId }).populate("subject", "name");
 
-  // NOTE: there is no manual "question bank" for teachers — questions live inside exams.
+  const teacherBatchIds = await Batch.find({
+    isActive: true,
+    $or: [
+      { "assignedTeachers.teacher": teacherUserId },
+      { createdBy: teacherUserId },
+    ],
+  }).distinct("_id");
+
   const [materialCount, videoCount, examCount, archivedCount, batchCount] = await Promise.all([
     Material.countDocuments({ uploadedBy: teacherUserId, isActive: true }),
     Material.countDocuments({ uploadedBy: teacherUserId, isActive: true, type: "VIDEO" }),
-    Exam.countDocuments({ createdBy: teacherUserId, isArchived: { $ne: true } }),
-    Exam.countDocuments({ createdBy: teacherUserId, isArchived: true }),
-    Batch.countDocuments({ "assignedTeachers.teacher": teacherUserId, isActive: true }),
+    Exam.countDocuments({
+      $or: [
+        { createdBy: teacherUserId },
+        { batch: { $in: teacherBatchIds } },
+      ],
+      isArchived: { $ne: true },
+    }),
+    Exam.countDocuments({
+      $or: [
+        { createdBy: teacherUserId },
+        { batch: { $in: teacherBatchIds } },
+      ],
+      isArchived: true,
+    }),
+    Batch.countDocuments({
+      isActive: true,
+      $or: [
+        { "assignedTeachers.teacher": teacherUserId },
+        { createdBy: teacherUserId },
+      ],
+    }),
   ]);
 
   return { teacher, materialCount, videoCount, examCount, archivedCount, batchCount };

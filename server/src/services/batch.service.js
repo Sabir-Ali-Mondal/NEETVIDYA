@@ -24,6 +24,23 @@ const resolveBatchStudentUserIds = (batchStudentIds = [], studentRecords = []) =
   return [...new Set(normalized)];
 };
 
+const buildAccessibleBatchFilter = (user, extraFilter = {}) => {
+  const filter = { isActive: true, ...extraFilter };
+  const teacherUserId = user?._id || user?.id || user?.user?._id;
+
+  if (user?.role === "teacher" && teacherUserId) {
+    return {
+      ...filter,
+      $or: [
+        { "assignedTeachers.teacher": teacherUserId },
+        { createdBy: teacherUserId },
+      ],
+    };
+  }
+
+  return filter;
+};
+
 const createBatch = async (data, userId) => {
   const existing = await Batch.findOne({ code: data.code });
   if (existing) throw new ApiError(400, "Batch code already exists");
@@ -31,8 +48,8 @@ const createBatch = async (data, userId) => {
   return batch;
 };
 
-const getBatches = async (filter = {}) => {
-  const batches = await Batch.find({ isActive: true, ...filter })
+const getBatches = async (filter = {}, user = null) => {
+  const batches = await Batch.find(buildAccessibleBatchFilter(user, filter))
     .populate("assignedTeachers.teacher", "name")
     .populate("assignedTeachers.subject", "name")
     .sort({ createdAt: -1 });
@@ -108,4 +125,5 @@ module.exports = {
   addStudentsToBatch,
   removeStudentFromBatch,
   resolveBatchStudentUserIds,
+  buildAccessibleBatchFilter,
 };

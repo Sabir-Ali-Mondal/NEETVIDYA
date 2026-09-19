@@ -19,19 +19,26 @@ const canAccessExam = async (user, exam) => {
   if (!user) return false;
   if (user.role === "admin" || user.role === "teacher") return true;
   if (!exam) return false;
-  if (!["PUBLISHED", "LIVE"].includes(exam.status)) return false;
 
   const Student = require("../models/Student");
   const student = await Student.findOne({ user: user._id });
   const batchId = exam.batch?._id || exam.batch;
-  if (student?.batches?.some((b) => b.toString() === batchId?.toString())) return true;
-
-  const perm = await ExamPermission.findOne({
+  const studentHasBatch = student?.batches?.some((b) => b.toString() === batchId?.toString());
+  const explicitPermission = await ExamPermission.findOne({
     student: user._id,
     exam: exam._id || exam.id,
     isActive: true,
   });
-  return !!perm;
+
+  if (["PUBLISHED", "LIVE"].includes(exam.status)) {
+    return studentHasBatch || !!explicitPermission;
+  }
+
+  if (["CLOSED", "ARCHIVED"].includes(exam.status) && exam.studyVisible) {
+    return studentHasBatch || !!explicitPermission;
+  }
+
+  return false;
 };
 
 const assertExamAccess = async (user, exam) => {

@@ -1,240 +1,312 @@
-export const generateExamResultPdf = ({ examTitle = "Exam Results", rows = [] }) => {
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import images from "../config/images";
+
+const escapeValue = (value, fallback = "—") => {
+  if (value === null || value === undefined || value === "") {
+    return fallback;
+  }
+
+  return String(value);
+};
+
+const getLogoDataUrl = async (url) => {
+  if (!url) return null;
+
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const formatDate = (date) => {
+  if (!date) return "—";
+
+  return new Date(date).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
+
+export const downloadExamResultSheet = async ({
+  examTitle = "Exam Results",
+  rows = [],
+  batchName = "",
+  instituteName = "NEETVIDYA",
+  generatedAt = new Date(),
+}) => {
   if (!rows.length) return;
 
-  const cleanRows = rows.map((row, index) => ({
-    rank: row.rank || index + 1,
-    studentId: row.studentId || row.student?.studentId || "—",
-    studentName: row.student?.name || "Student",
-    score: `${row.obtainedMarks ?? 0} / ${row.totalMarks || row.exam?.totalMarks || 0}`,
-    status: row.isPublished ? "Published" : "Pending",
-    date: row.createdAt ? new Date(row.createdAt).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }) : "—",
-  }));
+  const sortedRows = [...rows]
+    .sort((a, b) => {
+      const scoreDiff = (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8" />
-        <title>${examTitle}</title>
-        <style>
-          :root {
-            --bg: #f8fafc;
-            --paper: #ffffff;
-            --ink: #0f172a;
-            --muted: #64748b;
-            --line: #e2e8f0;
-            --green: #16a34a;
-            --amber: #d97706;
-            --brand: #0f766e;
-          }
+      if (scoreDiff !== 0) {
+        return scoreDiff;
+      }
 
-          * { box-sizing: border-box; }
-          body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: var(--bg);
-            color: var(--ink);
-            padding: 28px;
-          }
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    })
+    .map((row, index) => ({
+      ...row,
+      rank: index + 1,
+    }));
 
-          .sheet {
-            width: 100%;
-            max-width: 1100px;
-            margin: 0 auto;
-            background: var(--paper);
-            border: 1px solid var(--line);
-            border-radius: 18px;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
-            overflow: hidden;
-          }
+  const safeExamTitle = examTitle || "Exam Results";
+  const safeInstitute = instituteName || "NEETVIDYA";
+  const safeBatch = batchName || "General";
 
-          .header {
-            padding: 28px 30px 20px;
-            background: linear-gradient(135deg, #0f172a 0%, #0f766e 100%);
-            color: white;
-          }
+  const highestScore = sortedRows[0]?.obtainedMarks || 0;
+  const averageScore = sortedRows.length
+    ? Math.round(sortedRows.reduce((sum, row) => sum + Number(row.obtainedMarks || 0), 0) / sortedRows.length)
+    : 0;
+  const totalAttempts = rows.reduce((sum, row) => sum + Number(row.totalAttempts || 0), 0);
+  const publishedCount = sortedRows.filter((row) => row.isPublished).length;
 
-          .title {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
-          }
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+  });
 
-          .subtitle {
-            margin: 10px 0 0;
-            font-size: 13px;
-            opacity: 0.8;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-          }
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 12;
 
-          .stats {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            padding: 18px 30px 0;
-            margin-top: -12px;
-          }
+  const colors = {
+    black: [15, 23, 42],
+    green: [15, 118, 110],
+    white: [255, 255, 255],
+    slate: [71, 85, 105],
+    muted: [100, 116, 139],
+    border: [226, 232, 240],
+    soft: [248, 250, 252],
+    emerald: [22, 163, 74],
+    amber: [217, 119, 6],
+    greenLight: [236, 253, 245],
+    lime: [190, 242, 100],
+  };
 
-          .stat {
-            background: #f8fafc;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 14px 18px;
-          }
+  const logoUrl = images.logo || images.logoRoundedTransparent || "";
+  const logoData = await getLogoDataUrl(logoUrl);
 
-          .stat-label {
-            display: block;
-            font-size: 11px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 6px;
-          }
+  const roundedRect = (x, y, w, h, radius, fillColor, strokeColor = null) => {
+    doc.setFillColor(...fillColor);
 
-          .stat-value {
-            font-size: 22px;
-            font-weight: 700;
-          }
+    if (strokeColor) {
+      doc.setDrawColor(...strokeColor);
+      doc.roundedRect(x, y, w, h, radius, radius, "FD");
+    } else {
+      doc.roundedRect(x, y, w, h, radius, radius, "F");
+    }
+  };
 
-          .table-wrap {
-            padding: 20px 30px 30px;
-          }
+  const addPageNumber = () => {
+    const currentPage = doc.internal.getNumberOfPages();
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            overflow: hidden;
-          }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...colors.muted);
 
-          th, td {
-            padding: 14px 12px;
-            border-bottom: 1px solid var(--line);
-            text-align: left;
-            font-size: 13px;
-          }
+    doc.text("NEETVIDYA  •  Examination Report", margin, pageHeight - 7);
+    doc.text(`Page ${currentPage}`, pageWidth - margin, pageHeight - 7, { align: "right" });
+  };
 
-          th {
-            background: #f8fafc;
-            color: var(--muted);
-            font-size: 11px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
+  roundedRect(0, 0, pageWidth, 39, 0, colors.black);
+  doc.setFillColor(...colors.green);
+  doc.rect(0, 36, pageWidth, 3, "F");
 
-          tbody tr:nth-child(even) {
-            background: #fafafa;
-          }
+  if (logoData) {
+    try {
+      doc.addImage(logoData, "PNG", margin, 8, 22, 22);
+    } catch {
+      // ignore missing logo
+    }
+  }
 
-          .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            border: 1px solid transparent;
-          }
+  const brandX = logoData ? margin + 29 : margin;
 
-          .published {
-            background: rgba(22, 163, 74, 0.1);
-            color: var(--green);
-            border-color: rgba(22, 163, 74, 0.2);
-          }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  doc.text(safeInstitute.toUpperCase(), brandX, 12);
 
-          .pending {
-            background: rgba(217, 119, 6, 0.1);
-            color: var(--amber);
-            border-color: rgba(217, 119, 6, 0.2);
-          }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(19);
+  doc.setTextColor(...colors.white);
+  doc.text("EXAMINATION RESULT", brandX, 21);
 
-          .rank {
-            font-weight: 700;
-            color: var(--brand);
-          }
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(203, 213, 225);
+  doc.text("Official student performance report", brandX, 27);
 
-          @media print {
-            body {
-              background: white;
-              padding: 0;
-            }
-            .sheet {
-              box-shadow: none;
-              border: none;
-              border-radius: 0;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="sheet">
-          <div class="header">
-            <div class="subtitle">Exam leaderboard</div>
-            <h1 class="title">${examTitle}</h1>
-          </div>
+  roundedRect(pageWidth - margin - 45, 10, 45, 16, 8, [30, 41, 59]);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...colors.lime);
+  doc.text(safeBatch.toUpperCase(), pageWidth - margin - 22.5, 19.5, { align: "center" });
 
-          <div class="stats">
-            <div class="stat">
-              <span class="stat-label">Students</span>
-              <span class="stat-value">${cleanRows.length}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Highest Score</span>
-              <span class="stat-value">${cleanRows[0]?.score || "0 / 0"}</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Generated</span>
-              <span class="stat-value">${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>
-            </div>
-          </div>
+  let y = 50;
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Student ID</th>
-                  <th>Student</th>
-                  <th>Latest Attempt</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${cleanRows.map((row) => `
-                  <tr>
-                    <td class="rank">#${row.rank}</td>
-                    <td>${row.studentId}</td>
-                    <td>${row.studentName}</td>
-                    <td>${row.date}</td>
-                    <td>${row.score}</td>
-                    <td>
-                      <span class="badge ${row.status === "Published" ? "published" : "pending"}">${row.status}</span>
-                    </td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(...colors.black);
 
-  const popup = window.open("", "_blank", "width=1200,height=900");
-  if (!popup) return;
+  const titleLines = doc.splitTextToSize(safeExamTitle, pageWidth - margin * 2 - 80);
+  doc.text(titleLines, margin, y);
 
-  popup.document.write(html);
-  popup.document.close();
-  setTimeout(() => {
-    popup.focus();
-    popup.print();
-  }, 250);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...colors.muted);
+  doc.text(`Generated ${formatDate(generatedAt)}`, pageWidth - margin, y, { align: "right" });
+
+  y += Math.max(10, titleLines.length * 7);
+
+  const cardGap = 5;
+  const cardWidth = (pageWidth - margin * 2 - cardGap * 3) / 4;
+  const cardHeight = 25;
+
+  const cards = [
+    { label: "STUDENTS", value: sortedRows.length, accent: colors.green },
+    { label: "HIGHEST SCORE", value: highestScore, accent: colors.emerald },
+    { label: "AVERAGE SCORE", value: averageScore, accent: [59, 130, 246] },
+    { label: "TOTAL ATTEMPTS", value: totalAttempts, accent: colors.amber },
+  ];
+
+  cards.forEach((card, index) => {
+    const x = margin + index * (cardWidth + cardGap);
+
+    roundedRect(x, y, cardWidth, cardHeight, 4, colors.soft, colors.border);
+    doc.setFillColor(...card.accent);
+    doc.roundedRect(x, y, 2.2, cardHeight, 1, 1, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.muted);
+    doc.text(card.label, x + 8, y + 8);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...colors.black);
+    doc.text(String(card.value), x + 8, y + 18);
+  });
+
+  y += cardHeight + 10;
+
+  roundedRect(margin, y, pageWidth - margin * 2, 11, 5, colors.greenLight);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...colors.green);
+  doc.text(`${publishedCount} of ${sortedRows.length} student result${sortedRows.length === 1 ? "" : "s"} published`, margin + 7, y + 7);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...colors.muted);
+  doc.text(`Batch: ${safeBatch}`, pageWidth - margin - 7, y + 7, { align: "right" });
+
+  y += 18;
+
+  const tableBody = sortedRows.map((row) => [
+    `#${row.rank}`,
+    escapeValue(row.studentId),
+    escapeValue(row.studentName, "Student"),
+    formatDate(row.createdAt),
+    `${row.obtainedMarks ?? 0} / ${row.totalMarks || 0}`,
+    String(row.totalAttempts || 0),
+    row.isPublished ? "Published" : "Pending",
+  ]);
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Rank", "Student ID", "Student Name", "Latest Attempt", "Score", "Attempts", "Status"]],
+    body: tableBody,
+    theme: "grid",
+    styles: {
+      font: "helvetica",
+      fontSize: 8,
+      textColor: colors.black,
+      cellPadding: 3.2,
+      lineColor: colors.border,
+      lineWidth: 0.25,
+      valign: "middle",
+    },
+    headStyles: {
+      fillColor: colors.black,
+      textColor: colors.white,
+      fontStyle: "bold",
+      fontSize: 7.5,
+      cellPadding: 3.5,
+    },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    bodyStyles: { minCellHeight: 9 },
+    columnStyles: {
+      0: { cellWidth: 17, halign: "center", fontStyle: "bold" },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 55, fontStyle: "bold" },
+      3: { cellWidth: 48 },
+      4: { cellWidth: 32, halign: "center", fontStyle: "bold" },
+      5: { cellWidth: 25, halign: "center" },
+      6: { cellWidth: 28, halign: "center" },
+    },
+    margin: { left: margin, right: margin, bottom: 16 },
+    didParseCell: (data) => {
+      if (data.section === "body" && data.column.index === 0) {
+        const rank = sortedRows[data.row.index]?.rank;
+        if (rank === 1) data.cell.styles.textColor = [180, 83, 9];
+        if (rank === 2) data.cell.styles.textColor = [100, 116, 139];
+        if (rank === 3) data.cell.styles.textColor = [146, 64, 14];
+      }
+
+      if (data.section === "body" && data.column.index === 4) {
+        data.cell.styles.textColor = colors.green;
+      }
+
+      if (data.section === "body" && data.column.index === 6) {
+        const row = sortedRows[data.row.index];
+        if (row?.isPublished) {
+          data.cell.styles.textColor = colors.emerald;
+          data.cell.styles.fontStyle = "bold";
+        } else {
+          data.cell.styles.textColor = colors.amber;
+          data.cell.styles.fontStyle = "bold";
+        }
+      }
+    },
+    didDrawPage: () => {
+      addPageNumber();
+    },
+  });
+
+  const finalY = doc.lastAutoTable?.finalY || pageHeight - 25;
+
+  if (finalY < pageHeight - 35) {
+    doc.setDrawColor(...colors.border);
+    doc.line(margin, finalY + 8, pageWidth - margin, finalY + 8);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...colors.muted);
+    doc.text("This document is generated from the NEETVIDYA examination result system.", margin, finalY + 15);
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...colors.green);
+    doc.text(safeInstitute, pageWidth - margin, finalY + 15, { align: "right" });
+  }
+
+  const filename = `${safeExamTitle}`
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase() || "exam-results";
+
+  doc.save(`${filename}-results.pdf`);
 };

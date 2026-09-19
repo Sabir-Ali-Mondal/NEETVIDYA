@@ -9,7 +9,6 @@ const navItems = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard, end: true },
   { label: "Study Materials", path: "/teacher/materials", icon: FileText },
   { label: "Exam & Question Manager", path: "/teacher/exams", icon: ClipboardList },
-  { label: "Student Performance", path: "/teacher/performance", icon: BarChart3 },
 ];
 
 export default function TeacherLayout() {
@@ -81,9 +80,9 @@ export default function TeacherLayout() {
           <button className="lg:hidden p-1.5 rounded text-gray-600 hover:bg-gray-100" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 min-w-0">
             <NotificationBell />
-            <span className="text-sm font-semibold text-brand-dark">{user?.name} (Faculty)</span>
+            <span className="max-w-[140px] sm:max-w-none truncate text-xs sm:text-sm font-semibold text-brand-dark">{user?.name} (Faculty)</span>
           </div>
         </header>
 

@@ -272,7 +272,7 @@ export default function AdminStudents() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <div className="flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition">
                         <button
                           onClick={() => {
                             setViewingStudent(s);

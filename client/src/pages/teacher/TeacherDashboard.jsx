@@ -101,13 +101,13 @@ export default function TeacherDashboard() {
             <div
               key={s.label}
               onClick={() => navigate(s.path)}
-              className="bg-white border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 group"
+              className="bg-white border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:border-slate-200 active:scale-[0.99] touch-manipulation"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                <div className={`w-11 h-11 rounded-xl ${s.bg} ${s.border} border flex items-center justify-center transition-transform`}>
                   <s.icon className={`w-5 h-5 ${s.color}`} />
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition" />
+                <ChevronRight className="w-4 h-4 text-slate-300" />
               </div>
               <div className="text-3xl font-extrabold text-slate-900 tracking-tight">{s.value}</div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">{s.label}</div>

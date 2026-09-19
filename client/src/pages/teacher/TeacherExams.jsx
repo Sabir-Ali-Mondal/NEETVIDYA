@@ -10,7 +10,7 @@ import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 import Pagination from "../../components/shared/Pagination";
 import { parseCSV, downloadCSVTemplate } from "../../utils/csv";
-import { generateExamResultPdf } from "../../utils/examResultPdf";
+import { downloadExamResultSheet } from "../../utils/examResultPdf";
 
 const statusColors = {
   LIVE: "bg-green-100 text-green-700 border-green-200",
@@ -85,7 +85,7 @@ export default function TeacherExams() {
   const rankedSubmissionRows = (examResults?.results || []).slice().sort((a, b) => {
     const scoreDiff = (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
     if (scoreDiff !== 0) return scoreDiff;
-    return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
   }).map((row, index) => ({ ...row, rank: index + 1 }));
 
   const fetchExams = async () => {
@@ -388,6 +388,7 @@ export default function TeacherExams() {
       alertSuccess("Exam deleted");
       setExamToDelete(null);
       fetchExams();
+      if (activeTab === "bank") fetchBank();
     } catch {
       alertError("Failed to delete");
     }
@@ -436,12 +437,12 @@ export default function TeacherExams() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+      <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl w-full sm:w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+            className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2 ${
               activeTab === tab.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -637,6 +638,12 @@ export default function TeacherExams() {
                       >
                         <Download className="w-3.5 h-3.5 inline mr-1" /> Download
                       </button>
+                      <button
+                        onClick={() => setExamToDelete(exam)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 inline mr-1" /> Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -684,49 +691,56 @@ export default function TeacherExams() {
                   <div className="flex justify-end">
                     <button
                       type="button"
-                      onClick={() => generateExamResultPdf({
+                      onClick={() => downloadExamResultSheet({
                         examTitle: examResults.exam?.title || "Exam Results",
                         rows: rankedSubmissionRows,
+                        batchName: examResults.exam?.batch?.name || "General",
+                        instituteName: "NEETVIDYA",
                       })}
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50"
                     >
-                      <BarChart3 className="w-3.5 h-3.5" /> Download PDF
+                      <BarChart3 className="w-3.5 h-3.5" /> Download Result Sheet
                     </button>
                   </div>
 
-                  <div className="border border-slate-100 rounded-xl overflow-x-auto print:shadow-none print:border-0">
-                    <table className="w-full text-sm min-w-[800px] print:text-black">
-                      <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
-                        <tr>
-                          <th className="py-3 px-4 text-left">Rank</th>
-                          <th className="py-3 px-4 text-left">Student ID</th>
-                          <th className="py-3 px-4 text-left">Student</th>
-                          <th className="py-3 px-4 text-center">Latest Attempt</th>
-                          <th className="py-3 px-4 text-center">Score</th>
-                          <th className="py-3 px-4 text-center">Status</th>
-                          <th className="py-3 px-4 text-right">Date & Time</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {rankedSubmissionRows.map((r) => (
-                          <tr key={r._id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-bold text-xs">#{r.rank}</td>
-                            <td className="py-3 px-4 font-semibold text-slate-700">{r.studentId || r.student?.studentId || "—"}</td>
-                            <td className="py-3 px-4 font-semibold text-slate-800">{r.student?.name || "Student"}</td>
-                            <td className="py-3 px-4 text-center text-xs text-slate-500">{r.createdAt ? new Date(r.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
-                            <td className="py-3 px-4 text-center font-bold">{r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}</td>
-                            <td className="py-3 px-4 text-center">
-                              {r.isPublished ? (
-                                <span className="text-xs font-semibold text-green-600">Published</span>
-                              ) : (
-                                <span className="text-xs font-semibold text-amber-600">Pending</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-right text-xs text-slate-400">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="space-y-4">
+                    {rankedSubmissionRows.map((group) => (
+                      <div key={group.userId || group.studentId || group.studentName} className="border border-slate-200 rounded-2xl bg-slate-50/50 p-4 shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-3 border-b border-slate-200">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">#{group.rank}</span>
+                            <div>
+                              <div className="font-bold text-slate-800">{group.studentName || "Student"}</div>
+                              <div className="text-xs text-slate-500">Student ID: {group.studentId || "—"}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">Attempts: {group.totalAttempts}</span>
+                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">Latest Score: {group.obtainedMarks} / {group.totalMarks}</span>
+                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">{group.isPublished ? "Published" : "Pending"}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 space-y-2">
+                          {group.attempts?.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).map((attempt, idx) => (
+                            <div key={attempt._id || idx} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm">
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Attempt {group.attempts.length - idx}</span>
+                                <span className="text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}</span>
+                              </div>
+
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className="font-semibold">{attempt.obtainedMarks} / {attempt.totalMarks}</span>
+                                <span className={`text-[11px] font-semibold px-2 py-1 rounded-full ${attempt.isPublished ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+                                  {attempt.isPublished ? "Published" : "Pending"}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (

@@ -104,7 +104,11 @@ export default function TestsPage() {
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {studyExams.map((exam) => (
-                  <div key={exam._id} className="card flex-col justify-between border-gray-200 p-5">
+                  <Link
+                    key={exam._id}
+                    to={`/student/tests/study/${exam._id}`}
+                    className="card flex-col justify-between border-gray-200 p-5 transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md"
+                  >
                     <div>
                       <span className="badge bg-purple-100 text-purple-800 mb-2 inline-block">
                         {exam.testType?.replace(/_/g, " ")}
@@ -117,7 +121,7 @@ export default function TestsPage() {
                     <div className="pt-3 mt-3 border-t border-gray-100 flex items-center gap-1 text-xs text-purple-600 font-semibold">
                       <BookOpen className="w-3.5 h-3.5" /> Available for study
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>

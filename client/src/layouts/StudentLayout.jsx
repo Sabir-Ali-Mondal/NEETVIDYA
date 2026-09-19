@@ -103,18 +103,19 @@ export default function StudentLayout() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto min-w-0">
             {myBatch && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 bg-brand-green/10 text-brand-green rounded-full border-brand-green/20">
-                <GraduationCap className="w-3.5 h-3.5" /> {myBatch.name}
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold px-2 py-1 bg-brand-green/10 text-brand-green rounded-full border border-brand-green/20 max-w-[110px] truncate">
+                <GraduationCap className="w-3 h-3 shrink-0" />
+                <span className="truncate">{myBatch.name}</span>
               </span>
             )}
             <NotificationBell />
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-brand-dark leading-tight">{user?.name}</p>
-              <p className="text-xs text-gray-400 capitalize">{user?.role} Account</p>
+            <div className="text-right min-w-0 block">
+              <p className="text-xs sm:text-sm font-semibold text-brand-dark leading-tight truncate max-w-[100px] sm:max-w-none">{user?.name}</p>
+              <p className="hidden sm:block text-[11px] text-gray-400 capitalize">{user?.role} Account</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-brand-green/10 text-brand-green font-bold flex items-center justify-center border border-brand-green/30 text-sm">
+            <div className="w-9 h-9 rounded-full bg-brand-green/10 text-brand-green font-bold flex items-center justify-center border border-brand-green/30 text-sm shrink-0">
               {user?.name ? user.name[0].toUpperCase() : "S"}
             </div>
           </div>

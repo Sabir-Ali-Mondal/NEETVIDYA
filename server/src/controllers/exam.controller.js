@@ -1,6 +1,7 @@
 const Exam = require("../models/Exam");
 const Result = require("../models/Result");
 const Attempt = require("../models/Attempt");
+const Student = require("../models/Student");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
 const svc = require("../services/exam.service");
@@ -11,7 +12,6 @@ const getExams = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
 
     if (req.user.role === "student") {
-      // Students only ever see released exams for their batch / permitted exams.
       const data = await svc.getStudentExams(req.user, { page, limit });
       return apiResponse(res, 200, "Exams retrieved", data);
     }
@@ -23,6 +23,22 @@ const getExams = async (req, res, next) => {
     if (req.query.testType) filter.testType = req.query.testType;
     if (req.query.batch) filter.batch = req.query.batch;
     if (req.query.search) filter.title = { $regex: req.query.search, $options: "i" };
+
+    if (req.user.role === "teacher") {
+      const Batch = require("../models/Batch");
+      const teacherBatchIds = await Batch.find({
+        isActive: true,
+        $or: [
+          { "assignedTeachers.teacher": req.user._id },
+          { createdBy: req.user._id },
+        ],
+      }).distinct("_id");
+
+      filter.$or = [
+        { createdBy: req.user._id },
+        { batch: { $in: teacherBatchIds } },
+      ];
+    }
 
     const data = await svc.getExams(filter, { page, limit });
     return apiResponse(res, 200, "Exams retrieved", data);
@@ -276,7 +292,13 @@ const getExamQuestions = async (req, res, next) => {
     const Question = require("../models/Question");
     const exam = await Exam.findById(req.params.id);
     if (!exam) throw new ApiError(404, "Exam not found");
-    const questions = await Question.find({ _id: { $in: exam.questions }});
+
+    if (req.user.role === "student") {
+      const allowed = await svc.canAccessExam(req.user, exam);
+      if (!allowed) throw new ApiError(403, "You do not have access to this study paper");
+    }
+
+    const questions = await Question.find({ _id: { $in: exam.questions } });
     return apiResponse(res, 200, "Exam questions", { questions });
   } catch (error) {
     next(error);
@@ -319,29 +341,72 @@ const getExamResults = async (req, res, next) => {
       .populate("student", "name email phone")
       .sort({ createdAt: -1, updatedAt: -1 });
 
-    const latestByStudent = new Map();
+    const studentProfiles = await Student.find({
+      user: { $in: results.map((r) => r.student?._id).filter(Boolean) },
+    }).select("user studentId");
+
+    const studentProfileMap = new Map(
+      studentProfiles.map((student) => [String(student.user), student])
+    );
+
+    const groupedByStudent = new Map();
+
     for (const result of results) {
-      const studentId = result.student?._id?.toString() || result.student?.toString();
-      if (!studentId) continue;
-      const existing = latestByStudent.get(studentId);
-      if (!existing || new Date(result.createdAt || result.updatedAt) >= new Date(existing.createdAt || existing.updatedAt)) {
-        latestByStudent.set(studentId, result);
+      const userId = result.student?._id ? String(result.student._id) : null;
+      if (!userId) continue;
+
+      const studentProfile = studentProfileMap.get(userId);
+      const studentKey = userId;
+
+      if (!groupedByStudent.has(studentKey)) {
+        groupedByStudent.set(studentKey, {
+          userId,
+          studentId: studentProfile?.studentId || "—",
+          studentName: result.student?.name || "Student",
+          attempts: [],
+        });
       }
+
+      const group = groupedByStudent.get(studentKey);
+      group.attempts.push({
+        ...result.toObject ? result.toObject() : result,
+        studentId: studentProfile?.studentId || "—",
+        studentName: result.student?.name || "Student",
+      });
     }
 
-    const rankedResults = Array.from(latestByStudent.values())
+    const rankedResults = Array.from(groupedByStudent.values())
+      .map((group) => {
+        const attempts = group.attempts.slice().sort((a, b) => {
+          return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+        });
+
+        const latestAttempt = attempts[0] || null;
+        return {
+          userId: group.userId,
+          studentId: group.studentId,
+          studentName: group.studentName,
+          totalAttempts: attempts.length,
+          attempts,
+          latestAttempt,
+          obtainedMarks: latestAttempt?.obtainedMarks || 0,
+          totalMarks: latestAttempt?.totalMarks || exam.totalMarks || 0,
+          createdAt: latestAttempt?.createdAt || null,
+          isPublished: latestAttempt?.isPublished || false,
+        };
+      })
       .sort((a, b) => {
         const scoreDiff = (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
         if (scoreDiff !== 0) return scoreDiff;
-        return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
       })
-      .map((result, index) => ({
-        ...result.toObject ? result.toObject() : result,
-        studentId: result.student?.studentId || result.student?.id || "—",
+      .map((group, index) => ({
+        ...group,
         rank: index + 1,
       }));
 
     const totalSubmissions = rankedResults.length;
+    const totalAttempts = results.length;
     const avgScore = totalSubmissions > 0
       ? Math.round(rankedResults.reduce((acc, r) => acc + (r.obtainedMarks || 0), 0) / totalSubmissions)
       : 0;
@@ -351,6 +416,7 @@ const getExamResults = async (req, res, next) => {
       results: rankedResults,
       analytics: {
         totalSubmissions,
+        totalAttempts,
         avgScore,
         highestScore: rankedResults[0]?.obtainedMarks || 0,
       },

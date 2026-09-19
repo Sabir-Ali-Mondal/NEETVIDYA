@@ -51,7 +51,7 @@ router.get("/:id/results", protect, authorize("admin", "teacher"), getExamResult
 router.put("/:id/publish-results", protect, authorize("admin", "teacher"), publishResults);
 
 // Exam-specific questions (belong to THIS exam only)
-router.get("/:id/questions", protect, authorize("admin", "teacher"), getExamQuestions);
+router.get("/:id/questions", protect, getExamQuestions);
 router.post(
   "/:id/questions",
   protect,

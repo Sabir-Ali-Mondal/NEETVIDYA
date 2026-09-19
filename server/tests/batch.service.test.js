@@ -2,7 +2,19 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
 
-const { resolveBatchStudentUserIds } = require('../src/services/batch.service');
+const { resolveBatchStudentUserIds, buildAccessibleBatchFilter } = require('../src/services/batch.service');
+
+test('buildAccessibleBatchFilter returns teacher-scoped batch visibility for assigned batches', () => {
+  const filter = buildAccessibleBatchFilter({ role: 'teacher', _id: 'teacher_123' }, { course: 'SANKALP' });
+  assert.deepEqual(filter, {
+    course: 'SANKALP',
+    isActive: true,
+    $or: [
+      { 'assignedTeachers.teacher': 'teacher_123' },
+      { createdBy: 'teacher_123' },
+    ],
+  });
+});
 
 test('resolveBatchStudentUserIds converts legacy student ids to user ids', () => {
   const resolved = resolveBatchStudentUserIds(['student_123'], [{ _id: 'student_123', user: 'user_456' }]);
