@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import images from "../../config/images";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
 const getTeacherFallbackImage = (teacher) => {
   const teacherName = teacher?.user?.name || teacher?.name || "";
@@ -40,7 +41,7 @@ export default function FacultyPage() {
       <section className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
 
         {/* Hero section */}
-        <div className="mx-auto mb-14 max-w-3xl text-center sm:mb-20">
+        <Reveal className="mx-auto mb-14 max-w-3xl text-center sm:mb-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white/80 px-4 py-2 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-brand-green" />
 
@@ -65,7 +66,7 @@ export default function FacultyPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
             <span className="h-px w-10 bg-brand-green/40" />
           </div>
-        </div>
+        </Reveal>
 
         {/* Faculty cards */}
         {loading ? (
@@ -79,8 +80,9 @@ export default function FacultyPage() {
           </div>
         ) : (
           <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-8 sm:grid-cols-2 sm:gap-10">
-            {teachers.map((teacher) => (
-              <article
+            {teachers.map((teacher, i) => (
+              <FadeInCard
+                delay={(i % 2) * 0.1}
                 key={teacher._id}
                 className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
               >
@@ -138,13 +140,13 @@ export default function FacultyPage() {
                     </span>
                   </div>
                 </div>
-              </article>
+              </FadeInCard>
             ))}
           </div>
         )}
 
         {/* Bottom message */}
-        <div className="mx-auto mt-16 max-w-2xl text-center sm:mt-20">
+        <Reveal className="mx-auto mt-16 max-w-2xl text-center sm:mt-20">
           <p className="font-heading text-xl font-bold text-brand-dark sm:text-2xl">
             Your goals deserve the right guidance.
           </p>
@@ -152,7 +154,7 @@ export default function FacultyPage() {
           <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
             Learn with confidence. Prepare with purpose.
           </p>
-        </div>
+        </Reveal>
       </section>
     </main>
   );

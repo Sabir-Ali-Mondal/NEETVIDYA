@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Trophy, Star, Award, Target, BookOpen, GraduationCap } from "lucide-react";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
 export default function ResultsPage() {
   const [achievements, setAchievements] = useState([]);
@@ -87,10 +88,11 @@ export default function ResultsPage() {
             </div>
           ) : achievements.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {achievements.map((item) => (
-                <article
+              {achievements.map((item, i) => (
+                <FadeInCard
+                  delay={(i % 3) * 0.08}
                   key={item._id}
-                  className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-green/30 hover:shadow-xl"
                 >
                   <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
@@ -132,7 +134,7 @@ export default function ResultsPage() {
                       <span>{item.studentBatch}</span>
                     </div>
                   )}
-                </article>
+                </FadeInCard>
               ))}
             </div>
           ) : (

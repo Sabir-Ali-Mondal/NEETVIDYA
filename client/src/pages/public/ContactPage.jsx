@@ -14,6 +14,7 @@ import {
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import TelegramLink from "../../components/shared/TelegramLink";
 import useContactSettings from "../../hooks/useContactSettings";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -78,7 +79,7 @@ export default function ContactPage() {
 
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
         {/* Hero */}
-        <div className="mx-auto mb-14 max-w-3xl text-center sm:mb-20">
+        <Reveal className="mx-auto mb-14 max-w-3xl text-center sm:mb-20">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
             <span className="h-2 w-2 rounded-full bg-brand-green" />
 
@@ -105,7 +106,7 @@ export default function ContactPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
             <span className="h-px w-10 bg-brand-green/40" />
           </div>
-        </div>
+        </Reveal>
 
         {/* Contact + Form */}
         <div className="grid items-start gap-8 lg:grid-cols-12 lg:gap-10">

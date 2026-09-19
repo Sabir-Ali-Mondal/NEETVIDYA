@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, BookOpen, ClipboardList, BarChart3, User, LogOut, Menu, X, Bell, GraduationCap } from "lucide-react";
 import { useState, useContext, useEffect } from "react";
+import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import api from "../config/api";
 import TelegramLink from "../components/shared/TelegramLink";
@@ -120,7 +121,13 @@ export default function StudentLayout() {
         </header>
 
         <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
-          <Outlet />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
     </div>

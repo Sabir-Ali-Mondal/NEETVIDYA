@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, FileText, HelpCircle, ClipboardList, Link, BarChart3, User, LogOut, Menu, X } from "lucide-react";
 import { useState, useContext } from "react";
+import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import NotificationBell from "../components/shared/NotificationBell";
 
@@ -87,7 +88,13 @@ export default function TeacherLayout() {
         </header>
 
         <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
-          <Outlet />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
     </div>

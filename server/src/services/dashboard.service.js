@@ -25,7 +25,7 @@ const getAdminDashboard = async () => {
     Student.countDocuments({ isActive: true }),
     Teacher.countDocuments({ isActive: true }),
     Exam.countDocuments(),
-    Attempt.countDocuments(),
+    Attempt.countDocuments({ status: { $in: ["SUBMITTED", "AUTO_SUBMITTED"] } }),
     Question.countDocuments({ isActive: true }),
     Course.countDocuments({ isActive: true }),
     Batch.countDocuments({ isActive: true }),

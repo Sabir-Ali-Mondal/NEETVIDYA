@@ -10,6 +10,7 @@ import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 import Pagination from "../../components/shared/Pagination";
 import { parseCSV, downloadCSVTemplate } from "../../utils/csv";
+import { generateExamResultPdf } from "../../utils/examResultPdf";
 
 const statusColors = {
   LIVE: "bg-green-100 text-green-700 border-green-200",
@@ -76,10 +77,16 @@ export default function TeacherExams() {
     endTime: "",
     maxAttempts: 1,
     instructions: "",
-    resultPublishMode: "MANUAL",
+    resultPublishMode: "IMMEDIATE",
     resultPublishAt: "",
     publishNow: false,
   });
+
+  const rankedSubmissionRows = (examResults?.results || []).slice().sort((a, b) => {
+    const scoreDiff = (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
+    if (scoreDiff !== 0) return scoreDiff;
+    return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+  }).map((row, index) => ({ ...row, rank: index + 1 }));
 
   const fetchExams = async () => {
     setLoading(true);
@@ -140,7 +147,7 @@ export default function TeacherExams() {
       endTime: "",
       maxAttempts: 1,
       instructions: "",
-      resultPublishMode: "MANUAL",
+      resultPublishMode: "IMMEDIATE",
       resultPublishAt: "",
       publishNow: false,
     });
@@ -340,6 +347,10 @@ export default function TeacherExams() {
     }
   };
 
+  const showManualResultPublishButton = (exam) => {
+    return exam.resultPublishMode !== "IMMEDIATE" && !exam.resultsPublished;
+  };
+
   const handleReconduct = async (exam) => {
     try {
       await api.post(`/exams/${exam._id}/reconduct`, {
@@ -520,7 +531,7 @@ export default function TeacherExams() {
                           <Archive className="w-3.5 h-3.5 inline mr-1" /> Close & Archive
                         </button>
                       )}
-                      {!exam.resultsPublished && (
+                      {showManualResultPublishButton(exam) && (
                         <button
                           onClick={() => handlePublishResults(exam._id)}
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
@@ -668,37 +679,56 @@ export default function TeacherExams() {
                 </div>
               </div>
 
-              {examResults.results?.length > 0 ? (
-                <div className="border border-slate-100 rounded-xl overflow-x-auto">
-                  <table className="w-full text-sm min-w-[600px]">
-                    <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Rank</th>
-                        <th className="py-3 px-4 text-left">Student</th>
-                        <th className="py-3 px-4 text-center">Score</th>
-                        <th className="py-3 px-4 text-center">Status</th>
-                        <th className="py-3 px-4 text-right">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {examResults.results.map((r, i) => (
-                        <tr key={r._id || i} className="hover:bg-slate-50">
-                          <td className="py-3 px-4 font-bold text-xs">#{r.rank || i + 1}</td>
-                          <td className="py-3 px-4 font-semibold text-slate-800">{r.student?.name || "Student"}</td>
-                          <td className="py-3 px-4 text-center font-bold">{r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}</td>
-                          <td className="py-3 px-4 text-center">
-                            {r.isPublished ? (
-                              <span className="text-xs font-semibold text-green-600">Published</span>
-                            ) : (
-                              <span className="text-xs font-semibold text-amber-600">Pending</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-right text-xs text-slate-400">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</td>
+              {rankedSubmissionRows.length > 0 ? (
+                <>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => generateExamResultPdf({
+                        examTitle: examResults.exam?.title || "Exam Results",
+                        rows: rankedSubmissionRows,
+                      })}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" /> Download PDF
+                    </button>
+                  </div>
+
+                  <div className="border border-slate-100 rounded-xl overflow-x-auto print:shadow-none print:border-0">
+                    <table className="w-full text-sm min-w-[800px] print:text-black">
+                      <thead className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0">
+                        <tr>
+                          <th className="py-3 px-4 text-left">Rank</th>
+                          <th className="py-3 px-4 text-left">Student ID</th>
+                          <th className="py-3 px-4 text-left">Student</th>
+                          <th className="py-3 px-4 text-center">Latest Attempt</th>
+                          <th className="py-3 px-4 text-center">Score</th>
+                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-right">Date & Time</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {rankedSubmissionRows.map((r) => (
+                          <tr key={r._id} className="hover:bg-slate-50">
+                            <td className="py-3 px-4 font-bold text-xs">#{r.rank}</td>
+                            <td className="py-3 px-4 font-semibold text-slate-700">{r.studentId || r.student?.studentId || "—"}</td>
+                            <td className="py-3 px-4 font-semibold text-slate-800">{r.student?.name || "Student"}</td>
+                            <td className="py-3 px-4 text-center text-xs text-slate-500">{r.createdAt ? new Date(r.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
+                            <td className="py-3 px-4 text-center font-bold">{r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}</td>
+                            <td className="py-3 px-4 text-center">
+                              {r.isPublished ? (
+                                <span className="text-xs font-semibold text-green-600">Published</span>
+                              ) : (
+                                <span className="text-xs font-semibold text-amber-600">Pending</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right text-xs text-slate-400">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-slate-400 text-sm">No submissions recorded yet.</div>
               )}
@@ -812,6 +842,13 @@ export default function TeacherExams() {
                         onChange={(e) => setExamForm({ ...examForm, negativePerWrong: e.target.value })}
                         className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Max Attempts Allowed</label>
+                    <input type="number" min="1" value={examForm.maxAttempts}
+                      onChange={(e) => setExamForm({ ...examForm, maxAttempts: e.target.value })}
+                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                    <p className="text-[11px] text-slate-400 mt-1">Default is 1. Increase this to allow more than one attempt per learner.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>

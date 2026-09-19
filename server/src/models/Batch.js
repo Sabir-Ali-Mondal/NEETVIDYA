@@ -9,7 +9,17 @@ const batchSchema = new mongoose.Schema(
       enum: ["OFFLINE", "ONLINE", "HYBRID", "EXAM_ONLY", "CRASH_COURSE"],
       required: true,
     },
-    course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
+    // One of the institute's fixed programme identifiers (see client/src/config/courses.js),
+    // e.g. "SANKALP" or "UDAAN". Stored as a plain string because the course catalogue is
+    // fixed rather than a user-managed collection.
+    course: {
+      type: String,
+      enum: {
+        values: ["SANKALP", "UDAAN"],
+        message: "Course must be one of: SANKALP, UDAAN",
+      },
+      default: null,
+    },
     academicYear: { type: String },
     startDate: { type: Date },
     endDate: { type: Date },

@@ -5,8 +5,9 @@ const Exam = require("../models/Exam");
 const ApiError = require("../utils/apiError");
 
 const evaluateAttempt = async (attempt) => {
-  if (attempt.status !== "IN_PROGRESS") {
-    return await Result.findOne({ attempt: attempt._id });
+  const existingResult = await Result.findOne({ attempt: attempt._id });
+  if (attempt.status !== "IN_PROGRESS" && existingResult) {
+    return existingResult;
   }
 
   let totalScore = 0;

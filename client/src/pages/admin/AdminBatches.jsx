@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../../config/api";
 import { Users, Plus, Search, BookOpen, Clock, Calendar, Pencil, Trash2, X, Save, UserMinus, ShieldAlert } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
+import { DEFAULT_COURSES, getCourseByValue } from "../../config/courses";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const batchTypeColors = {
@@ -13,7 +14,6 @@ const batchTypeColors = {
 
 export default function AdminBatches() {
   const [batches, setBatches] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -49,16 +49,7 @@ export default function AdminBatches() {
     }
   };
 
-  const fetchCourses = async () => {
-    try {
-      const { data } = await api.get("/courses");
-      setCourses(data.data?.courses || []);
-    } catch {
-      setCourses([]);
-    }
-  };
-
-  useEffect(() => { fetchBatches(); fetchCourses(); }, []);
+  useEffect(() => { fetchBatches(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -253,6 +244,12 @@ export default function AdminBatches() {
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-500">
+                  {(getCourseByValue(b.course)?.name || b.course?.name) && (
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{getCourseByValue(b.course)?.name || b.course?.name}</span>
+                    </div>
+                  )}
                   {b.schedule && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -278,7 +275,10 @@ export default function AdminBatches() {
                     onClick={() =>
                       setEditingBatch({
                         ...b,
-                        course: b.course?._id || b.course || "",
+                        course:
+                          typeof b.course === "object"
+                            ? b.course?._id || ""
+                            : b.course || "",
                       })
                     }
                     className="flex-1 text-xs font-semibold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition"
@@ -326,8 +326,8 @@ export default function AdminBatches() {
                   <select value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition">
                     <option value="">Select a course</option>
-                    {courses.map((course) => (
-                      <option key={course._id} value={course._id}>{course.name}</option>
+                    {DEFAULT_COURSES.map((course) => (
+                      <option key={course.value} value={course.value}>{course.name}</option>
                     ))}
                   </select>
                 </div>
@@ -528,8 +528,8 @@ export default function AdminBatches() {
                     className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
                   >
                     <option value="">Select a course</option>
-                    {courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
+                    {DEFAULT_COURSES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.name}</option>
                     ))}
                   </select>
                 </div>

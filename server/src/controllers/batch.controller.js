@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
 const {
@@ -8,6 +9,7 @@ const {
   deleteBatch: deleteBatchService,
   addStudentsToBatch: addStudentsToBatchService,
   removeStudentFromBatch: removeStudentFromBatchService,
+  resolveBatchStudentUserIds,
 } = require("../services/batch.service");
 
 const getBatches = async (req, res, next) => {
@@ -73,10 +75,27 @@ const removeStudentFromBatch = async (req, res, next) => {
   }
 };
 
+const Student = require("../models/Student");
+
 const getBatchStudents = async (req, res, next) => {
   try {
     const batch = await getBatchById(req.params.id);
-    return apiResponse(res, 200, "Batch students", { students: batch.students });
+    const batchStudentIds = Array.isArray(batch.students) ? batch.students : [];
+
+    const validObjectIds = batchStudentIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const studentProfiles = await Student.find({
+      $or: [
+        { user: { $in: batchStudentIds.filter((id) => !mongoose.Types.ObjectId.isValid(id) ? false : false) } },
+        { _id: { $in: validObjectIds } },
+      ],
+    }).populate("user", "name email phone avatar");
+
+    const validUserIds = resolveBatchStudentUserIds(batchStudentIds, studentProfiles);
+    const students = await Student.find({ user: { $in: validUserIds } })
+      .populate("user", "name email phone avatar")
+      .sort({ createdAt: -1 });
+
+    return apiResponse(res, 200, "Batch students", { students });
   } catch (error) {
     next(error);
   }

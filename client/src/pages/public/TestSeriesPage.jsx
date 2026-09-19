@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../config/api";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 import images from "../../config/images";
 import {
   ClipboardList,
@@ -39,7 +40,7 @@ export default function TestSeriesPage() {
 
       {/* Hero */}
       <section className="relative mx-auto max-w-7xl px-4 pb-14 pt-16 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
-        <div className="mx-auto max-w-3xl text-center">
+        <Reveal className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
             <span className="h-2 w-2 rounded-full bg-brand-green" />
 
@@ -66,7 +67,7 @@ export default function TestSeriesPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
             <span className="h-px w-10 bg-brand-green/40" />
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Main content */}

@@ -8,6 +8,7 @@ import {
   Clock,
   Users,
 } from "lucide-react";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
 export default function CoursesPage() {
   const [batches, setBatches] = useState([]);
@@ -94,7 +95,7 @@ export default function CoursesPage() {
         ) : (
           <>
             {/* Section heading */}
-            <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <Reveal className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">
                   Program Catalog
@@ -117,14 +118,15 @@ export default function CoursesPage() {
                 Need guidance?
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
-            </div>
+            </Reveal>
 
             {/* Batch cards */}
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-              {batches.map((batch) => (
-                <article
+                {batches.map((batch, i) => (
+                <FadeInCard
+                  delay={(i % 3) * 0.08}
                   key={batch._id}
-                  className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
+                  className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:border-brand-green/30 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
                 >
                   {/* Accent */}
                   <div
@@ -214,7 +216,7 @@ export default function CoursesPage() {
                       </div>
                     </div>
                   </div>
-                </article>
+                </FadeInCard>
               ))}
             </div>
           </>

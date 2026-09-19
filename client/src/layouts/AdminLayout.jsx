@@ -4,6 +4,7 @@ import {
   HelpCircle, ClipboardList, Trophy, Settings, Globe, LogOut, Menu, X, MessageSquare
 } from "lucide-react";
 import { useState, useContext } from "react";
+import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import NotificationBell from "../components/shared/NotificationBell";
 
@@ -12,7 +13,6 @@ const navItems = [
   { label: "Students", path: "/admin/students", icon: Users },
   { label: "Faculty", path: "/admin/teachers", icon: GraduationCap },
   { label: "Batches & Courses", path: "/admin/batches", icon: Layers },
-  { label: "Question Bank", path: "/admin/questions", icon: HelpCircle },
   { label: "Exams & Tests", path: "/admin/exams", icon: ClipboardList },
   { label: "Enquiries", path: "/admin/enquiries", icon: MessageSquare },
   { label: "Achievements", path: "/admin/achievements", icon: Trophy },
@@ -106,7 +106,13 @@ export default function AdminLayout() {
 
         <main className="flex-1 overflow-y-auto overscroll-contain p-4 pb-24 lg:p-8 lg:pb-8 w-full">
           <div className="max-w-7xl mx-auto">
-            <Outlet />
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Outlet />
+            </motion.div>
           </div>
         </main>
       </div>

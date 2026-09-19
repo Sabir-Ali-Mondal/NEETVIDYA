@@ -44,7 +44,7 @@ const createExam = async (data, userId) => {
   const {
     questions = [],
     publishNow = false,
-    resultPublishMode = "MANUAL",
+    resultPublishMode = "IMMEDIATE",
     resultPublishAt,
     startTime,
     endTime,

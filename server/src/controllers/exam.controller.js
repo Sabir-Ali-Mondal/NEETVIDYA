@@ -317,20 +317,42 @@ const getExamResults = async (req, res, next) => {
 
     const results = await Result.find({ exam: req.params.id })
       .populate("student", "name email phone")
-      .sort({ rank: 1, obtainedMarks: -1 });
+      .sort({ createdAt: -1, updatedAt: -1 });
 
-    const totalSubmissions = results.length;
+    const latestByStudent = new Map();
+    for (const result of results) {
+      const studentId = result.student?._id?.toString() || result.student?.toString();
+      if (!studentId) continue;
+      const existing = latestByStudent.get(studentId);
+      if (!existing || new Date(result.createdAt || result.updatedAt) >= new Date(existing.createdAt || existing.updatedAt)) {
+        latestByStudent.set(studentId, result);
+      }
+    }
+
+    const rankedResults = Array.from(latestByStudent.values())
+      .sort((a, b) => {
+        const scoreDiff = (b.obtainedMarks || 0) - (a.obtainedMarks || 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        return new Date(b.createdAt || b.updatedAt || 0) - new Date(a.createdAt || a.updatedAt || 0);
+      })
+      .map((result, index) => ({
+        ...result.toObject ? result.toObject() : result,
+        studentId: result.student?.studentId || result.student?.id || "—",
+        rank: index + 1,
+      }));
+
+    const totalSubmissions = rankedResults.length;
     const avgScore = totalSubmissions > 0
-      ? Math.round(results.reduce((acc, r) => acc + (r.obtainedMarks || 0), 0) / totalSubmissions)
+      ? Math.round(rankedResults.reduce((acc, r) => acc + (r.obtainedMarks || 0), 0) / totalSubmissions)
       : 0;
 
     return apiResponse(res, 200, "Exam results retrieved", {
       exam,
-      results,
+      results: rankedResults,
       analytics: {
         totalSubmissions,
         avgScore,
-        highestScore: results[0]?.obtainedMarks || 0,
+        highestScore: rankedResults[0]?.obtainedMarks || 0,
       },
     });
   } catch (error) {

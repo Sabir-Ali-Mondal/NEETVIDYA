@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
 export default function AboutPage() {
   const stats = [
@@ -75,7 +76,7 @@ export default function AboutPage() {
       <section className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-16">
           {/* Content */}
-          <div>
+          <Reveal>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
               <span className="h-2 w-2 rounded-full bg-brand-green" />
 
@@ -106,10 +107,11 @@ export default function AboutPage() {
 
             {/* Stats */}
             <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <div
+              {stats.map((stat, i) => (
+                  <FadeInCard
                   key={stat.label}
-                  className="rounded-2xl border border-white/80 bg-white p-4 shadow-[0_10px_35px_-20px_rgba(15,23,42,0.2)]"
+                    delay={i * 0.07}
+                  className="rounded-2xl border border-white/80 transition-all duration-300 hover:border-brand-green/30 hover:shadow-elevated bg-white p-4 shadow-[0_10px_35px_-20px_rgba(15,23,42,0.2)]"
                 >
                   <h4 className="font-heading text-2xl font-extrabold text-brand-green">
                     {stat.value}
@@ -118,10 +120,10 @@ export default function AboutPage() {
                   <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
                     {stat.label}
                   </p>
-                </div>
+                </FadeInCard>
               ))}
             </div>
-          </div>
+          </Reveal>
 
           {/* Image */}
           <div className="relative">

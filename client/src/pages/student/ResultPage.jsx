@@ -130,6 +130,12 @@ export default function ResultPage() {
 
                         <p className="text-sm font-medium text-brand-dark leading-relaxed">{q.questionText}</p>
 
+                        {q.questionImageUrl && (
+                          <div className="rounded-xl border border-gray-200 bg-white p-2">
+                            <img src={q.questionImageUrl} alt="Question illustration" className="max-h-64 rounded-lg object-contain mx-auto" />
+                          </div>
+                        )}
+
                         <div className="space-y-2 text-xs">
                           {q.options?.map((opt, optIdx) => {
                             const isSelected = item.yourAnswer === optIdx;
@@ -157,7 +163,10 @@ export default function ResultPage() {
                         {q.explanation && (
                           <div className="bg-brand-soft p-4 rounded-xl text-xs text-gray-700 border border-gray-200/70">
                             <strong className="text-brand-dark block mb-1">NCERT Concept Explanation:</strong>
-                            {q.explanation}
+                            <p className="leading-relaxed">{q.explanation}</p>
+                            {q.explanationImageUrl && (
+                              <img src={q.explanationImageUrl} alt="Explanation illustration" className="mt-3 max-h-64 rounded-lg object-contain border border-gray-200 bg-white" />
+                            )}
                           </div>
                         )}
                       </div>
