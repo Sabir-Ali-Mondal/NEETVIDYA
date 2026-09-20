@@ -21,7 +21,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem("neetvidya_refresh");
       if (refreshToken) {
         try {
-          const { data } = await axios.post("/api/auth/refresh", { refreshToken });
+          const { data } = await api.post("/auth/refresh", { refreshToken });
           localStorage.setItem("neetvidya_token", data.data.accessToken);
           error.config.headers.Authorization = `Bearer ${data.data.accessToken}`;
           return api(error.config);

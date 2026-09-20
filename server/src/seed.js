@@ -1,13 +1,22 @@
 /**
- * NEETVIDYA Database Seeder
+ * NEETVIDYA Production Seeder
  * Usage: cd server && npm run seed
  *
- * This seeds the database with:
- * - 1 Admin
- * - 5 Teachers (Physics, Biology, Chemistry x2, Zoology)
- * - 10 Students with generated IDs
- * - Courses, Subjects, Chapters, Batches
- * - Sample Questions, Exams, Achievements, Testimonials
+ * Creates ONLY the initial admin account so the project can be bootstrapped
+ * for production. Every other account (teachers, students) and all academic
+ * content (courses, subjects, questions, exams, materials) is added later
+ * from the admin panel, which stays the single source of truth.
+ *
+ * Credentials are read from the environment so they never have to live in
+ * source control:
+ *   ADMIN_NAME      (default: NEETVIDYA Admin)
+ *   ADMIN_EMAIL     (default: neetvidya720@gmail.com)
+ *   ADMIN_PASSWORD  (default: Admin@NEET2026)
+ *   ADMIN_PHONE     (default: +91 74396 85658)
+ *
+ * This script is safe to run against an existing database: if an admin with
+ * the given email already exists it is left untouched, and no other data is
+ * ever deleted.
  */
 
 const mongoose = require("mongoose");
@@ -15,188 +24,61 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const User = require("./models/User");
-const Student = require("./models/Student");
-const Teacher = require("./models/Teacher");
-const Batch = require("./models/Batch");
-const WebsiteContent = require("./models/WebsiteContent");
 
-const generateStudentId = (index) => {
-  const year = new Date().getFullYear();
-  return `NV-${year}-${String(index).padStart(4, "0")}`;
-};
+const ADMIN_NAME = process.env.ADMIN_NAME || "NEETVIDYA Admin";
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "neetvidya720@gmail.com").toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@NEET2026";
+const ADMIN_PHONE = process.env.ADMIN_PHONE || "+91 74396 85658";
 
 const seedData = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI || "mongodb://localhost:27017/neetvidya";
     await mongoose.connect(mongoUri);
-    console.log("✅ Connected to MongoDB...\n");
+    console.log("Connected to MongoDB...\n");
 
-    // Clear all collections
-    await Promise.all([
-      User.deleteMany({}),
-      Student.deleteMany({}),
-      Teacher.deleteMany({}),
-      Batch.deleteMany({}),
-      WebsiteContent.deleteMany({}),
-    ]);
-    console.log("🗑️  Cleared all collections.\n");
-
-    // ─────────────────────────────────────────────────────────
-    // 1. TEST ACCOUNTS ONLY
-    // Note: the app requires unique email addresses for each user.
-    // Therefore the admin and teacher accounts are kept to unique
-    // test emails, while the rest of the seed data is minimized.
-    // ─────────────────────────────────────────────────────────
-    const adminUser = await User.create({
-      name: "NEETVIDYA Admin",
-      email: "neetvidya720@gmail.com",
-      password: "Admin@NEET2026",
-      phone: "+91 74396 85658",
-      role: "admin",
-      emailVerified: true,
-    });
-    console.log("👤 Admin created:", adminUser.email);
-
-    const teacherData = [
-      {
-        name: "Ramij Khan",
-        email: "Ramijkhan314@gmail.com",
-        phone: "+91 98765 43211",
-        subject: "Physics",
-        qualification: "M.Sc Physics, B.Ed",
-        experience: "10+ Years in NEET Coaching",
-        specialisation: "Mechanics, Modern Physics",
-        bio: "Experienced mentor guiding students through core NEET physics concepts and problem-solving strategy.",
-      },
-      {
-        name: "Bheshma Das",
-        email: "bheshmadas377@gmail.com",
-        phone: "+91 98765 43212",
-        subject: "Chemistry",
-        qualification: "M.Sc Chemistry, B.Ed",
-        experience: "8+ Years in NEET Coaching",
-        specialisation: "Physical Chemistry, Organic Chemistry",
-        bio: "Focused on building strong fundamentals, high-yield revision and exam temperament for NEET aspirants.",
-      },
-    ];
-
-    const teacherUsers = [];
-    const teacherProfiles = [];
-
-    for (const t of teacherData) {
-      const user = await User.create({
-        name: t.name,
-        email: t.email,
-        password: "Teacher@NEET2026",
-        phone: t.phone,
-        role: "teacher",
-        emailVerified: true,
-      });
-      teacherUsers.push(user);
-
-      const teacher = await Teacher.create({
-        user: user._id,
-        subjectName: t.subject,
-        qualification: t.qualification,
-        experience: t.experience,
-        specialisation: t.specialisation,
-        bio: t.bio,
-      });
-      teacherProfiles.push(teacher);
-      console.log("👨‍🏫 Teacher created:", user.email, `(${t.subject})`);
+    // ADMIN BOOTSTRAP
+    // Idempotent: never deletes or overwrites existing data. If an admin
+    // with this email already exists we report it and stop.
+    const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
+    if (existingAdmin) {
+      console.log("Admin already exists, nothing to do:", existingAdmin.email);
+      console.log("Set ADMIN_EMAIL in server/.env to seed a different admin.");
+      await mongoose.disconnect();
+      process.exit(0);
     }
 
-    // Course, subject, and chapter data are intentionally left empty so admin users can add
-    // programs from the admin panel only. The seed now creates only the core accounts and batches.
-
-    // Teacher subject references are skipped here because there are no seeded courses or subjects.
-
-    // ─────────────────────────────────────────────────────────
-    // 2. ONLY TEST STUDENT
-    // ─────────────────────────────────────────────────────────
-    const studentUser = await User.create({
-      name: "Sabir Mondal",
-      email: "sabir.gdsc@gmail.com",
-      password: "Student@NEET2026",
-      phone: "+91 70012 34567",
-      role: "student",
+    await User.create({
+      name: ADMIN_NAME,
+      email: ADMIN_EMAIL,
+      password: ADMIN_PASSWORD,
+      phone: ADMIN_PHONE,
+      role: "admin",
       emailVerified: true,
+      mustChangePassword: true,
     });
+    console.log("Admin created:", ADMIN_EMAIL);
 
-    const studentId = generateStudentId(1);
-    const studentProfile = await Student.create({
-      user: studentUser._id,
-      studentId,
-      studentType: "REGULAR_OFFLINE",
-      currentClass: "DROPPER",
-      parentName: "Parent Name",
-      parentPhone: "+91 70012 34567",
-      school: "Test Center",
-      city: "Karimpur",
-      enrollmentDate: new Date(),
-    });
-    console.log(`👨‍🎓 Student created: ${studentUser.email} [${studentId}]`);
+    // Teachers, students, batches, courses, subjects, materials, questions and
+    // exams are intentionally NOT seeded. Create them from the admin panel once
+    // you have logged in with the account above.
 
-    // ─────────────────────────────────────────────────────────
-    // 6. BATCHES
-    // ─────────────────────────────────────────────────────────
-    const batch1 = await Batch.create({
-      name: "12th Batch – SANKALP",
-      code: "SANKALP-12TH",
-      batchType: "OFFLINE",
-      academicYear: "2026-2027",
-      capacity: 40,
-      students: [studentUser._id],
-      schedule: "Mon–Sat: 08:30 AM – 01:30 PM",
-      color: "#22c55e",
-      createdBy: adminUser._id,
-    });
-
-    const batch2 = await Batch.create({
-      name: "11th Batch – UDAAN",
-      code: "UDAAN-11TH",
-      batchType: "OFFLINE",
-      academicYear: "2026-2027",
-      capacity: 45,
-      students: [],
-      schedule: "Mon–Sat: 09:00 AM – 02:00 PM",
-      color: "#3b82f6",
-      createdBy: adminUser._id,
-    });
-
-    await Student.findByIdAndUpdate(studentProfile._id, { batches: [batch1._id] });
-    console.log("🏫 Seed batches created:", batch1.name, "|", batch2.name);
-
-    // Demo assessments are intentionally omitted so the admin panel remains the single source
-    // for course, subject, question-bank, and test creation.
-
-    console.log("ℹ️  Achievement and testimonial seed data intentionally omitted.");
-
-    // ─────────────────────────────────────────────────────────
     // SUMMARY
-    // ─────────────────────────────────────────────────────────
     console.log("\n" + "=".repeat(60));
-    console.log("✅ NEETVIDYA Database Seeded Successfully!");
+    console.log("NEETVIDYA admin seeded successfully!");
     console.log("=".repeat(60));
-    console.log("\n📋 TEST LOGIN CREDENTIALS:");
+    console.log("\nLOGIN CREDENTIALS:");
     console.log("-".repeat(45));
     console.log("  ADMIN");
-    console.log("  Email:    neetvidya720@gmail.com");
-    console.log("  Password: Admin@NEET2026\n");
-    console.log("  TEACHER 1");
-    console.log("  Email:    ramijkhan314@gmail.com");
-    console.log("  Password: Teacher@NEET2026\n");
-    console.log("  TEACHER 2");
-    console.log("  Email:    bheshmadas377@gmail.com");
-    console.log("  Password: Teacher@NEET2026\n");
-    console.log("  STUDENT");
-    console.log("  Email:    sabir.gdsc@gmail.com [NV-" + new Date().getFullYear() + "-0001]");
-    console.log("  Password: Student@NEET2026");
+    console.log("  Email:    " + ADMIN_EMAIL);
+    console.log("  Password: " + ADMIN_PASSWORD);
+    console.log("\n  You must change this password on first login.");
+    console.log("  All other accounts and content are added from the admin panel.");
     console.log("=".repeat(60));
 
+    await mongoose.disconnect();
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding error:", error);
+    console.error("Seeding error:", error);
     process.exit(1);
   }
 };
