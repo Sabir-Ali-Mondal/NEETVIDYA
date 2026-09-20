@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <defs>
+      <linearGradient id="grad_15" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#0B0F0D" />
+        <stop offset="100%" stop-color="#050706" />
+      </linearGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#grad_15)" />
+    <circle cx="400" cy="260" r="90" fill="#18A66A" opacity="0.18" />
+    <text x="400" y="270" fill="#18A66A" font-family="Arial, sans-serif" font-weight="bold" font-size="28" text-anchor="middle">NEETVIDYA</text>
+    <rect x="250" y="320" width="300" height="2" fill="#18A66A" opacity="0.4" />
+    <text x="400" y="360" fill="#E2E8F0" font-family="Arial, sans-serif" font-weight="600" font-size="18" text-anchor="middle">TEACHER 6</text>
+  </svg>
