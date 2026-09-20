@@ -6,6 +6,24 @@ const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
 const svc = require("../services/exam.service");
 
+const checkExamAccess = async (req, res, next) => {
+  try {
+    const data = await svc.checkExamAccess(req.user, req.params.id);
+    return apiResponse(res, 200, "Exam access checked", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPublicExamBySlug = async (req, res, next) => {
+  try {
+    const data = await svc.getPublicExamBySlug(req.params.slug);
+    return apiResponse(res, 200, "Public exam preview", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getExams = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -24,21 +42,7 @@ const getExams = async (req, res, next) => {
     if (req.query.batch) filter.batch = req.query.batch;
     if (req.query.search) filter.title = { $regex: req.query.search, $options: "i" };
 
-    if (req.user.role === "teacher") {
-      const Batch = require("../models/Batch");
-      const teacherBatchIds = await Batch.find({
-        isActive: true,
-        $or: [
-          { "assignedTeachers.teacher": req.user._id },
-          { createdBy: req.user._id },
-        ],
-      }).distinct("_id");
-
-      filter.$or = [
-        { createdBy: req.user._id },
-        { batch: { $in: teacherBatchIds } },
-      ];
-    }
+    // Teachers access exams across every batch — no assignment-based filtering.
 
     const data = await svc.getExams(filter, { page, limit });
     return apiResponse(res, 200, "Exams retrieved", data);
@@ -429,6 +433,7 @@ const getExamResults = async (req, res, next) => {
 module.exports = {
   getExams,
   getExamById,
+  checkExamAccess,
   createExam,
   updateExam,
   publishExam,
@@ -438,6 +443,7 @@ module.exports = {
   reconductExam,
   downloadExam,
   getQuestionBank,
+  getPublicExamBySlug,
   publishResults,
   grantPermission,
   revokePermission,

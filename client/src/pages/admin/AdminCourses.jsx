@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
   BookOpen,
@@ -13,11 +14,13 @@ import {
   X,
   Save,
   CheckCircle2,
+  Layers,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 export default function AdminCourses() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -202,14 +205,25 @@ export default function AdminCourses() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-900/10"
-          >
-            <Plus className="h-4 w-4" />
-            Add Course
-          </button>
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/batches")}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              <Layers className="h-4 w-4" />
+              Manage Batches
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-900/10"
+            >
+              <Plus className="h-4 w-4" />
+              Add Course
+            </button>
+          </div>
         </div>
       </section>
 

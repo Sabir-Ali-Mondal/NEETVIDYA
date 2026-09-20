@@ -24,27 +24,34 @@ const resolveBatchStudentUserIds = (batchStudentIds = [], studentRecords = []) =
   return [...new Set(normalized)];
 };
 
+// Every teacher has full access to every active batch. Batch assignment no longer
+// restricts what a teacher can see or work with, so the filter is role-agnostic.
 const buildAccessibleBatchFilter = (user, extraFilter = {}) => {
-  const filter = { isActive: true, ...extraFilter };
-  const teacherUserId = user?._id || user?.id || user?.user?._id;
+  return { isActive: true, ...extraFilter };
+};
 
-  if (user?.role === "teacher" && teacherUserId) {
-    return {
-      ...filter,
-      $or: [
-        { "assignedTeachers.teacher": teacherUserId },
-        { createdBy: teacherUserId },
-      ],
-    };
-  }
-
-  return filter;
+// Keep only valid, non-empty group entries.
+const sanitizeGroups = (groups) => {
+  if (!Array.isArray(groups)) return undefined;
+  return groups
+    .filter((g) => g && g.label && g.url)
+    .map((g) => ({
+      label: String(g.label).trim(),
+      type: ["TELEGRAM", "WHATSAPP", "LINK"].includes(g.type) ? g.type : "LINK",
+      url: String(g.url).trim(),
+      description: g.description ? String(g.description).trim() : undefined,
+    }));
 };
 
 const createBatch = async (data, userId) => {
   const existing = await Batch.findOne({ code: data.code });
   if (existing) throw new ApiError(400, "Batch code already exists");
-  const batch = await Batch.create({ ...data, createdBy: userId });
+  const groups = sanitizeGroups(data.groups);
+  const batch = await Batch.create({
+    ...data,
+    ...(groups ? { groups } : {}),
+    createdBy: userId,
+  });
   return batch;
 };
 
@@ -65,7 +72,10 @@ const getBatchById = async (id) => {
 };
 
 const updateBatch = async (id, data) => {
-  const batch = await Batch.findByIdAndUpdate(id, data, { new: true });
+  const update = { ...data };
+  const groups = sanitizeGroups(data.groups);
+  if (groups !== undefined) update.groups = groups;
+  const batch = await Batch.findByIdAndUpdate(id, update, { new: true });
   if (!batch) throw new ApiError(404, "Batch not found");
   return batch;
 };

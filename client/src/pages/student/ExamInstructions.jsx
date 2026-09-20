@@ -6,14 +6,19 @@ import {
   ArrowRight,
   FileText,
   CheckCircle2,
+  ShieldAlert,
 } from "lucide-react";
 import api from "../../config/api";
 import { alertError } from "../../utils/alert";
+import WhatsAppLink from "../../components/shared/WhatsAppLink";
+import useContactSettings from "../../hooks/useContactSettings";
 
 export default function ExamInstructions() {
   const { examId } = useParams();
   const navigate = useNavigate();
+  const { settings } = useContactSettings();
   const [exam, setExam] = useState(null);
+  const [access, setAccess] = useState(null);
   const [agreed, setAgreed] = useState(false);
   const [starting, setStarting] = useState(false);
 
@@ -22,6 +27,11 @@ export default function ExamInstructions() {
       .get(`/exams/${examId}`)
       .then(({ data }) => setExam(data.data?.exam))
       .catch(() => navigate("/student/tests"));
+
+    api
+      .get(`/exams/${examId}/access-check`)
+      .then(({ data }) => setAccess(data.data))
+      .catch(() => setAccess(null));
   }, [examId, navigate]);
 
   const handleStart = async () => {
@@ -36,6 +46,55 @@ export default function ExamInstructions() {
   };
 
   if (!exam) return null;
+
+  // Non-batch students must request permission before they can take the exam.
+  const needsPermission = access && access.needsPermission;
+
+  const waMessage = `Hello NEETVIDYA! I want to take the exam "${exam.title}"${
+    exam.batch?.name ? ` (Batch: ${exam.batch.name})` : ""
+  } but I do not have access. Please grant me exam permission.`;
+
+  if (needsPermission) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-brand-soft px-3 py-6 sm:px-5 sm:py-10">
+        <div className="relative mx-auto w-full max-w-lg">
+          <div className="overflow-hidden rounded-[2rem] border-slate-200 bg-white p-6 text-center shadow-xl shadow-slate-900/5 sm:p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+              <ShieldAlert className="h-7 w-7" />
+            </div>
+
+            <h1 className="mt-4 font-heading text-xl font-extrabold text-brand-dark">
+              Exam permission required
+            </h1>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              You are not a member of the batch for{" "}
+              <span className="font-bold text-slate-700">{exam.title}</span>
+              {exam.batch?.name ? ` (${exam.batch.name})` : ""}. Request access on
+              WhatsApp and our team will grant you permission.
+            </p>
+
+            <div className="mt-6 flex justify-center">
+              <WhatsAppLink
+                number={settings.whatsappNumber}
+                message={waMessage}
+                label="Request permission on WhatsApp"
+                className="!text-sm !font-bold"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/student/tests")}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+            >
+              Back to Tests
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-brand-soft px-3 py-6 sm:px-5 sm:py-10">

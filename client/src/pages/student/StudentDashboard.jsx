@@ -9,6 +9,7 @@ import {
   GraduationCap,
   ExternalLink,
   Sparkles,
+  Users,
 } from "lucide-react";
 import api from "../../config/api";
 import StudentBadge from "../../components/shared/StudentBadge";
@@ -48,6 +49,11 @@ export default function StudentDashboard() {
   }
 
   const batch = student?.batches?.[0];
+
+  // Flatten groups from every batch the student belongs to.
+  const batchGroups = (student?.batches || []).flatMap(
+    (b) => b.groups || []
+  );
 
   const studentType =
     student?.studentType === "REGULAR_ONLINE"
@@ -131,6 +137,50 @@ export default function StudentDashboard() {
             </div>
           </div>
         </section>
+
+        {/* Batch Groups / Community Links (per-batch, admin-managed) */}
+        {batchGroups.length > 0 && (
+          <section className="overflow-hidden rounded-[1.75rem] border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/5 sm:p-6">
+            <div className="mb-4 flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-heading text-base font-extrabold text-brand-dark sm:text-lg">
+                  Your Batch Groups
+                </h2>
+                <p className="mt-0.5 text-[11px] text-slate-400">
+                  Doubt, help and community groups for your batch
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {batchGroups.map((g, i) => (
+                <a
+                  key={i}
+                  href={g.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-3 rounded-2xl border-slate-200 bg-slate-50/70 p-3.5 transition hover:border-sky-200 hover:bg-sky-50/60"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sky-600 shadow-sm">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-extrabold text-slate-800">
+                      {g.label}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                      {g.description || g.type}
+                    </p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:text-sky-500" />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Welcome Header */}
         <section className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/5 sm:p-6 lg:p-7">

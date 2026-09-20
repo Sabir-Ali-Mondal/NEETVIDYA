@@ -33,6 +33,15 @@ const batchSchema = new mongoose.Schema(
     ],
     schedule: { type: String },
     telegramGroupLink: { type: String },
+    // Batch-specific groups (doubt / help / community). Shown to students of this batch.
+    groups: [
+      {
+        label: { type: String, trim: true },
+        type: { type: String, enum: ["TELEGRAM", "WHATSAPP", "LINK"], default: "LINK" },
+        url: { type: String, trim: true },
+        description: { type: String, trim: true },
+      },
+    ],
     color: { type: String, default: "#18A66A" },
     isActive: { type: Boolean, default: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

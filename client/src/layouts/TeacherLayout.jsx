@@ -6,11 +6,13 @@ import {
   LogOut,
   Menu,
   X,
+  KeyRound,
 } from "lucide-react";
 import { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import NotificationBell from "../components/shared/NotificationBell";
+import ChangePasswordModal from "../components/shared/ChangePasswordModal";
 
 const navItems = [
   {
@@ -33,6 +35,7 @@ const navItems = [
 
 export default function TeacherLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -204,6 +207,35 @@ export default function TeacherLayout() {
             pb-[max(0.75rem,env(safe-area-inset-bottom))]
           "
         >
+          <button
+            type="button"
+            onClick={() => {
+              setSidebarOpen(false);
+              setShowPasswordModal(true);
+            }}
+            className="
+              group
+              flex items-center gap-3
+              w-full
+              min-h-[44px]
+              px-3
+              rounded-xl
+              text-[12px]
+              font-semibold
+              text-gray-400
+              hover:text-brand-lime
+              hover:bg-brand-green/[0.08]
+              transition-all
+              mb-1
+            "
+          >
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/[0.05] group-hover:bg-brand-green/10 shrink-0">
+              <KeyRound className="w-4 h-4" />
+            </span>
+
+            <span>Change Password</span>
+          </button>
+
           <button
             type="button"
             onClick={handleLogout}
@@ -385,6 +417,11 @@ export default function TeacherLayout() {
           </div>
         </main>
       </div>
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 }

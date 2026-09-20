@@ -2,6 +2,7 @@ const Material = require("../models/Material");
 const Student = require("../models/Student");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
+const { notifyBatch } = require("../services/notification.service");
 const { uploadFile } = require("../services/cloudinary.service");
 const FOLDERS = require("../constants/cloudinaryFolders");
 
@@ -101,6 +102,15 @@ const createMaterial = async (req, res, next) => {
     if (req.file) materialData.fileSize = req.file.size;
 
     const material = await Material.create(materialData);
+
+    // Batch-scoped notification — only students in this batch are notified.
+    await notifyBatch(batch, {
+      title: "New study material",
+      message: `${title} has been added to your batch library.`,
+      type: "MATERIAL",
+      createdBy: req.user._id,
+    });
+
     return apiResponse(res, 201, "Material created", { material });
   } catch (error) {
     next(error);

@@ -8,13 +8,54 @@ const { protect } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
+const { DEFAULT_SUBJECTS } = require("../config/constants");
+
+// Lazily create the four default subjects so the Faculty Library always has options.
+const ensureDefaultSubjects = async () => {
+  await Promise.all(
+    DEFAULT_SUBJECTS.map((name, index) =>
+      Subject.findOneAndUpdate(
+        { name },
+        { $setOnInsert: { name, displayOrder: index, isActive: true, isCustom: false } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      )
+    )
+  );
+};
 
 router.get("/subjects", async (req, res, next) => {
   try {
+    // No course-scoped catalogue exists yet → seed defaults on first read.
+    const existingCount = await Subject.countDocuments({ isActive: true });
+    if (existingCount === 0) {
+      await ensureDefaultSubjects();
+    }
+
     const filter = { isActive: true };
     if (req.query.course) filter.course = req.query.course;
-    const subjects = await Subject.find(filter).sort({ displayOrder: 1 });
+    const subjects = await Subject.find(filter).sort({ displayOrder: 1, name: 1 });
     return apiResponse(res, 200, "Subjects retrieved", { subjects });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Create a custom subject (used by the "Other" option in the Faculty Library).
+router.post("/subjects", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return next(new ApiError(400, "Subject name is required"));
+    }
+    const clean = name.trim();
+    const existingSubject = await Subject.findOne({
+      name: { $regex: `^${clean}$`, $options: "i" },
+    });
+    let subject = existingSubject;
+    if (!subject) {
+      subject = await Subject.create({ name: clean, isCustom: true, isActive: true });
+    }
+    return apiResponse(res, 201, "Subject ready", { subject });
   } catch (error) {
     next(error);
   }

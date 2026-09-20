@@ -5,6 +5,11 @@ const Result = require("../models/Result");
 const ExamPermission = require("../models/ExamPermission");
 const { shuffleArray, generateOptionOrder } = require("../utils/shuffle");
 const ApiError = require("../utils/apiError");
+const { notifyBatch } = require("./notification.service");
+const crypto = require("crypto");
+
+// Short, URL-safe public share slug for an exam.
+const generateShareSlug = () => crypto.randomBytes(6).toString("hex");
 
 /**
  * Batch = Course. Exams are batch-specific.
@@ -46,6 +51,37 @@ const assertExamAccess = async (user, exam) => {
   if (!allowed) throw new ApiError(403, "You do not have access to this exam");
 };
 
+// Lets the UI decide the CTA: batch members start directly, outsiders request access.
+const checkExamAccess = async (user, examId) => {
+  const exam = await Exam.findById(examId).populate("batch", "name code");
+  if (!exam) throw new ApiError(404, "Exam not found");
+
+  if (user.role === "admin" || user.role === "teacher") {
+    return { hasBatchAccess: true, needsPermission: false, canAccess: true };
+  }
+
+  const Student = require("../models/Student");
+  const student = await Student.findOne({ user: user._id });
+  const batchId = exam.batch?._id || exam.batch;
+  const hasBatchAccess = !!student?.batches?.some(
+    (b) => b.toString() === batchId?.toString()
+  );
+  const explicitPermission = await ExamPermission.findOne({
+    student: user._id,
+    exam: exam._id,
+    isActive: true,
+  });
+  const canAccess = await canAccessExam(user, exam);
+
+  return {
+    hasBatchAccess,
+    needsPermission: !hasBatchAccess && !explicitPermission,
+    canAccess,
+    batchName: exam.batch?.name || null,
+    examTitle: exam.title,
+  };
+};
+
 // ── Create ─────────────────
 const createExam = async (data, userId) => {
   const {
@@ -81,8 +117,37 @@ const createExam = async (data, userId) => {
     resultPublishMode,
     resultPublishAt: resultPublishAt || undefined,
     publishedAt: publishNow ? new Date() : undefined,
+    shareSlug: generateShareSlug(),
+    isPublic: data.isPublic !== false,
   });
   return exam;
+};
+
+// Public exam preview by share slug — returns NO questions/answers.
+const getPublicExamBySlug = async (slug) => {
+  const exam = await Exam.findOne({ shareSlug: slug }).populate("batch", "name code");
+  if (!exam) throw new ApiError(404, "Exam link not found");
+
+  const released = ["PUBLISHED", "LIVE"].includes(exam.status);
+  return {
+    exam: {
+      _id: exam._id,
+      title: exam.title,
+      description: exam.description,
+      testType: exam.testType,
+      batchName: exam.batch?.name || null,
+      batchCode: exam.batch?.code || null,
+      duration: exam.duration,
+      totalQuestions: exam.totalQuestions,
+      totalMarks: exam.totalMarks,
+      marksPerCorrect: exam.marksPerCorrect,
+      negativePerWrong: exam.negativePerWrong,
+      startTime: exam.startTime,
+      endTime: exam.endTime,
+      status: exam.status,
+      isOpen: released,
+    },
+  };
 };
 
 // ── Read ─────────────────
@@ -156,7 +221,17 @@ const publishExam = async (id) => {
   }
   exam.status = "LIVE";
   exam.publishedAt = new Date();
+  if (!exam.shareSlug) exam.shareSlug = generateShareSlug();
   await exam.save();
+
+  // Notify only the students of this exam's batch.
+  await notifyBatch(exam.batch, {
+    title: "New exam published",
+    message: `${exam.title} is now live for your batch.`,
+    type: "TEST",
+    createdBy: exam.createdBy,
+  });
+
   return exam;
 };
 
@@ -280,6 +355,16 @@ const publishResults = async (id, { publish = true } = {}) => {
     { exam: id },
     { isPublished: publish, publishedAt: publish ? new Date() : undefined }
   );
+
+  if (publish) {
+    await notifyBatch(exam.batch, {
+      title: "Results published",
+      message: `Results for ${exam.title} are now available.`,
+      type: "RESULT",
+      createdBy: exam.createdBy,
+    });
+  }
+
   return exam;
 };
 
@@ -433,7 +518,9 @@ const startAttempt = async (examId, studentId) => {
 module.exports = {
   canAccessExam,
   assertExamAccess,
+  checkExamAccess,
   createExam,
+  getPublicExamBySlug,
   getExams,
   getStudentExams,
   getExamById,

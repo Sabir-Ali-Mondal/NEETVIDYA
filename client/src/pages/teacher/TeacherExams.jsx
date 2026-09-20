@@ -4,7 +4,7 @@ import {
   ClipboardList, Plus, Search, Layers, BarChart3, Trash2, X, Save,
   CheckCircle2, Eye, EyeOff, Image as ImageIcon, Upload, Download,
   RefreshCw, Users, Calendar, FileSpreadsheet, Archive, ChevronLeft,
-  ChevronRight, Clock, AlertCircle,
+  ChevronRight, Clock, AlertCircle, Link2,
 } from "lucide-react";
 import { alertSuccess, alertError, confirmDialog } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
@@ -360,6 +360,24 @@ export default function TeacherExams() {
     return exam.resultPublishMode !== "IMMEDIATE" && !exam.resultsPublished;
   };
 
+  // Public, shareable exam link (advertisement). Falls back to the exam id,
+  // since older exams may not have a shareSlug yet.
+  const buildShareLink = (exam) => {
+    const key = exam.shareSlug || exam._id;
+    return `${window.location.origin}/e/${key}`;
+  };
+
+  const handleCopyLink = async (exam) => {
+    const url = buildShareLink(exam);
+    try {
+      await navigator.clipboard.writeText(url);
+      alertSuccess("Exam link copied — share it anywhere");
+    } catch {
+      // Clipboard may be blocked; fall back to a prompt.
+      window.prompt("Copy this exam link:", url);
+    }
+  };
+
   const handleReconduct = async (exam) => {
     try {
       await api.post(`/exams/${exam._id}/reconduct`, {
@@ -629,6 +647,16 @@ export default function TeacherExams() {
                             <span className="hidden sm:inline truncate">Publish Results</span>
                           </button>
                         )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(exam)}
+                          className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-sky-200 bg-sky-50 px-3 text-[10px] font-bold text-sky-700 transition hover:bg-sky-100 sm:text-xs"
+                          title="Copy shareable exam link"
+                        >
+                          <Link2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline truncate">Copy Link</span>
+                        </button>
 
                         <button
                           type="button"

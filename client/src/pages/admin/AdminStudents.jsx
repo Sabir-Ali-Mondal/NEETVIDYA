@@ -180,7 +180,7 @@ export default function AdminStudents() {
       );
 
       alertSuccess(
-        `Student created! ID: ${data.data.studentId}, Password: ${data.data.tempPassword}`
+        `Student created. ID: ${data.data.studentId}. Default password: Neetvidya@123 — the student must change it on first login.`
       );
 
       setShowCreate(false);

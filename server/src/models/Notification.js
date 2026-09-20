@@ -9,7 +9,10 @@ const notificationSchema = new mongoose.Schema(
       enum: ["MATERIAL", "LECTURE", "TEST", "RESULT", "ANNOUNCEMENT", "GENERAL"],
       default: "GENERAL",
     },
-    targetRole: { type: String, enum: ["student", "teacher", "all"], default: "all" },
+    // Routing scope. BATCH (default) = only students of targetBatches see it.
+    // STUDENT = only targetStudents. ROLE = rare admin-wide broadcast.
+    scope: { type: String, enum: ["BATCH", "STUDENT", "ROLE"], default: "BATCH" },
+    targetRole: { type: String, enum: ["student", "teacher", "all"], default: "student" },
     targetBatches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Batch" }],
     targetStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     isRead: { type: Boolean, default: false },

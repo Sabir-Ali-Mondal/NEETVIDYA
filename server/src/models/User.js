@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema(
       match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     password: { type: String, required: [true, "Password is required"], select: false },
+    // Admin-created accounts start with a constant default password and must
+    // change it the first time they log in.
+    mustChangePassword: { type: Boolean, default: false },
+    passwordChangedAt: { type: Date },
     phone: { type: String, trim: true },
     role: {
       type: String,

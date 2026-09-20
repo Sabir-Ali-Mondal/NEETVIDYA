@@ -66,7 +66,7 @@ const getMyProfile = async (req, res, next) => {
   try {
     let student = await Student.findOne({ user: req.user._id })
       .populate("user", "name email phone avatar")
-      .populate("batches", "name code batchType course schedule color");
+      .populate("batches", "name code batchType course schedule color groups telegramGroupLink");
     if (!student) {
       student = await Student.create({
         user: req.user._id,

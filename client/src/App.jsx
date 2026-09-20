@@ -21,6 +21,7 @@ import TermsPage from "./pages/public/TermsPage";
 import VerifyEmailPage from "./pages/public/VerifyEmailPage";
 import ForgotPasswordPage from "./pages/public/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/public/ResetPasswordPage";
+import PublicExamLanding from "./pages/public/PublicExamLanding";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -68,6 +69,9 @@ export default function App() {
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
+
+      {/* Public shareable exam link (advertisement) */}
+      <Route path="/e/:slug" element={<PublicExamLanding />} />
 
       {/* Auth Routes (no layout wrapper) */}
       <Route path="/login" element={<LoginPage />} />
@@ -119,9 +123,9 @@ export default function App() {
         <Route path="students" element={<AdminStudents />} />
         <Route path="teachers" element={<AdminTeachers />} />
         <Route path="batches" element={<AdminBatches />} />
-        <Route path="courses" element={<Navigate to="/admin/batches" replace />} />
-        <Route path="questions" element={<TeacherExams />} />
-        <Route path="exams" element={<TeacherExams />} />
+        <Route path="courses" element={<AdminCourses />} />
+        <Route path="questions" element={<AdminQuestions />} />
+        <Route path="exams" element={<AdminExams />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="achievements" element={<AdminAchievements />} />
         <Route path="contact-settings" element={<AdminContactSettings />} />

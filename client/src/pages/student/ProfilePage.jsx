@@ -16,7 +16,6 @@ import {
   GraduationCap,
   MapPin,
   ShieldCheck,
-  IdCard,
   UsersRound,
   Building2,
   LockKeyhole,
@@ -162,7 +161,7 @@ export default function ProfilePage() {
     {
       label: "Student ID",
       value: student?.studentId,
-      icon: IdCard,
+      icon: BadgeCheck,
     },
     {
       label: "Current Class",
@@ -293,7 +292,7 @@ export default function ProfilePage() {
                 <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
                   {student?.studentId && (
                     <span className="inline-flex max-w-full items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-[10px] font-bold text-slate-300">
-                      <IdCard className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                      <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                       <span className="truncate">
                         {student.studentId}
                       </span>

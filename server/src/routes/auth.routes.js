@@ -29,6 +29,7 @@ router.post("/reset-password", authLimiter, resetPassword);
 
 // Protected routes
 router.get("/me", protect, getMe);
+// Every logged-in user (student, teacher, admin) can update their own profile and password.
 router.put("/profile", protect, updateProfile);
 router.put("/change-password", protect, changePassword);
 

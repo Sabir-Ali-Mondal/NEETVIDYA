@@ -6,9 +6,7 @@ import {
   Search,
   Eye,
   Mail,
-  Pencil,
   X,
-  Save,
   Phone,
   Clock,
   Target,
@@ -25,8 +23,6 @@ export default function AdminTeachers() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [viewingTeacher, setViewingTeacher] = useState(null);
-  const [editingTeacher, setEditingTeacher] = useState(null);
-  const [savingEdit, setSavingEdit] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -60,13 +56,10 @@ export default function AdminTeachers() {
     setCreating(true);
 
     try {
-      const { data } = await api.post(
-        "/auth/admin/create-teacher",
-        form
-      );
+      await api.post("/auth/admin/create-teacher", form);
 
       alertSuccess(
-        `Teacher created! Temp password: ${data.data.tempPassword}`
+        `Teacher created. Default password: Neetvidya@123 — the teacher must change it on first login.`
       );
 
       setShowCreate(false);
@@ -107,37 +100,6 @@ export default function AdminTeachers() {
     }
   };
 
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-
-    if (!editingTeacher) return;
-
-    setSavingEdit(true);
-
-    try {
-      await api.put(`/teachers/${editingTeacher._id}`, {
-        name: editingTeacher.name,
-        phone: editingTeacher.phone,
-        qualification: editingTeacher.qualification,
-        experience: editingTeacher.experience,
-        specialisation: editingTeacher.specialisation,
-        bio: editingTeacher.bio,
-      });
-
-      alertSuccess("Teacher profile updated successfully");
-
-      setEditingTeacher(null);
-      fetchTeachers();
-    } catch (err) {
-      alertError(
-        err.response?.data?.message ||
-          "Failed to update teacher"
-      );
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   const filtered = teachers.filter((t) => {
     const query = search.toLowerCase();
 
@@ -147,14 +109,6 @@ export default function AdminTeachers() {
       t.specialisation?.toLowerCase().includes(query)
     );
   });
-
-  const openEdit = (teacher) => {
-    setEditingTeacher({
-      ...teacher,
-      name: teacher.user?.name || "",
-      phone: teacher.user?.phone || teacher.phone || "",
-    });
-  };
 
   const inputClass =
     "min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10";
@@ -181,8 +135,8 @@ export default function AdminTeachers() {
             </h1>
 
             <p className="mt-1.5 max-w-xl text-sm leading-6 text-slate-500">
-              Manage faculty profiles, contact information and
-              account availability from one place.
+              Manage faculty accounts and availability. Faculty manage
+              their own profile and password after first login.
             </p>
 
             <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-400">
@@ -363,7 +317,7 @@ export default function AdminTeachers() {
                 )}
 
                 {/* Actions */}
-                <div className="mt-5 grid min-w-0 grid-cols-[1fr_40px_40px_40px] gap-2 border-t border-slate-100 pt-4">
+                <div className="mt-5 grid min-w-0 grid-cols-[1fr_40px_40px] gap-2 border-t border-slate-100 pt-4">
                   <button
                     onClick={() =>
                       toggleActive(t._id, t.isActive)
@@ -394,14 +348,6 @@ export default function AdminTeachers() {
                     title="View Profile"
                   >
                     <Eye className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    onClick={() => openEdit(t)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
-                    title="Edit Teacher"
-                  >
-                    <Pencil className="h-4 w-4" />
                   </button>
 
                   {t.user?.email ? (
@@ -598,9 +544,12 @@ export default function AdminTeachers() {
                     <Mail className="mt-0.5 h-4 w-4 shrink-0 text-brand-green" />
 
                     <p className="text-xs leading-5 text-green-800">
-                      A temporary password will be generated and
-                      emailed to the teacher after the account is
-                      created.
+                      The account is created with the default password
+                      <span className="mx-1 rounded bg-white px-1.5 py-0.5 font-mono font-bold text-brand-dark">
+                        Neetvidya@123
+                      </span>
+                      No email is sent. Share this password with the teacher —
+                      they must change it on first login.
                     </p>
                   </div>
                 </div>
@@ -798,195 +747,9 @@ export default function AdminTeachers() {
                     Close
                   </button>
 
-                  <button
-                    onClick={() => {
-                      const t = viewingTeacher;
-
-                      setViewingTeacher(null);
-
-                      setEditingTeacher({
-                        ...t,
-                        name: t.user?.name || "",
-                        phone:
-                          t.user?.phone || t.phone || "",
-                      });
-                    }}
-                    className="min-h-11 rounded-xl bg-brand-green px-4 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-green-700 sm:col-start-2"
-                  >
-                    Edit Faculty
-                  </button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Teacher Modal */}
-      {editingTeacher && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:max-h-[92dvh] sm:max-w-2xl sm:rounded-[2rem]">
-            {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6 sm:py-5">
-              <div className="min-w-0 pr-3">
-                <h2 className="truncate text-lg font-extrabold text-slate-900 sm:text-xl">
-                  Edit Faculty Profile
-                </h2>
-
-                <p className="mt-0.5 text-xs text-slate-400">
-                  Update credentials and contact information.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setEditingTeacher(null)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <form
-              onSubmit={handleSaveEdit}
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-            >
-              <div className="space-y-5 p-5 sm:p-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className={labelClass}>
-                      Full Name *
-                    </label>
-
-                    <input
-                      required
-                      value={editingTeacher.name}
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <label className={labelClass}>
-                      Phone
-                    </label>
-
-                    <input
-                      value={editingTeacher.phone || ""}
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          phone: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <label className={labelClass}>
-                      Experience
-                    </label>
-
-                    <input
-                      value={editingTeacher.experience || ""}
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          experience: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                      placeholder="e.g. 10+ Years"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className={labelClass}>
-                      Qualification
-                    </label>
-
-                    <input
-                      value={
-                        editingTeacher.qualification || ""
-                      }
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          qualification: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className={labelClass}>
-                      Specialisation
-                    </label>
-
-                    <input
-                      value={
-                        editingTeacher.specialisation || ""
-                      }
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          specialisation: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className={labelClass}>
-                      Short Bio
-                    </label>
-
-                    <textarea
-                      rows={4}
-                      value={editingTeacher.bio || ""}
-                      onChange={(e) =>
-                        setEditingTeacher((prev) => ({
-                          ...prev,
-                          bio: e.target.value,
-                        }))
-                      }
-                      className={`${inputClass} resize-none py-3`}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions inside scrollable body */}
-                <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingTeacher(null)}
-                    className="hidden min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={savingEdit}
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-start-2"
-                  >
-                    <Save className="h-4 w-4" />
-
-                    {savingEdit
-                      ? "Saving..."
-                      : "Save Profile"}
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
         </div>
       )}

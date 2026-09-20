@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
   Users,
@@ -33,7 +34,15 @@ const initialForm = {
   capacity: "",
   schedule: "",
   color: "#22c55e",
+  groups: [],
 };
+
+const emptyGroup = () => ({
+  label: "",
+  type: "LINK",
+  url: "",
+  description: "",
+});
 
 const getStudentName = (student) => {
   if (!student) return "Unknown Student";
@@ -85,6 +94,7 @@ const getStudentId = (student) =>
   student?.user?.id;
 
 export default function AdminBatches() {
+  const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -282,6 +292,7 @@ export default function AdminBatches() {
         capacity: Number(editingBatch.capacity || 0),
         schedule: editingBatch.schedule,
         color: editingBatch.color,
+        groups: (editingBatch.groups || []).filter((g) => g.label && g.url),
       });
 
       alertSuccess("Batch updated successfully");
@@ -350,17 +361,28 @@ export default function AdminBatches() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              resetCreateForm();
-              setShowCreate(true);
-            }}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-900/10"
-          >
-            <Plus className="h-4 w-4" />
-            Create Batch
-          </button>
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/courses")}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              <BookOpen className="h-4 w-4" />
+              Manage Courses
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                resetCreateForm();
+                setShowCreate(true);
+              }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-900/10"
+            >
+              <Plus className="h-4 w-4" />
+              Create Batch
+            </button>
+          </div>
         </div>
       </section>
 
@@ -761,6 +783,50 @@ export default function AdminBatches() {
                     className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 py-1"
                   />
                 </div>
+
+                <div className="md:col-span-2 rounded-2xl border-slate-200 bg-slate-50/70 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Groups / Community Links</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">Doubt, help or community groups shown to students of this batch.</p>
+                    </div>
+                    <button type="button" onClick={() => setForm((f) => ({ ...f, groups: [...(f.groups || []), emptyGroup()] }))}
+                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+                      <Plus className="h-3.5 w-3.5" /> Add
+                    </button>
+                  </div>
+                  {(form.groups || []).length === 0 && (
+                    <p className="text-xs text-slate-400">No groups added yet.</p>
+                  )}
+                  <div className="space-y-2.5">
+                    {(form.groups || []).map((g, i) => (
+                      <div key={i} className="rounded-xl border-slate-200 bg-white p-3">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <input value={g.label} onChange={(e) => { const next = (form.groups || []).map((g, idx) => idx === i ? { ...g, label: e.target.value } : g); setForm((f) => ({ ...f, groups: next })); }}
+                            placeholder="Label (e.g. Physics Doubts)"
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green" />
+                          <select value={g.type} onChange={(e) => { const next = (form.groups || []).map((g, idx) => idx === i ? { ...g, type: e.target.value } : g); setForm((f) => ({ ...f, groups: next })); }}
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green">
+                            <option value="TELEGRAM">Telegram</option>
+                            <option value="WHATSAPP">WhatsApp</option>
+                            <option value="LINK">Other Link</option>
+                          </select>
+                          <input value={g.url} onChange={(e) => { const next = (form.groups || []).map((g, idx) => idx === i ? { ...g, url: e.target.value } : g); setForm((f) => ({ ...f, groups: next })); }}
+                            placeholder="https://..."
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green sm:col-span-2" />
+                          <input value={g.description} onChange={(e) => { const next = (form.groups || []).map((g, idx) => idx === i ? { ...g, description: e.target.value } : g); setForm((f) => ({ ...f, groups: next })); }}
+                            placeholder="Short description (optional)"
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green sm:col-span-2" />
+                        </div>
+                        <button type="button" onClick={() => setForm((f) => ({ ...f, groups: (f.groups || []).filter((_, idx) => idx !== i) }))}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-bold text-red-500 transition hover:bg-red-100">
+                          <Trash2 className="h-3 w-3" /> Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-2.5 pb-6 sm:grid-cols-2">
@@ -1215,6 +1281,50 @@ export default function AdminBatches() {
                     className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 py-1"
                   />
                 </div>
+
+                <div className="md:col-span-2 rounded-2xl border-slate-200 bg-slate-50/70 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Groups / Community Links</p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">Doubt, help or community groups shown to students of this batch.</p>
+                    </div>
+                    <button type="button" onClick={() => setEditingBatch((prev) => ({ ...prev, groups: [...(prev.groups || []), emptyGroup()] }))}
+                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+                      <Plus className="h-3.5 w-3.5" /> Add
+                    </button>
+                  </div>
+                  {(editingBatch.groups || []).length === 0 && (
+                    <p className="text-xs text-slate-400">No groups added yet.</p>
+                  )}
+                  <div className="space-y-2.5">
+                    {(editingBatch.groups || []).map((g, i) => (
+                      <div key={i} className="rounded-xl border-slate-200 bg-white p-3">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <input value={g.label} onChange={(e) => { const next = (editingBatch.groups || []).map((g, idx) => idx === i ? { ...g, label: e.target.value } : g); setEditingBatch((prev) => ({ ...prev, groups: next })); }}
+                            placeholder="Label (e.g. Physics Doubts)"
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green" />
+                          <select value={g.type} onChange={(e) => { const next = (editingBatch.groups || []).map((g, idx) => idx === i ? { ...g, type: e.target.value } : g); setEditingBatch((prev) => ({ ...prev, groups: next })); }}
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green">
+                            <option value="TELEGRAM">Telegram</option>
+                            <option value="WHATSAPP">WhatsApp</option>
+                            <option value="LINK">Other Link</option>
+                          </select>
+                          <input value={g.url} onChange={(e) => { const next = (editingBatch.groups || []).map((g, idx) => idx === i ? { ...g, url: e.target.value } : g); setEditingBatch((prev) => ({ ...prev, groups: next })); }}
+                            placeholder="https://..."
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green sm:col-span-2" />
+                          <input value={g.description} onChange={(e) => { const next = (editingBatch.groups || []).map((g, idx) => idx === i ? { ...g, description: e.target.value } : g); setEditingBatch((prev) => ({ ...prev, groups: next })); }}
+                            placeholder="Short description (optional)"
+                            className="min-h-10 w-full rounded-lg border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-brand-green sm:col-span-2" />
+                        </div>
+                        <button type="button" onClick={() => setEditingBatch((prev) => ({ ...prev, groups: (prev.groups || []).filter((_, idx) => idx !== i) }))}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-bold text-red-500 transition hover:bg-red-100">
+                          <Trash2 className="h-3 w-3" /> Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-2.5 pb-6 sm:grid-cols-2">

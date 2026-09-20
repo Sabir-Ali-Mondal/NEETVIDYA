@@ -56,6 +56,10 @@ export default function TeacherMaterials() {
     description: "",
   });
 
+  // "Other" → teacher types a custom subject that is persisted for next time.
+  const [customSubjectMode, setCustomSubjectMode] = useState(false);
+  const [customSubjectName, setCustomSubjectName] = useState("");
+
   const fetchMaterials = async () => {
     try {
       const { data } = await api.get("/materials");
@@ -192,6 +196,10 @@ export default function TeacherMaterials() {
     if (!form.chapter)
       return alertError("Please select or create a chapter");
 
+    if (customSubjectMode && !customSubjectName.trim()) {
+      return alertError("Enter the custom subject name");
+    }
+
     if (!fileToUpload && !form.fileUrl.trim()) {
       return alertError(
         "Provide either a file upload or an external URL"
@@ -201,10 +209,23 @@ export default function TeacherMaterials() {
     setUploading(true);
 
     try {
+      // "Other" → create the custom subject first so it is saved for next time.
+      let subjectId = form.subject;
+      if (customSubjectMode && customSubjectName.trim()) {
+        const { data: subjectData } = await api.post("/academics/subjects", {
+          name: customSubjectName.trim(),
+        });
+        const created = subjectData.data.subject;
+        subjectId = created._id;
+        setSubjects((prev) =>
+          prev.find((s) => s._id === created._id) ? prev : [...prev, created]
+        );
+      }
+
       const formData = new FormData();
 
       formData.append("title", form.title);
-      if (form.subject) formData.append("subject", form.subject);
+      if (subjectId) formData.append("subject", subjectId);
       formData.append("batch", form.batch);
       formData.append("unit", form.unit);
       formData.append("chapter", form.chapter);
@@ -239,6 +260,8 @@ export default function TeacherMaterials() {
       });
 
       setFileToUpload(null);
+      setCustomSubjectMode(false);
+      setCustomSubjectName("");
       fetchMaterials();
     } catch (err) {
       alertError(
@@ -716,16 +739,29 @@ export default function TeacherMaterials() {
                       </label>
 
                       <select
-                        value={form.subject}
-                        onChange={(e) =>
-                          setForm((p) => ({
-                            ...p,
-                            subject: e.target.value,
-                            unit: "",
-                            chapter: "",
-                          }))
-                        }
-                        className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                        value={customSubjectMode ? "__other__" : form.subject}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "__other__") {
+                            setCustomSubjectMode(true);
+                            setCustomSubjectName("");
+                            setForm((p) => ({
+                              ...p,
+                              subject: "",
+                              unit: "",
+                              chapter: "",
+                            }));
+                          } else {
+                            setCustomSubjectMode(false);
+                            setForm((p) => ({
+                              ...p,
+                              subject: value,
+                              unit: "",
+                              chapter: "",
+                            }));
+                          }
+                        }}
+                        className="min-h-11 w-full min-w-0 rounded-xl border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
                       >
                         <option value="">Select subject</option>
 
@@ -734,7 +770,20 @@ export default function TeacherMaterials() {
                             {s.name}
                           </option>
                         ))}
+
+                        {!subjects.some((s) => s.name?.toLowerCase() === "other") && (
+                          <option value="__other__">Other…</option>
+                        )}
                       </select>
+
+                      {customSubjectMode && (
+                        <input
+                          value={customSubjectName}
+                          onChange={(e) => setCustomSubjectName(e.target.value)}
+                          placeholder="Type the subject name"
+                          className="mt-2 min-h-11 min-w-0 w-full rounded-xl border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>

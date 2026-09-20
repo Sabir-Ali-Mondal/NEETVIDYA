@@ -2,9 +2,9 @@ const User = require("../models/User");
 const Student = require("../models/Student");
 const Teacher = require("../models/Teacher");
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("../utils/jwt");
-const generatePassword = require("../utils/generatePassword");
 const ApiError = require("../utils/apiError");
-const { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } = require("./email.service");
+const { sendVerificationEmail, sendPasswordResetEmail } = require("./email.service");
+const { DEFAULT_PASSWORD } = require("../config/constants");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 
@@ -179,6 +179,8 @@ const changePassword = async (userId, currentPassword, newPassword) => {
   if (!isMatch) throw new ApiError(400, "Current password is incorrect");
 
   user.password = newPassword;
+  user.mustChangePassword = false;
+  user.passwordChangedAt = new Date();
   await user.save();
 
   return { message: "Password changed successfully" };
@@ -188,14 +190,15 @@ const adminCreateStudent = async (data) => {
   const existing = await User.findOne({ email: data.email });
   if (existing) throw new ApiError(400, "Email already registered");
 
-  const tempPassword = data.password || generatePassword();
+  // Constant default password — the student is forced to change it on first login.
   const user = await User.create({
     name: data.name,
     email: data.email,
-    password: tempPassword,
+    password: DEFAULT_PASSWORD,
     phone: data.phone,
     role: "student",
     emailVerified: true, // admin-created accounts are pre-verified
+    mustChangePassword: true,
   });
 
   const studentId = await generateStudentId();
@@ -214,24 +217,23 @@ const adminCreateStudent = async (data) => {
     whatsappNumber: data.whatsappNumber,
   });
 
-  // Send welcome email with credentials
-  await sendWelcomeEmail(user, tempPassword);
-
-  return { user, student, tempPassword, studentId };
+  // No credential email is sent — the admin shares the constant default password.
+  return { user, student, studentId };
 };
 
 const adminCreateTeacher = async (data) => {
   const existing = await User.findOne({ email: data.email });
   if (existing) throw new ApiError(400, "Email already registered");
 
-  const tempPassword = data.password || generatePassword();
+  // Constant default password — the teacher is forced to change it on first login.
   const user = await User.create({
     name: data.name,
-    email: data.email,
-    password: tempPassword,
+    email: data,
+    password: DEFAULT_PASSWORD,
     phone: data.phone,
     role: "teacher",
     emailVerified: true,
+    mustChangePassword: true,
   });
 
   const teacher = await Teacher.create({
@@ -245,9 +247,8 @@ const adminCreateTeacher = async (data) => {
     permissions: data.permissions || {},
   });
 
-  await sendWelcomeEmail(user, tempPassword);
-
-  return { user, teacher, tempPassword };
+  // No credential email is sent — the admin shares the constant default password.
+  return { user, teacher };
 };
 
 const updateProfile = async (userId, updates) => {

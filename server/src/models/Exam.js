@@ -47,6 +47,11 @@ const examSchema = new mongoose.Schema(
     // ── Outsider / specific-student access (admin granted) ─────
     permittedStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
+    // ── Public share link (advertisement / virality) ──
+    // Anyone can open /e/:shareSlug to see a sanitized exam preview (no questions).
+    shareSlug: { type: String, unique: true, sparse: true },
+    isPublic: { type: Boolean, default: false },
+
     // ── Question Bank archive metadata (archive = finished exam paper) ──
     isArchived: { type: Boolean, default: false },
     archivedAt: { type: Date },

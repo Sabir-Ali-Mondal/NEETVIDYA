@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../config/api";
 import {
+  BookOpen,
   ClipboardList,
   Plus,
   Search,
@@ -48,6 +50,7 @@ const labelClass =
   "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500";
 
 export default function AdminExams() {
+  const navigate = useNavigate();
   const [exams, setExams] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -213,6 +216,21 @@ export default function AdminExams() {
     }
   };
 
+  const buildShareLink = (exam) => {
+    const key = exam.shareSlug || exam._id;
+    return `${window.location.origin}/e/${key}`;
+  };
+
+  const handleCopyLink = async (exam) => {
+    const url = buildShareLink(exam);
+    try {
+      await navigator.clipboard.writeText(url);
+      alertSuccess("Exam link copied — share it anywhere");
+    } catch {
+      window.prompt("Copy this exam link:", url);
+    }
+  };
+
   const confirmDeleteExam = async () => {
     if (!examToDelete) return;
 
@@ -308,13 +326,23 @@ export default function AdminExams() {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/10 sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Create Exam
-          </button>
+          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
+            <button
+              onClick={() => navigate("/admin/courses")}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              <BookOpen className="h-4 w-4" />
+              Courses
+            </button>
+
+            <button
+              onClick={() => setShowCreate(true)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/10"
+            >
+              <Plus className="h-4 w-4" />
+              Create Exam
+            </button>
+          </div>
         </div>
       </section>
 
@@ -582,6 +610,16 @@ export default function AdminExams() {
                         <span className="hidden sm:inline truncate">Close Test</span>
                       </button>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(exam)}
+                      title="Copy shareable exam link"
+                      className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-sky-200 bg-sky-50 px-3 text-[10px] font-bold text-sky-700 transition hover:bg-sky-100 sm:text-xs"
+                    >
+                      <Link2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="hidden sm:inline truncate">Copy Link</span>
+                    </button>
 
                     <button
                       type="button"

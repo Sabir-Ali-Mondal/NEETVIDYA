@@ -6,6 +6,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const {
   getExams,
   getExamById,
+  checkExamAccess,
   createExam,
   updateExam,
   publishExam,
@@ -15,6 +16,7 @@ const {
   reconductExam,
   downloadExam,
   getQuestionBank,
+  getPublicExamBySlug,
   publishResults,
   grantPermission,
   revokePermission,
@@ -31,6 +33,12 @@ const { authorize } = require("../middleware/role.middleware");
 
 // Question Bank = archive of finished exams
 router.get("/bank", protect, authorize("admin", "teacher"), getQuestionBank);
+
+// Public exam preview by share slug — no auth, no questions exposed.
+router.get("/public/:slug", getPublicExamBySlug);
+
+// Access check for a student — decides Start Exam vs WhatsApp request CTA.
+router.get("/:id/access-check", protect, checkExamAccess);
 
 router.get("/", protect, getExams);
 router.post("/", protect, authorize("admin", "teacher"), createExam);
