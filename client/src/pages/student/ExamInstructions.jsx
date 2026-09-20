@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, AlertTriangle, ArrowRight } from "lucide-react";
+import {
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  FileText,
+  CheckCircle2,
+} from "lucide-react";
 import api from "../../config/api";
 import { alertError } from "../../utils/alert";
 
@@ -32,65 +38,165 @@ export default function ExamInstructions() {
   if (!exam) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-8">
-        <h1 className="font-extrabold text-2xl text-slate-900 mb-2">{exam.title}</h1>
-        <p className="text-slate-500 text-sm mb-6">{exam.description}</p>
+    <div className="relative min-h-screen overflow-hidden bg-brand-soft px-3 py-6 sm:px-5 sm:py-10">
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-green-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-emerald-100/60 blur-3xl" />
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <Clock className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-            <div className="font-bold text-lg">{exam.duration} min</div>
-            <div className="text-xs text-slate-400">Duration</div>
-          </div>
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <div className="font-bold text-lg">{exam.totalQuestions}</div>
-            <div className="text-xs text-slate-400">Questions</div>
-          </div>
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <div className="font-bold text-lg text-green-600">+{exam.marksPerCorrect}</div>
-            <div className="text-xs text-slate-400">Correct</div>
-          </div>
-          <div className="bg-slate-50 rounded-xl p-4 text-center">
-            <div className="font-bold text-lg text-red-600">-{exam.negativePerWrong}</div>
-            <div className="text-xs text-slate-400">Wrong</div>
+      <div className="relative mx-auto w-full max-w-3xl">
+        {/* Header */}
+        <div className="mb-5 text-center sm:mb-7">
+          <div className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/80 px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-brand-green shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+            Examination Instructions
           </div>
         </div>
 
-        <div className="bg-amber-50 border-amber-200 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-            <div className="text-sm text-amber-800">
-              <p className="font-bold mb-1">Important Instructions:</p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>Timer starts immediately upon clicking Start</li>
-                <li>Test auto-submits when time expires</li>
-                <li>Tab switching is recorded</li>
-                <li>Only {exam.maxAttempts} attempt(s) allowed</li>
-              </ul>
+        <div className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-xl shadow-slate-900/5 sm:rounded-[2rem]">
+          {/* Exam Header */}
+          <div className="border-b border-slate-100 p-5 sm:p-7 lg:p-8">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-brand-green sm:h-12 sm:w-12">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h1 className="font-heading text-xl font-extrabold leading-tight tracking-tight text-brand-dark sm:text-2xl lg:text-3xl">
+                  {exam.title}
+                </h1>
+
+                {exam.description && (
+                  <p className="mt-2 text-sm leading-6 text-slate-500 sm:text-[15px]">
+                    {exam.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Exam Stats */}
+          <div className="p-5 sm:p-7 lg:p-8">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-center transition hover:border-green-100 hover:bg-green-50/40">
+                <Clock className="mx-auto mb-2 h-5 w-5 text-brand-green" />
+                <div className="text-lg font-extrabold text-slate-800 sm:text-xl">
+                  {exam.duration}
+                </div>
+                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Minutes
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-center transition hover:border-green-100 hover:bg-green-50/40">
+                <div className="mb-2 flex h-5 items-center justify-center">
+                  <span className="text-lg font-extrabold text-slate-500">
+                    #
+                  </span>
+                </div>
+                <div className="text-lg font-extrabold text-slate-800 sm:text-xl">
+                  {exam.totalQuestions}
+                </div>
+                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Questions
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-green-100 bg-green-50/60 p-4 text-center">
+                <CheckCircle2 className="mx-auto mb-2 h-5 w-5 text-green-600" />
+                <div className="text-lg font-extrabold text-green-600 sm:text-xl">
+                  +{exam.marksPerCorrect}
+                </div>
+                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-green-600/60">
+                  Correct
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 text-center">
+                <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-rose-500" />
+                <div className="text-lg font-extrabold text-rose-500 sm:text-xl">
+                  -{exam.negativePerWrong}
+                </div>
+                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-500/60">
+                  Wrong
+                </div>
+              </div>
+            </div>
+
+            {/* Important Instructions */}
+            <div className="mt-5 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 sm:mt-6 sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0">
+                  <h2 className="text-sm font-extrabold text-amber-900">
+                    Important Instructions
+                  </h2>
+
+                  <ul className="mt-2 space-y-2 text-xs leading-5 text-amber-800 sm:text-sm">
+                    <li className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                      <span>
+                        Timer starts immediately upon clicking Start.
+                      </span>
+                    </li>
+
+                    <li className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                      <span>
+                        Test auto-submits when time expires.
+                      </span>
+                    </li>
+
+                    <li className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                      <span>
+                        Tab switching is recorded.
+                      </span>
+                    </li>
+
+                    <li className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-500" />
+                      <span>
+                        Only {exam.maxAttempts} attempt
+                        {exam.maxAttempts !== 1 ? "s" : ""} allowed.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Agreement */}
+            <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-green-200 hover:bg-green-50/30 sm:mt-6">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded accent-green-600"
+              />
+
+              <span className="text-sm font-medium leading-5 text-slate-700">
+                I have read and understood all instructions
+              </span>
+            </label>
+
+            {/* Start */}
+            <button
+              onClick={handleStart}
+              disabled={!agreed || starting}
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-green-900/10 transition duration-300 hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 sm:mt-5"
+            >
+              {starting ? "Starting..." : "Start Examination"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+
+            <p className="mt-3 text-center text-[10px] leading-4 text-slate-400 sm:text-xs">
+              Make sure you are ready before starting. The timer cannot be
+              paused once the examination begins.
+            </p>
+          </div>
         </div>
-
-        <label className="flex items-center gap-3 mb-6 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="w-4 h-4 rounded accent-green-600"
-          />
-          <span className="text-sm text-slate-700">
-            I have read and understood all instructions
-          </span>
-        </label>
-
-        <button
-          onClick={handleStart}
-          disabled={!agreed || starting}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
-        >
-          {starting ? "Starting..." : "Start Examination"} <ArrowRight className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );

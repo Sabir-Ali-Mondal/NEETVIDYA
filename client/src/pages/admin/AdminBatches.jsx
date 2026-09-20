@@ -1,6 +1,18 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import { Users, Plus, Search, BookOpen, Clock, Calendar, Pencil, Trash2, X, Save, UserMinus, ShieldAlert } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Search,
+  BookOpen,
+  Clock,
+  Calendar,
+  Pencil,
+  Trash2,
+  X,
+  Save,
+  UserMinus,
+} from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import { DEFAULT_COURSES, getCourseByValue } from "../../config/courses";
 import ConfirmModal from "../../components/shared/ConfirmModal";
@@ -12,33 +24,91 @@ const batchTypeColors = {
   EXAM_ONLY: "bg-orange-100 text-orange-700",
 };
 
+const initialForm = {
+  name: "",
+  code: "",
+  batchType: "OFFLINE",
+  course: "",
+  academicYear: "",
+  capacity: "",
+  schedule: "",
+  color: "#22c55e",
+};
+
+const getStudentName = (student) => {
+  if (!student) return "Unknown Student";
+
+  if (typeof student.name === "string" && student.name.trim()) {
+    return student.name.trim();
+  }
+
+  if (
+    typeof student.user?.name === "string" &&
+    student.user.name.trim()
+  ) {
+    return student.user.name.trim();
+  }
+
+  const userFullName = [
+    student.user?.firstName,
+    student.user?.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  if (userFullName) return userFullName;
+
+  const fullName = [student.firstName, student.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  if (fullName) return fullName;
+
+  if (student.email) return student.email;
+  if (student.user?.email) return student.user.email;
+
+  return "Unknown Student";
+};
+
+const getStudentEmail = (student) =>
+  student?.email ||
+  student?.user?.email ||
+  student?.emailAddress ||
+  "";
+
+const getStudentId = (student) =>
+  student?._id ||
+  student?.id ||
+  student?.user?._id ||
+  student?.user?.id;
+
 export default function AdminBatches() {
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+
   const [viewingBatch, setViewingBatch] = useState(null);
   const [batchStudents, setBatchStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [studentToEnroll, setStudentToEnroll] = useState("");
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [enrollingStudent, setEnrollingStudent] = useState(false);
+
   const [editingBatch, setEditingBatch] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+
   const [batchToDelete, setBatchToDelete] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    code: "",
-    batchType: "OFFLINE",
-    course: "",
-    academicYear: "",
-    capacity: "",
-    schedule: "",
-    color: "#22c55e",
-  });
+
+  const [form, setForm] = useState(initialForm);
 
   const fetchBatches = async () => {
     setLoading(true);
+
     try {
       const { data } = await api.get("/batches");
       setBatches(data.data?.batches || []);
@@ -49,27 +119,39 @@ export default function AdminBatches() {
     }
   };
 
-  useEffect(() => { fetchBatches(); }, []);
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  const resetCreateForm = () => {
+    setForm(initialForm);
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
+
     if (!form.course) {
       alertError("Please select a course before creating a batch");
       return;
     }
 
     setCreating(true);
+
     try {
       await api.post("/batches", {
         ...form,
         capacity: Number(form.capacity || 0),
       });
+
       alertSuccess("Batch created successfully");
+
       setShowCreate(false);
-      setForm({ name: "", code: "", batchType: "OFFLINE", course: "", academicYear: "", capacity: "", schedule: "", color: "#22c55e" });
+      resetCreateForm();
       fetchBatches();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to create batch");
+      alertError(
+        err.response?.data?.message || "Failed to create batch"
+      );
     } finally {
       setCreating(false);
     }
@@ -79,15 +161,35 @@ export default function AdminBatches() {
     setViewingBatch(batch);
     setLoadingStudents(true);
     setStudentToEnroll("");
+
     try {
       const [bRes, sRes] = await Promise.all([
         api.get(`/batches/${batch._id}/students`),
         api.get("/students?limit=100"),
       ]);
-      setBatchStudents(bRes.data.data?.students || []);
-      setAllStudents(sRes.data.data?.students || []);
+
+      const enrolledStudents =
+        bRes.data?.data?.students ||
+        bRes.data?.students ||
+        [];
+
+      const students =
+        sRes.data?.data?.students ||
+        sRes.data?.students ||
+        [];
+
+      setBatchStudents(
+        Array.isArray(enrolledStudents)
+          ? enrolledStudents
+          : []
+      );
+
+      setAllStudents(
+        Array.isArray(students) ? students : []
+      );
     } catch {
       setBatchStudents([]);
+      setAllStudents([]);
       alertError("Failed to load students in this batch");
     } finally {
       setLoadingStudents(false);
@@ -96,53 +198,101 @@ export default function AdminBatches() {
 
   const handleEnrollStudent = async (e) => {
     e.preventDefault();
+
     if (!studentToEnroll || !viewingBatch) return;
+
+    setEnrollingStudent(true);
+
     try {
       await api.post(`/batches/${viewingBatch._id}/students`, {
         studentIds: [studentToEnroll],
       });
+
       alertSuccess("Student enrolled into batch successfully");
-      const { data } = await api.get(`/batches/${viewingBatch._id}/students`);
-      setBatchStudents(data.data?.students || []);
+
+      const { data } = await api.get(
+        `/batches/${viewingBatch._id}/students`
+      );
+
+      const enrolledStudents =
+        data?.data?.students ||
+        data?.students ||
+        [];
+
+      setBatchStudents(
+        Array.isArray(enrolledStudents)
+          ? enrolledStudents
+          : []
+      );
+
       setStudentToEnroll("");
       fetchBatches();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to enroll student");
+      alertError(
+        err.response?.data?.message ||
+          "Failed to enroll student"
+      );
+    } finally {
+      setEnrollingStudent(false);
     }
   };
 
   const handleRemoveStudent = async (studentId) => {
-    if (!viewingBatch) return;
+    if (!viewingBatch || !studentId) return;
+
     try {
-      await api.delete(`/batches/${viewingBatch._id}/students/${studentId}`);
+      await api.delete(
+        `/batches/${viewingBatch._id}/students/${studentId}`
+      );
+
       alertSuccess("Student removed from batch");
-      setBatchStudents((prev) => prev.filter((s) => s._id !== studentId));
+
+      setBatchStudents((prev) =>
+        prev.filter(
+          (student) => getStudentId(student) !== studentId
+        )
+      );
+
       fetchBatches();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to remove student");
+      alertError(
+        err.response?.data?.message ||
+          "Failed to remove student"
+      );
     }
   };
 
   const handleSaveBatchEdit = async (e) => {
     e.preventDefault();
+
     if (!editingBatch) return;
+
     setSavingEdit(true);
+
     try {
       await api.put(`/batches/${editingBatch._id}`, {
         name: editingBatch.name,
         code: editingBatch.code,
         batchType: editingBatch.batchType,
-        course: typeof editingBatch.course === "object" ? editingBatch.course?._id : editingBatch.course,
+        course:
+          typeof editingBatch.course === "object"
+            ? editingBatch.course?._id
+            : editingBatch.course,
         academicYear: editingBatch.academicYear,
         capacity: Number(editingBatch.capacity || 0),
         schedule: editingBatch.schedule,
         color: editingBatch.color,
       });
+
       alertSuccess("Batch updated successfully");
+
       setEditingBatch(null);
       fetchBatches();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to update batch");
+      alertError(
+        err.response?.data?.message ||
+          "Failed to update batch"
+      );
     } finally {
       setSavingEdit(false);
     }
@@ -150,13 +300,19 @@ export default function AdminBatches() {
 
   const confirmDeleteBatch = async () => {
     if (!batchToDelete) return;
+
     try {
       await api.delete(`/batches/${batchToDelete._id}`);
+
       alertSuccess("Batch deleted successfully");
+
       setBatchToDelete(null);
       fetchBatches();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to delete batch");
+      alertError(
+        err.response?.data?.message ||
+          "Failed to delete batch"
+      );
     }
   };
 
@@ -167,198 +323,461 @@ export default function AdminBatches() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-extrabold text-2xl text-slate-900">Batches</h1>
-          <p className="text-slate-500 text-sm mt-1">{batches.length} active batches</p>
+    <div className="min-h-full space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-7">
+      {/* HEADER */}
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-7">
+        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-green-100/60 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-emerald-100/50 blur-3xl" />
+
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-green">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+              Academic Management
+            </div>
+
+            <h1 className="font-heading text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+              Batches
+            </h1>
+
+            <p className="mt-1.5 text-sm leading-6 text-slate-500">
+              Manage courses, students, capacity and batch schedules.
+            </p>
+
+            <div className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
+              {batches.length} active{" "}
+              {batches.length === 1 ? "batch" : "batches"}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              resetCreateForm();
+              setShowCreate(true);
+            }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-900/10"
+          >
+            <Plus className="h-4 w-4" />
+            Create Batch
+          </button>
         </div>
-        <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm">
-          <Plus className="w-4 h-4" /> Create Batch
-        </button>
-      </div>
+      </section>
 
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search batches..."
-          className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-        />
-      </div>
+      {/* SEARCH */}
+      <section className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search batches by name or code..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:bg-white focus:ring-4 focus:ring-green-500/10"
+          />
+        </div>
+      </section>
+
+      {/* CONTENT */}
       {loading ? (
-        <div className="flex items-center justify-center h-48">
-          <div className="w-9 h-9 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="flex min-h-[300px] items-center justify-center rounded-[1.5rem] border border-slate-200 bg-white">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-9 w-9 animate-spin rounded-full border-4 border-green-100 border-t-brand-green" />
+
+            <p className="text-sm font-medium text-slate-500">
+              Loading batches...
+            </p>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-          <BookOpen className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-          <h3 className="font-bold text-slate-600 mb-1">No batches found</h3>
-          <p className="text-slate-400 text-sm">Create your first batch using the button above and it will appear in the student-facing flow.</p>
+        <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white px-5 py-14 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-brand-green">
+            <BookOpen size={25} />
+          </div>
+
+          <h3 className="text-base font-bold text-slate-800">
+            {search ? "No batches found" : "No batches created yet"}
+          </h3>
+
+          <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
+            {search
+              ? "Try another batch name or code."
+              : "Create your first batch to start managing students and schedules."}
+          </p>
+
+          {!search && (
+            <button
+              type="button"
+              onClick={() => {
+                resetCreateForm();
+                setShowCreate(true);
+              }}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition hover:bg-green-700"
+            >
+              <Plus size={17} />
+              Create Batch
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map((b) => (
-            <div key={b._id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group">
-              <div
-                className="h-1.5"
-                style={{ backgroundColor: b.color || "#22c55e" }}
-              />
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                        {b.code}
-                      </span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${batchTypeColors[b.batchType] || "bg-slate-100 text-slate-600"}`}>
-                        {b.batchType}
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-base">{b.name}</h3>
-                  </div>
-                  <button
-                    onClick={() => setBatchToDelete(b)}
-                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                    title="Delete Batch"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          {filtered.map((batch) => {
+            const course =
+              getCourseByValue(batch.course)?.name ||
+              batch.course?.name;
 
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="text-xl font-extrabold text-slate-800">{b.students?.length || 0}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Students</div>
-                  </div>
-                  <div className="text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="text-xl font-extrabold text-slate-800">{b.capacity || "—"}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Capacity</div>
-                  </div>
-                  <div className="text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="text-xl font-extrabold text-slate-800">{b.assignedTeachers?.length || 0}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Teachers</div>
-                  </div>
-                </div>
+            return (
+              <article
+                key={batch._id}
+                className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-900/5"
+              >
+                <div
+                  className="h-1.5 w-full"
+                  style={{
+                    backgroundColor:
+                      batch.color || "#22c55e",
+                  }}
+                />
 
-                <div className="space-y-1.5 text-xs text-slate-500">
-                  {(getCourseByValue(b.course)?.name || b.course?.name) && (
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{getCourseByValue(b.course)?.name || b.course?.name}</span>
-                    </div>
-                  )}
-                  {b.schedule && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{b.schedule}</span>
-                    </div>
-                  )}
-                  {b.academicYear && (
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Academic Year: {b.academicYear}</span>
-                    </div>
-                  )}
-                </div>
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-black text-slate-600">
+                          {batch.code}
+                        </span>
 
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => handleOpenStudents(b)}
-                    className="flex-1 text-xs font-semibold py-2 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
-                  >
-                    View Students
-                  </button>
-                  <button
-                    onClick={() =>
-                      setEditingBatch({
-                        ...b,
-                        course:
-                          typeof b.course === "object"
-                            ? b.course?._id || ""
-                            : b.course || "",
-                      })
-                    }
-                    className="flex-1 text-xs font-semibold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition"
-                  >
-                    Edit Batch
-                  </button>
+                        <span
+                          className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                            batchTypeColors[batch.batchType] ||
+                            "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {batch.batchType}
+                        </span>
+                      </div>
+
+                      <h2 className="mt-3 break-words text-lg font-bold leading-7 text-slate-900 sm:text-xl">
+                        {batch.name}
+                      </h2>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setBatchToDelete(batch)}
+                      className="shrink-0 rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                      title="Delete Batch"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-2.5 sm:gap-3">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
+                      <div className="text-xl font-extrabold text-slate-800">
+                        {batch.students?.length || 0}
+                      </div>
+
+                      <div className="mt-0.5 text-[11px] font-medium text-slate-400">
+                        Students
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
+                      <div className="text-xl font-extrabold text-slate-800">
+                        {batch.capacity || "—"}
+                      </div>
+
+                      <div className="mt-0.5 text-[11px] font-medium text-slate-400">
+                        Capacity
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
+                      <div className="text-xl font-extrabold text-slate-800">
+                        {batch.assignedTeachers?.length || 0}
+                      </div>
+
+                      <div className="mt-0.5 text-[11px] font-medium text-slate-400">
+                        Teachers
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-2 text-xs text-slate-500">
+                    {course && (
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{course}</span>
+                      </div>
+                    )}
+
+                    {batch.schedule && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{batch.schedule}</span>
+                      </div>
+                    )}
+
+                    {batch.academicYear && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>
+                          Academic Year: {batch.academicYear}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenStudents(batch)}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      View Students
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingBatch({
+                          ...batch,
+                          course:
+                            typeof batch.course === "object"
+                              ? batch.course?._id || ""
+                              : batch.course || "",
+                        })
+                      }
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit Batch
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
 
+      {/* =====================================================
+          CREATE BATCH MODAL
+          ===================================================== */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100">
-              <h2 className="font-extrabold text-xl text-slate-900">Create New Batch</h2>
-              <p className="text-slate-500 text-sm mt-1">Associate the batch with an active course and publish it to the public flow.</p>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/50 px-2 py-2 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+          <div className="flex h-[calc(100dvh-1rem)] w-full max-w-xl flex-col overflow-hidden rounded-[1.5rem] border border-white/70 bg-white shadow-2xl sm:h-auto sm:max-h-[90vh]">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 bg-white px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <div className="mb-1 inline-flex rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-green">
+                  Academic Management
+                </div>
+
+                <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">
+                  Create New Batch
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Associate the batch with an active course.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCreate(false)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <form onSubmit={handleCreate} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <form
+              onSubmit={handleCreate}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6"
+            >
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Name *</label>
-                  <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="12th Batch – SANKALP" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Name *
+                  </label>
+
+                  <input
+                    required
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                    placeholder="12th Batch – SANKALP"
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Code *</label>
-                  <input required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="SANKALP-12TH" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Code *
+                  </label>
+
+                  <input
+                    required
+                    value={form.code}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        code: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                    placeholder="SANKALP-12TH"
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Type</label>
-                  <select value={form.batchType} onChange={(e) => setForm((f) => ({ ...f, batchType: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Type
+                  </label>
+
+                  <select
+                    value={form.batchType}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        batchType: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                  >
                     <option value="OFFLINE">OFFLINE</option>
                     <option value="ONLINE">ONLINE</option>
                     <option value="HYBRID">HYBRID</option>
                     <option value="EXAM_ONLY">EXAM_ONLY</option>
                   </select>
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Course *</label>
-                  <select value={form.course} onChange={(e) => setForm((f) => ({ ...f, course: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Course *
+                  </label>
+
+                  <select
+                    required
+                    value={form.course}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        course: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                  >
                     <option value="">Select a course</option>
+
                     {DEFAULT_COURSES.map((course) => (
-                      <option key={course.value} value={course.value}>{course.name}</option>
+                      <option
+                        key={course.value}
+                        value={course.value}
+                      >
+                        {course.name}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Academic Year</label>
-                  <input value={form.academicYear} onChange={(e) => setForm((f) => ({ ...f, academicYear: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="2026-2027" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Academic Year
+                  </label>
+
+                  <input
+                    value={form.academicYear}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        academicYear: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                    placeholder="2026-2027"
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Capacity</label>
-                  <input type="number" min="0" value={form.capacity} onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="40" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Capacity
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.capacity}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        capacity: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                    placeholder="40"
+                  />
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Schedule</label>
-                  <input value={form.schedule} onChange={(e) => setForm((f) => ({ ...f, schedule: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition" placeholder="Mon–Sat: 08:30 AM – 01:30 PM" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Schedule
+                  </label>
+
+                  <input
+                    value={form.schedule}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        schedule: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                    placeholder="Mon–Sat: 08:30 AM – 01:30 PM"
+                  />
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Color</label>
-                  <input type="color" value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                    className="w-full h-12 px-2 py-1 border border-slate-200 rounded-xl bg-white" />
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Color
+                  </label>
+
+                  <input
+                    type="color"
+                    value={form.color}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        color: e.target.value,
+                      }))
+                    }
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 py-1"
+                  />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreate(false)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+
+              <div className="mt-6 grid grid-cols-1 gap-2.5 pb-6 sm:grid-cols-2">
+                {/* HIDDEN ON MOBILE */}
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  className="hidden min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={creating}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm">
+
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="min-h-11 rounded-xl bg-brand-green px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-start-2"
+                >
                   {creating ? "Creating..." : "Create Batch"}
                 </button>
               </div>
@@ -367,152 +786,328 @@ export default function AdminBatches() {
         </div>
       )}
 
-      {/* View Batch Students Modal */}
+      {/* =====================================================
+          VIEW STUDENTS MODAL
+          ===================================================== */}
       {viewingBatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/50 px-2 py-2 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+          <div className="flex h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[1.5rem] border border-white/70 bg-white shadow-2xl sm:h-auto sm:max-h-[90vh]">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 bg-white px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-[10px] font-bold text-slate-600">
                     {viewingBatch.code}
                   </span>
-                  <h2 className="font-extrabold text-xl text-slate-900">{viewingBatch.name}</h2>
+
+                  <h2 className="break-words text-base font-extrabold text-slate-900 sm:text-lg">
+                    {viewingBatch.name}
+                  </h2>
                 </div>
-                <p className="text-slate-500 text-xs mt-1">
-                  Enrolled Students ({batchStudents.length} / {viewingBatch.capacity || "Unlimited"})
+
+                <p className="mt-1 text-xs text-slate-500">
+                  Enrolled Students ({batchStudents.length} /{" "}
+                  {viewingBatch.capacity || "Unlimited"})
                 </p>
               </div>
+
               <button
+                type="button"
                 onClick={() => setViewingBatch(null)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="p-6">
-              {/* Quick Enroll Student Form */}
-              <form onSubmit={handleEnrollStudent} className="flex items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <select
-                  value={studentToEnroll}
-                  onChange={(e) => setStudentToEnroll(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                >
-                  <option value="">Select a student to enroll into this batch...</option>
-                  {allStudents
-                    .filter((st) => !batchStudents.some((bs) => bs._id === st._id))
-                    .map((st) => (
-                      <option key={st._id} value={st._id}>
-                        {st.user?.name} ({st.studentId || st.user?.email})
-                      </option>
-                    ))}
-                </select>
-                <button
-                  type="submit"
-                  disabled={!studentToEnroll}
-                  className="px-3.5 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition shadow-sm inline-flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Enroll
-                </button>
-              </form>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
+              <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+                <div className="mb-2.5">
+                  <p className="text-sm font-bold text-slate-800">
+                    Enroll Student
+                  </p>
 
-              {loadingStudents ? (
-                <div className="py-12 flex justify-center items-center">
-                  <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : batchStudents.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <h3 className="font-bold text-slate-700">No students enrolled in this batch</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Assign students to this batch from the Students page.
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Add an existing student to this batch.
                   </p>
                 </div>
-              ) : (
-                <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
-                  {batchStudents.map((s) => (
-                    <div key={s._id} className="p-3.5 flex items-center justify-between hover:bg-slate-50 transition">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                          {s.user?.name?.charAt(0)?.toUpperCase() || "S"}
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-800 text-sm">{s.user?.name}</div>
-                          <div className="text-xs text-slate-400 flex items-center gap-2">
-                            <span>ID: {s.studentId || "—"}</span>
-                            <span>•</span>
-                            <span>{s.user?.email}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveStudent(s._id)}
-                        className="inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-100 transition"
-                        title="Remove student from this batch"
-                      >
-                        <UserMinus className="w-3.5 h-3.5" /> Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            <div className="p-6 border-t border-slate-100 flex justify-end">
-              <button
-                onClick={() => setViewingBatch(null)}
-                className="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-              >
-                Close
-              </button>
+                <form
+                  onSubmit={handleEnrollStudent}
+                  className="flex flex-col gap-2.5 sm:flex-row"
+                >
+                  <select
+                    value={studentToEnroll}
+                    onChange={(e) =>
+                      setStudentToEnroll(e.target.value)
+                    }
+                    disabled={
+                      loadingStudents || enrollingStudent
+                    }
+                    className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
+                  >
+                    <option value="">
+                      Select a student to enroll...
+                    </option>
+
+                    {allStudents
+                      .filter(
+                        (student) =>
+                          !batchStudents.some(
+                            (enrolled) =>
+                              getStudentId(enrolled) ===
+                              student?._id
+                          )
+                      )
+                      .map((student) => (
+                        <option
+                          key={student._id}
+                          value={student._id}
+                        >
+                          {getStudentName(student)}
+                          {student.studentId
+                            ? ` (${student.studentId})`
+                            : getStudentEmail(student)
+                            ? ` (${getStudentEmail(student)})`
+                            : ""}
+                        </option>
+                      ))}
+                  </select>
+
+                  <button
+                    type="submit"
+                    disabled={
+                      !studentToEnroll ||
+                      loadingStudents ||
+                      enrollingStudent
+                    }
+                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4" />
+
+                    {enrollingStudent
+                      ? "Enrolling..."
+                      : "Enroll"}
+                  </button>
+                </form>
+              </div>
+
+              <div>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">
+                      Enrolled Students
+                    </h3>
+
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      Students currently assigned to this batch
+                    </p>
+                  </div>
+
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">
+                    {batchStudents.length} /{" "}
+                    {viewingBatch.capacity || "∞"}
+                  </span>
+                </div>
+
+                {loadingStudents ? (
+                  <div className="flex min-h-[220px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-100 border-t-brand-green" />
+
+                      <p className="text-xs font-medium text-slate-500">
+                        Loading students...
+                      </p>
+                    </div>
+                  </div>
+                ) : batchStudents.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-12 text-center">
+                    <Users
+                      size={28}
+                      className="mx-auto text-slate-300"
+                    />
+
+                    <p className="mt-3 text-sm font-bold text-slate-600">
+                      No students enrolled
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                      Select a student above to enroll them into
+                      this batch.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {batchStudents.map((student, index) => {
+                      const studentId = getStudentId(student);
+                      const studentName = getStudentName(student);
+                      const studentEmail =
+                        getStudentEmail(student);
+
+                      return (
+                        <div
+                          key={studentId || index}
+                          className={`flex items-center justify-between gap-3 p-3.5 transition hover:bg-slate-50 sm:p-4 ${
+                            index !== batchStudents.length - 1
+                              ? "border-b border-slate-100"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-sm font-extrabold text-brand-green">
+                              {studentName
+                                .charAt(0)
+                                .toUpperCase() || "S"}
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-bold text-slate-800">
+                                {studentName}
+                              </div>
+
+                              <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-400">
+                                {student.studentId && (
+                                  <span>
+                                    ID: {student.studentId}
+                                  </span>
+                                )}
+
+                                {student.studentId &&
+                                  studentEmail && (
+                                    <span>•</span>
+                                  )}
+
+                                {studentEmail && (
+                                  <span className="max-w-[220px] truncate">
+                                    {studentEmail}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveStudent(studentId)
+                            }
+                            disabled={!studentId}
+                            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-red-500 transition hover:bg-red-100 hover:text-red-700 disabled:opacity-40"
+                          >
+                            <UserMinus className="h-3.5 w-3.5" />
+
+                            <span className="hidden sm:inline">
+                              Remove
+                            </span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 pb-6">
+                {/* HIDDEN ON MOBILE */}
+                <button
+                  type="button"
+                  onClick={() => setViewingBatch(null)}
+                  className="hidden min-h-11 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Batch Modal */}
+      {/* =====================================================
+          EDIT BATCH MODAL
+          ===================================================== */}
       {editingBatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Edit Batch</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Modify batch details, schedule, or capacity.</p>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/50 px-2 py-2 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+          <div className="flex h-[calc(100dvh-1rem)] w-full max-w-xl flex-col overflow-hidden rounded-[1.5rem] border border-white/70 bg-white shadow-2xl sm:h-auto sm:max-h-[90vh]">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 bg-white px-5 py-4 sm:px-6">
+              <div className="min-w-0">
+                <div className="mb-1 inline-flex rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-green">
+                  Batch Settings
+                </div>
+
+                <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">
+                  Edit Batch
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Modify batch details, schedule or capacity.
+                </p>
               </div>
+
               <button
+                type="button"
                 onClick={() => setEditingBatch(null)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleSaveBatchEdit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <form
+              onSubmit={handleSaveBatchEdit}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6"
+            >
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Name *</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Name *
+                  </label>
+
                   <input
                     required
-                    value={editingBatch.name}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    value={editingBatch.name || ""}
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Code *</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Code *
+                  </label>
+
                   <input
                     required
-                    value={editingBatch.code}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, code: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    value={editingBatch.code || ""}
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        code: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Type</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Type
+                  </label>
+
                   <select
-                    value={editingBatch.batchType}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, batchType: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                    value={editingBatch.batchType || "OFFLINE"}
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        batchType: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   >
                     <option value="OFFLINE">OFFLINE</option>
                     <option value="ONLINE">ONLINE</option>
@@ -520,71 +1115,129 @@ export default function AdminBatches() {
                     <option value="EXAM_ONLY">EXAM_ONLY</option>
                   </select>
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Course *</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Course *
+                  </label>
+
                   <select
-                    value={editingBatch.course}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, course: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
+                    required
+                    value={editingBatch.course || ""}
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        course: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   >
                     <option value="">Select a course</option>
-                    {DEFAULT_COURSES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.name}</option>
+
+                    {DEFAULT_COURSES.map((course) => (
+                      <option
+                        key={course.value}
+                        value={course.value}
+                      >
+                        {course.name}
+                      </option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Academic Year</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Academic Year
+                  </label>
+
                   <input
                     value={editingBatch.academicYear || ""}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, academicYear: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        academicYear: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Capacity</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Capacity
+                  </label>
+
                   <input
                     type="number"
                     min="0"
                     value={editingBatch.capacity || ""}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, capacity: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        capacity: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Schedule</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Schedule
+                  </label>
+
                   <input
                     value={editingBatch.schedule || ""}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, schedule: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        schedule: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch Color</label>
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                    Batch Color
+                  </label>
+
                   <input
                     type="color"
                     value={editingBatch.color || "#22c55e"}
-                    onChange={(e) => setEditingBatch((prev) => ({ ...prev, color: e.target.value }))}
-                    className="w-full h-12 px-2 py-1 border border-slate-200 rounded-xl bg-white"
+                    onChange={(e) =>
+                      setEditingBatch((prev) => ({
+                        ...prev,
+                        color: e.target.value,
+                      }))
+                    }
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-2 py-1"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="mt-6 grid grid-cols-1 gap-2.5 pb-6 sm:grid-cols-2">
+                {/* HIDDEN ON MOBILE */}
                 <button
                   type="button"
                   onClick={() => setEditingBatch(null)}
-                  className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+                  className="hidden min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   disabled={savingEdit}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
+                  className="min-h-11 rounded-xl bg-brand-green px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-start-2"
                 >
-                  <Save className="w-4 h-4" />
-                  {savingEdit ? "Saving..." : "Save Changes"}
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Save className="h-4 w-4" />
+                    {savingEdit
+                      ? "Saving..."
+                      : "Save Changes"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -592,7 +1245,7 @@ export default function AdminBatches() {
         </div>
       )}
 
-      {/* Delete Batch Confirmation */}
+      {/* DELETE CONFIRMATION */}
       <ConfirmModal
         isOpen={!!batchToDelete}
         onClose={() => setBatchToDelete(null)}

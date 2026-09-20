@@ -1,9 +1,26 @@
 import { useState, useEffect } from "react";
 import api from "../../config/api";
 import {
-  BookOpen, Plus, Search, Trash2, X, Save, Link as LinkIcon,
-  FileText, ExternalLink, ChevronDown, ChevronRight, Layers, FolderOpen,
-  AlertTriangle, Video,
+  BookOpen,
+  Plus,
+  Search,
+  Trash2,
+  X,
+  Save,
+  Link as LinkIcon,
+  FileText,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Layers,
+  FolderOpen,
+  AlertTriangle,
+  Video,
+  FileImage,
+  Presentation,
+  File,
+  Upload,
+  Sparkles,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
@@ -19,7 +36,6 @@ export default function TeacherMaterials() {
   const [uploading, setUploading] = useState(false);
   const [expanded, setExpanded] = useState({});
 
-  // Upload flow state
   const [showUpload, setShowUpload] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const [units, setUnits] = useState([]);
@@ -57,6 +73,7 @@ export default function TeacherMaterials() {
         api.get("/academics/subjects"),
         api.get("/batches"),
       ]);
+
       setSubjects(sRes.data?.subjects || []);
       setBatches(bRes.data?.batches || []);
     } catch {
@@ -69,24 +86,24 @@ export default function TeacherMaterials() {
     fetchDependencies();
   }, []);
 
-  // Load units when the subject changes
   useEffect(() => {
     if (!form.subject) {
       setUnits([]);
       return;
     }
+
     api
       .get(`/academics/units?subject=${form.subject}`)
       .then(({ data }) => setUnits(data.data?.units || []))
       .catch(() => setUnits([]));
   }, [form.subject]);
 
-  // Load chapters when the unit changes
   useEffect(() => {
     if (!form.unit) {
       setChapters([]);
       return;
     }
+
     api
       .get(`/academics/chapters?unit=${form.unit}`)
       .then(({ data }) => setChapters(data.data?.chapters || []))
@@ -98,15 +115,27 @@ export default function TeacherMaterials() {
       alertError("Enter a unit name and pick a subject first");
       return;
     }
+
     setCreatingUnit(true);
+
     try {
       const { data } = await api.post("/academics/units", {
         name: newUnitName.trim(),
         subject: form.subject,
       });
+
       const unit = data.data.unit;
-      setUnits((prev) => (prev.find((u) => u._id === unit._id) ? prev : [...prev, unit]));
-      setForm((f) => ({ ...f, unit: unit._id, chapter: "" }));
+
+      setUnits((prev) =>
+        prev.find((u) => u._id === unit._id) ? prev : [...prev, unit]
+      );
+
+      setForm((f) => ({
+        ...f,
+        unit: unit._id,
+        chapter: "",
+      }));
+
       setNewUnitName("");
       alertSuccess("Unit added");
     } catch (err) {
@@ -121,22 +150,35 @@ export default function TeacherMaterials() {
       alertError("Enter a chapter name and pick a unit first");
       return;
     }
+
     setCreatingChapter(true);
+
     try {
       const { data } = await api.post("/academics/chapters", {
         name: newChapterName.trim(),
         unit: form.unit,
         subject: form.subject,
       });
+
       const chapter = data.data.chapter;
+
       setChapters((prev) =>
-        prev.find((c) => c._id === chapter._id) ? prev : [...prev, chapter]
+        prev.find((c) => c._id === chapter._id)
+          ? prev
+          : [...prev, chapter]
       );
-      setForm((f) => ({ ...f, chapter: chapter._id }));
+
+      setForm((f) => ({
+        ...f,
+        chapter: chapter._id,
+      }));
+
       setNewChapterName("");
       alertSuccess("Chapter added");
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to create chapter");
+      alertError(
+        err.response?.data?.message || "Failed to create chapter"
+      );
     } finally {
       setCreatingChapter(false);
     }
@@ -144,15 +186,23 @@ export default function TeacherMaterials() {
 
   const handleCreateMaterial = async (e) => {
     e.preventDefault();
+
     if (!form.batch) return alertError("Please select a batch");
     if (!form.unit) return alertError("Please select or create a unit");
-    if (!form.chapter) return alertError("Please select or create a chapter");
-    if (!fileToUpload && !form.fileUrl.trim())
-      return alertError("Provide either a file upload or an external URL");
+    if (!form.chapter)
+      return alertError("Please select or create a chapter");
+
+    if (!fileToUpload && !form.fileUrl.trim()) {
+      return alertError(
+        "Provide either a file upload or an external URL"
+      );
+    }
 
     setUploading(true);
+
     try {
       const formData = new FormData();
+
       formData.append("title", form.title);
       if (form.subject) formData.append("subject", form.subject);
       formData.append("batch", form.batch);
@@ -160,20 +210,40 @@ export default function TeacherMaterials() {
       formData.append("chapter", form.chapter);
       formData.append("type", form.type);
       formData.append("description", form.description);
-      if (fileToUpload) formData.append("file", fileToUpload);
-      else formData.append("fileUrl", form.fileUrl);
+
+      if (fileToUpload) {
+        formData.append("file", fileToUpload);
+      } else {
+        formData.append("fileUrl", form.fileUrl);
+      }
 
       await api.post("/materials", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       alertSuccess("Material published to your batch");
+
       setShowUpload(false);
-      setForm({ title: "", subject: "", batch: "", unit: "", chapter: "", type: "PDF", fileUrl: "", description: "" });
+
+      setForm({
+        title: "",
+        subject: "",
+        batch: "",
+        unit: "",
+        chapter: "",
+        type: "PDF",
+        fileUrl: "",
+        description: "",
+      });
+
       setFileToUpload(null);
       fetchMaterials();
     } catch (err) {
-      alertError(err.response?.data?.message || "Failed to upload material");
+      alertError(
+        err.response?.data?.message || "Failed to upload material"
+      );
     } finally {
       setUploading(false);
     }
@@ -181,8 +251,10 @@ export default function TeacherMaterials() {
 
   const confirmDeleteMaterial = async () => {
     if (!materialToDelete) return;
+
     try {
       await api.delete(`/materials/${materialToDelete._id}`);
+
       alertSuccess("Material deleted");
       setMaterialToDelete(null);
       fetchMaterials();
@@ -191,368 +263,786 @@ export default function TeacherMaterials() {
     }
   };
 
-  // Group: Unit → Chapter → Materials
   const filtered = materials.filter((m) => {
+    const query = search.toLowerCase();
+
     const matchSearch =
-      m.title?.toLowerCase().includes(search.toLowerCase()) ||
-      m.subject?.name?.toLowerCase().includes(search.toLowerCase());
+      m.title?.toLowerCase().includes(query) ||
+      m.subject?.name?.toLowerCase().includes(query);
+
     const matchBatch =
       batchFilter === "All" ||
       m.batch?._id === batchFilter ||
       m.batch === batchFilter;
+
     return matchSearch && matchBatch;
   });
 
   const grouped = filtered.reduce((acc, m) => {
     const unitName = m.unit?.name || "Unsorted Unit";
     const chapterName = m.chapter?.name || "Unsorted Chapter";
+
     acc[unitName] = acc[unitName] || {};
-    acc[unitName][chapterName] = acc[unitName][chapterName] || [];
+    acc[unitName][chapterName] =
+      acc[unitName][chapterName] || [];
+
     acc[unitName][chapterName].push(m);
+
     return acc;
   }, {});
 
-  const toggle = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggle = (key) => {
+    setExpanded((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const getTypeIcon = (type) => {
+    if (type === "VIDEO") return Video;
+    if (type === "IMAGE") return FileImage;
+    if (type === "PPT") return Presentation;
+    if (type === "LINK") return LinkIcon;
+    if (type === "DOC") return File;
+    return FileText;
+  };
+
+  const getTypeLabel = (type) => {
+    const labels = {
+      PDF: "PDF",
+      DOC: "DOC",
+      PPT: "PPT",
+      IMAGE: "IMAGE",
+      VIDEO: "VIDEO",
+      LINK: "LINK",
+    };
+
+    return labels[type] || "PDF";
+  };
+
+  const totalMaterials = filtered.length;
+  const totalUnits = Object.keys(grouped).length;
+  const totalChapters = Object.values(grouped).reduce(
+    (sum, chapters) => sum + Object.keys(chapters).length,
+    0
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-extrabold text-2xl text-slate-900">Study Materials</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Publish notes and resources as Unit → Chapter → Material for your batches.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
-        >
-          <Plus className="w-4 h-4" /> Add Material
-        </button>
-      </div>
+    <div className="relative min-h-full overflow-hidden bg-brand-soft">
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-green-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-lime-200/30 blur-3xl" />
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or subject..."
-            className="w-full pl-10 pr-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-          />
-        </div>
-        <select
-          value={batchFilter}
-          onChange={(e) => setBatchFilter(e.target.value)}
-          className="px-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
-        >
-          <option value="All">All Batches</option>
-          {batches.map((b) => (
-            <option key={b._id} value={b._id}>{b.name}</option>
-          ))}
-        </select>
-      </div>
+      <div className="relative space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-7">
+        {/* Header */}
+        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-xl sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-green-100 bg-green-50/80 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-brand-green">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+                Faculty Resources
+              </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-40 text-slate-400">
-          <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-          <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="font-bold text-slate-600 mb-1">No materials yet</h3>
-          <p className="text-slate-400 text-sm">Add your first material using the button above.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {Object.entries(grouped).map(([unitName, chapters]) => (
-            <div key={unitName} className="bg-white border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-              <button
-                onClick={() => toggle(unitName)}
-                className="w-full flex items-center gap-3 p-5 hover:bg-slate-50 transition text-left"
-              >
-                {expanded[unitName] ? (
-                  <ChevronDown className="w-5 h-5 text-green-600 shrink-0" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
-                )}
-                <Layers className="w-5 h-5 text-green-600 shrink-0" />
-                <span className="font-bold text-slate-800">{unitName}</span>
-                <span className="ml-auto text-xs text-slate-400">
-                  {Object.values(chapters).flat().length} materials
+              <h1 className="font-heading text-2xl font-extrabold tracking-tight text-brand-dark sm:text-3xl">
+                Study Materials
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                Publish notes and resources for your batches through a
+                structured Unit → Chapter → Material library.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowUpload(true)}
+              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:-translate-y-0.5 hover:bg-green-700 sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Add Material
+            </button>
+          </div>
+
+          {/* Quick stats */}
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:max-w-xl sm:gap-3">
+            <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="truncate text-[10px] font-bold uppercase tracking-wider">
+                  Materials
                 </span>
-              </button>
+              </div>
+              <p className="mt-2 text-xl font-extrabold text-slate-800 sm:text-2xl">
+                {totalMaterials}
+              </p>
+            </div>
 
-              {expanded[unitName] && (
-                <div className="border-t border-slate-50">
-                  {Object.entries(chapters).map(([chapterName, items]) => (
-                    <div key={chapterName} className="pl-6">
-                      <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/60">
-                        <FolderOpen className="w-4 h-4 text-slate-400" />
-                        <span className="font-semibold text-slate-600 text-sm">{chapterName}</span>
-                        <span className="text-xs text-slate-400">({items.length})</span>
+            <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Layers className="h-4 w-4 shrink-0" />
+                <span className="truncate text-[10px] font-bold uppercase tracking-wider">
+                  Units
+                </span>
+              </div>
+              <p className="mt-2 text-xl font-extrabold text-slate-800 sm:text-2xl">
+                {totalUnits}
+              </p>
+            </div>
+
+            <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <FolderOpen className="h-4 w-4 shrink-0" />
+                <span className="truncate text-[10px] font-bold uppercase tracking-wider">
+                  Chapters
+                </span>
+              </div>
+              <p className="mt-2 text-xl font-extrabold text-slate-800 sm:text-2xl">
+                {totalChapters}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Filters */}
+        <section className="rounded-[1.5rem] border border-slate-100 bg-white p-3 shadow-sm sm:p-4">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title or subject..."
+                className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/10"
+              />
+            </div>
+
+            <select
+              value={batchFilter}
+              onChange={(e) => setBatchFilter(e.target.value)}
+              className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-slate-50/60 px-4 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:bg-white focus:ring-4 focus:ring-green-500/10 sm:w-auto sm:min-w-[190px]"
+            >
+              <option value="All">All Batches</option>
+
+              {batches.map((b) => (
+                <option key={b._id} value={b._id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+
+        {/* Content */}
+        {loading ? (
+          <div className="rounded-[1.75rem] border border-slate-100 bg-white p-10 shadow-sm sm:p-14">
+            <div className="mx-auto flex max-w-sm flex-col items-center text-center">
+              <div className="h-10 w-10 animate-spin rounded-full border-2 border-green-500 border-t-transparent" />
+              <p className="mt-4 text-sm font-semibold text-slate-500">
+                Loading study materials...
+              </p>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-[1.75rem] border border-slate-100 bg-white p-8 text-center shadow-sm sm:p-14">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+              <BookOpen className="h-7 w-7" />
+            </div>
+
+            <h3 className="mt-5 font-heading text-lg font-extrabold text-slate-700">
+              No materials found
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
+              {search || batchFilter !== "All"
+                ? "Try changing your search or batch filter."
+                : "Add your first study material using the button above."}
+            </p>
+          </div>
+        ) : (
+          <div className="min-w-0 space-y-4">
+            {Object.entries(grouped).map(([unitName, chapters]) => {
+              const unitMaterials = Object.values(chapters).flat();
+              const isExpanded = !!expanded[unitName];
+
+              return (
+                <section
+                  key={unitName}
+                  className="min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-100 bg-white shadow-sm transition hover:shadow-md"
+                >
+                  {/* Unit */}
+                  <button
+                    onClick={() => toggle(unitName)}
+                    className="flex min-h-[68px] w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
+                      {isExpanded ? (
+                        <ChevronDown className="h-5 w-5" />
+                      ) : (
+                        <ChevronRight className="h-5 w-5" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Layers className="hidden h-4 w-4 shrink-0 text-brand-green sm:block" />
+
+                        <h2 className="min-w-0 truncate text-sm font-extrabold text-slate-800 sm:text-base">
+                          {unitName}
+                        </h2>
                       </div>
-                      <div className="divide-y divide-slate-50">
-                        {items.map((m) => (
-                          <div key={m._id} className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-slate-50 transition">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-lg bg-green-50 border-green-100 flex items-center justify-center shrink-0">
-                                {m.type === "VIDEO" ? (
-                                  <Video className="w-4 h-4 text-green-600" />
-                                ) : (
-                                  <FileText className="w-4 h-4 text-green-600" />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-800 truncate">{m.title}</p>
-                                <p className="text-xs text-slate-400 truncate">
-                                  {m.batch?.name || "—"} · {m.type || "PDF"}
-                                </p>
-                              </div>
+
+                      <p className="mt-1 text-[11px] text-slate-400">
+                        {Object.keys(chapters).length}{" "}
+                        {Object.keys(chapters).length === 1
+                          ? "chapter"
+                          : "chapters"}
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500 sm:px-3">
+                      {unitMaterials.length}{" "}
+                      {unitMaterials.length === 1
+                        ? "material"
+                        : "materials"}
+                    </span>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="border-t border-slate-100">
+                      {Object.entries(chapters).map(
+                        ([chapterName, items]) => (
+                          <div
+                            key={chapterName}
+                            className="min-w-0 border-b border-slate-100 last:border-b-0"
+                          >
+                            {/* Chapter */}
+                            <div className="flex min-w-0 items-center gap-2 bg-slate-50/70 px-4 py-3 sm:px-6">
+                              <FolderOpen className="h-4 w-4 shrink-0 text-slate-400" />
+
+                              <span className="min-w-0 truncate text-xs font-bold text-slate-600 sm:text-sm">
+                                {chapterName}
+                              </span>
+
+                              <span className="shrink-0 text-[10px] font-semibold text-slate-400">
+                                {items.length}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <a
-                                href={m.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition inline-flex items-center gap-1"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" /> View
-                              </a>
-                              <button
-                                onClick={() => setMaterialToDelete(m)}
-                                className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+
+                            {/* Materials */}
+                            <div className="divide-y divide-slate-100">
+                              {items.map((m) => {
+                                const TypeIcon = getTypeIcon(m.type);
+
+                                return (
+                                  <div
+                                    key={m._id}
+                                    className="min-w-0 overflow-hidden px-4 py-3.5 transition hover:bg-slate-50 sm:px-6"
+                                  >
+                                    <div className="flex min-w-0 items-start gap-3">
+                                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600">
+                                        <TypeIcon className="h-4 w-4" />
+                                      </div>
+
+                                      <div className="min-w-0 flex-1 pt-0.5">
+                                        <p className="break-words text-sm font-bold leading-5 text-slate-800">
+                                          {m.title}
+                                        </p>
+
+                                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-400">
+                                          <span className="max-w-full truncate">
+                                            {m.batch?.name || "—"}
+                                          </span>
+
+                                          <span className="hidden text-slate-300 sm:inline">
+                                            •
+                                          </span>
+
+                                          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-bold uppercase tracking-wide text-slate-500">
+                                            {getTypeLabel(m.type)}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* Desktop actions */}
+                                      <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                                        <a
+                                          href={m.fileUrl}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                                        >
+                                          <ExternalLink className="h-3.5 w-3.5" />
+                                          View
+                                        </a>
+
+                                        <button
+                                          onClick={() =>
+                                            setMaterialToDelete(m)
+                                          }
+                                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
+                                          aria-label="Delete material"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Mobile actions */}
+                                    <div className="mt-3 grid grid-cols-[1fr_42px] gap-2 sm:hidden">
+                                      <a
+                                        href={m.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                        View Material
+                                      </a>
+
+                                      <button
+                                        onClick={() =>
+                                          setMaterialToDelete(m)
+                                        }
+                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-red-50 text-red-500 transition hover:bg-red-100"
+                                        aria-label="Delete material"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-      {/* Upload / add-material modal */}
+      {/* Upload modal */}
       {showUpload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col overflow-hidden bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh]">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Add Study Material</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Unit → Chapter → Material</p>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="flex max-h-[94dvh] w-full min-w-0 flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6 sm:py-5">
+              <div className="min-w-0">
+                <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.15em] text-brand-green">
+                  <Sparkles className="h-3 w-3" />
+                  Faculty Library
+                </div>
+
+                <h2 className="truncate font-heading text-lg font-extrabold text-slate-900 sm:text-xl">
+                  Add Study Material
+                </h2>
+
+                <p className="mt-0.5 text-xs text-slate-400">
+                  Unit → Chapter → Material
+                </p>
               </div>
-              <button onClick={() => setShowUpload(false)} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400">
-                <X className="w-5 h-5" />
+
+              <button
+                type="button"
+                onClick={() => setShowUpload(false)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateMaterial} className="p-6 space-y-4 overflow-y-auto flex-1">
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Title *</label>
-                <input
-                  required
-                  value={form.title}
-                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-                  placeholder="e.g. Rotational Dynamics — Handwritten Notes"
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-                />
-              </div>
+            {/* Form */}
+            <form
+              onSubmit={handleCreateMaterial}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6"
+            >
+              <div className="space-y-5">
+                {/* Basic details */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                      Title *
+                    </label>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
-                  <select
-                    required
-                    value={form.batch}
-                    onChange={(e) => setForm((p) => ({ ...p, batch: e.target.value }))}
-                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
-                  >
-                    <option value="">Select batch</option>
-                    {batches.map((b) => (
-                      <option key={b._id} value={b._id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Subject</label>
-                  <select
-                    value={form.subject}
-                    onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value, unit: "", chapter: "" }))}
-                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 bg-white"
-                  >
-                    <option value="">Select subject</option>
-                    {subjects.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                    <input
+                      required
+                      value={form.title}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          title: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Rotational Dynamics — Handwritten Notes"
+                      className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                    />
+                  </div>
 
-              {/* Unit step */}
-              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/60">
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
-                  1 · Unit * {!form.subject && <span className="text-slate-400 normal-case">(pick a subject first)</span>}
-                </label>
-                <div className="flex gap-2">
+                  <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                        Batch / Course *
+                      </label>
+
+                      <select
+                        required
+                        value={form.batch}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            batch: e.target.value,
+                          }))
+                        }
+                        className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                      >
+                        <option value="">Select batch</option>
+
+                        {batches.map((b) => (
+                          <option key={b._id} value={b._id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="min-w-0">
+                      <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                        Subject
+                      </label>
+
+                      <select
+                        value={form.subject}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            subject: e.target.value,
+                            unit: "",
+                            chapter: "",
+                          }))
+                        }
+                        className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                      >
+                        <option value="">Select subject</option>
+
+                        {subjects.map((s) => (
+                          <option key={s._id} value={s._id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Unit */}
+                <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className="mb-3 flex min-w-0 items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-green shadow-sm">
+                      <Layers className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <label className="block text-xs font-extrabold text-slate-700">
+                        1 · Unit *
+                      </label>
+
+                      {!form.subject && (
+                        <p className="mt-0.5 text-[10px] text-slate-400">
+                          Pick a subject first
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <select
                     value={form.unit}
-                    onChange={(e) => setForm((p) => ({ ...p, unit: e.target.value, chapter: "" }))}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        unit: e.target.value,
+                        chapter: "",
+                      }))
+                    }
                     disabled={!form.subject}
-                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white disabled:bg-slate-100"
+                    className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition disabled:bg-slate-100 disabled:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
                   >
                     <option value="">Select existing unit</option>
+
                     {units.map((u) => (
-                      <option key={u._id} value={u._id}>{u.name}</option>
+                      <option key={u._id} value={u._id}>
+                        {u.name}
+                      </option>
                     ))}
                   </select>
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    value={newUnitName}
-                    onChange={(e) => setNewUnitName(e.target.value)}
-                    placeholder="Or type a new unit name"
-                    disabled={!form.subject}
-                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm disabled:bg-slate-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCreateUnit}
-                    disabled={creatingUnit || !form.subject || !newUnitName.trim()}
-                    className="px-4 py-2.5 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl inline-flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Unit
-                  </button>
-                </div>
-              </div>
 
-              {/* Chapter step */}
-              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/60">
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
-                  2 · Chapter * {!form.unit && <span className="text-slate-400 normal-case">(pick a unit first)</span>}
-                </label>
-                <select
-                  value={form.chapter}
-                  onChange={(e) => setForm((p) => ({ ...p, chapter: e.target.value }))}
-                  disabled={!form.unit}
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white disabled:bg-slate-100"
-                >
-                  <option value="">Select existing chapter</option>
-                  {chapters.map((c) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
-                </select>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    value={newChapterName}
-                    onChange={(e) => setNewChapterName(e.target.value)}
-                    placeholder="Or type a new chapter name"
-                    disabled={!form.unit}
-                    className="flex-1 px-3 py-2.5 border-slate-200 rounded-xl text-sm disabled:bg-slate-100"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCreateChapter}
-                    disabled={creatingChapter || !form.unit || !newChapterName.trim()}
-                    className="px-4 py-2.5 bg-white border-slate-200 hover:bg-slate-50 disabled:opacity-50 text-slate-700 text-sm font-semibold rounded-xl inline-flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Chapter
-                  </button>
-                </div>
-              </div>
-
-              {/* Material step */}
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">3 · Material Type</label>
-                <select
-                  value={form.type}
-                  onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
-                >
-                  <option value="PDF">PDF Document</option>
-                  <option value="DOC">Word Document</option>
-                  <option value="PPT">Presentation (PPT)</option>
-                  <option value="IMAGE">Image / Diagram</option>
-                  <option value="VIDEO">Video Lecture</option>
-                  <option value="LINK">External Link / Resource</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">
-                  File Source (External link preferred, or upload to Cloudinary)
-                </label>
-                {/* Storage-conscious guidance: links cost the platform nothing. */}
-                <div className="mb-2 flex gap-2 bg-amber-50 border-amber-100 rounded-xl p-3 text-xs text-amber-800">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>
-                    Please prefer a <strong>Google Drive / YouTube / external link</strong> over a direct upload.
-                    Videos uploaded directly consume a lot of storage and bandwidth — use links whenever possible.
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  <div className="border border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition">
+                  <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
                     <input
-                      type="file"
-                      accept={form.type === "VIDEO" ? "video/*" : form.type === "IMAGE" ? "image/*" : undefined}
-                      onChange={(e) => setFileToUpload(e.target.files[0] || null)}
-                      className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
+                      value={newUnitName}
+                      onChange={(e) => setNewUnitName(e.target.value)}
+                      placeholder="Or type a new unit name"
+                      disabled={!form.subject}
+                      className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 disabled:bg-slate-100 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
                     />
-                    {fileToUpload && (
-                      <div className="text-xs font-semibold text-green-600 mt-2">
-                        Selected: {fileToUpload.name} ({(fileToUpload.size / (1024 * 1024)).toFixed(2)} MB)
-                      </div>
-                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleCreateUnit}
+                      disabled={
+                        creatingUnit ||
+                        !form.subject ||
+                        !newUnitName.trim()
+                      }
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {creatingUnit ? "Adding..." : "Add Unit"}
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 font-semibold">
-                    <LinkIcon className="w-3.5 h-3.5" /> OR paste an external URL (recommended)
+                </div>
+
+                {/* Chapter */}
+                <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                  <div className="mb-3 flex min-w-0 items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-green shadow-sm">
+                      <FolderOpen className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <label className="block text-xs font-extrabold text-slate-700">
+                        2 · Chapter *
+                      </label>
+
+                      {!form.unit && (
+                        <p className="mt-0.5 text-[10px] text-slate-400">
+                          Pick a unit first
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <input
-                    type="url"
-                    value={form.fileUrl}
-                    onChange={(e) => setForm((p) => ({ ...p, fileUrl: e.target.value }))}
-                    placeholder={
-                      form.type === "VIDEO"
-                        ? "https://drive.google.com/file/... or https://youtu.be/..."
-                        : "https://drive.google.com/... or https://example.com/notes.pdf"
+
+                  <select
+                    value={form.chapter}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        chapter: e.target.value,
+                      }))
                     }
-                    className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+                    disabled={!form.unit}
+                    className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition disabled:bg-slate-100 disabled:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                  >
+                    <option value="">Select existing chapter</option>
+
+                    {chapters.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
+                    <input
+                      value={newChapterName}
+                      onChange={(e) =>
+                        setNewChapterName(e.target.value)
+                      }
+                      placeholder="Or type a new chapter name"
+                      disabled={!form.unit}
+                      className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 disabled:bg-slate-100 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleCreateChapter}
+                      disabled={
+                        creatingChapter ||
+                        !form.unit ||
+                        !newChapterName.trim()
+                      }
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {creatingChapter
+                        ? "Adding..."
+                        : "Add Chapter"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Material type */}
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                    3 · Material Type
+                  </label>
+
+                  <select
+                    value={form.type}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        type: e.target.value,
+                      }))
+                    }
+                    className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-700 outline-none transition focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                  >
+                    <option value="PDF">PDF Document</option>
+                    <option value="DOC">Word Document</option>
+                    <option value="PPT">
+                      Presentation (PPT)
+                    </option>
+                    <option value="IMAGE">Image / Diagram</option>
+                    <option value="VIDEO">Video Lecture</option>
+                    <option value="LINK">
+                      External Link / Resource
+                    </option>
+                  </select>
+                </div>
+
+                {/* File source */}
+                <div className="min-w-0">
+                  <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                    File Source
+                  </label>
+
+                  <div className="mb-3 flex min-w-0 items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-3.5 text-xs leading-5 text-amber-800">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+
+                    <p className="min-w-0 break-words">
+                      Prefer a{" "}
+                      <strong>
+                        Google Drive / YouTube / external link
+                      </strong>{" "}
+                      over a direct upload. Videos uploaded directly
+                      consume significantly more storage and bandwidth.
+                    </p>
+                  </div>
+
+                  <div className="min-w-0 space-y-3">
+                    <div className="min-w-0 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-4 text-center transition hover:bg-slate-50">
+                      <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm">
+                        <Upload className="h-4 w-4" />
+                      </div>
+
+                      <p className="mt-2 text-xs font-bold text-slate-600">
+                        Upload a file
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-slate-400">
+                        Optional if you are using an external URL
+                      </p>
+
+                      <input
+                        type="file"
+                        accept={
+                          form.type === "VIDEO"
+                            ? "video/*"
+                            : form.type === "IMAGE"
+                            ? "image/*"
+                            : undefined
+                        }
+                        onChange={(e) =>
+                          setFileToUpload(
+                            e.target.files[0] || null
+                          )
+                        }
+                        className="mt-3 block w-full min-w-0 cursor-pointer text-xs text-slate-500 file:mr-2 file:rounded-lg file:border-0 file:bg-green-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-green-700 hover:file:bg-green-100"
+                      />
+
+                      {fileToUpload && (
+                        <div className="mt-3 min-w-0 rounded-xl bg-green-50 px-3 py-2 text-left text-xs font-semibold text-green-700">
+                          <p className="break-words">
+                            {fileToUpload.name}
+                          </p>
+                          <p className="mt-0.5 text-[10px] font-medium text-green-600">
+                            {(
+                              fileToUpload.size /
+                              (1024 * 1024)
+                            ).toFixed(2)}{" "}
+                            MB
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="h-px flex-1 bg-slate-100" />
+                      <span>Or use external URL</span>
+                      <span className="h-px flex-1 bg-slate-100" />
+                    </div>
+
+                    <div className="relative">
+                      <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                      <input
+                        type="url"
+                        value={form.fileUrl}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            fileUrl: e.target.value,
+                          }))
+                        }
+                        placeholder={
+                          form.type === "VIDEO"
+                            ? "https://drive.google.com/... or https://youtu.be/..."
+                            : "https://drive.google.com/... or https://example.com/notes.pdf"
+                        }
+                        className="min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="mb-1.5 block text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                    Description
+                    <span className="ml-1 normal-case tracking-normal text-slate-400">
+                      (optional)
+                    </span>
+                  </label>
+
+                  <textarea
+                    rows={3}
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        description: e.target.value,
+                      }))
+                    }
+                    placeholder="Summary or chapter coverage..."
+                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Description (optional)</label>
-                <textarea
-                  rows={2}
-                  value={form.description}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Summary or chapter coverage..."
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition resize-none"
-                />
-              </div>
+                {/* Actions */}
+                <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowUpload(false)}
+                    className="hidden min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
+                  >
+                    Cancel
+                  </button>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowUpload(false)}
-                  className="flex-1 py-2.5 border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition shadow-sm inline-flex items-center justify-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {uploading ? "Uploading..." : "Publish Material"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-1"
+                  >
+                    <Save className="h-4 w-4" />
+
+                    {uploading
+                      ? "Uploading..."
+                      : "Publish Material"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -571,4 +1061,3 @@ export default function TeacherMaterials() {
     </div>
   );
 }
-

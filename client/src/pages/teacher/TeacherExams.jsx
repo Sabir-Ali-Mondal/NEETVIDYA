@@ -13,12 +13,21 @@ import { parseCSV, downloadCSVTemplate } from "../../utils/csv";
 import { downloadExamResultSheet } from "../../utils/examResultPdf";
 
 const statusColors = {
-  LIVE: "bg-green-100 text-green-700 border-green-200",
-  PUBLISHED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  SCHEDULED: "bg-blue-100 text-blue-700 border-blue-200",
+  LIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  PUBLISHED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  SCHEDULED: "bg-blue-50 text-blue-700 border-blue-200",
   CLOSED: "bg-slate-100 text-slate-600 border-slate-200",
-  ARCHIVED: "bg-purple-100 text-purple-700 border-purple-200",
-  DRAFT: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  ARCHIVED: "bg-purple-50 text-purple-700 border-purple-200",
+  DRAFT: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+const statusDotColors = {
+  LIVE: "bg-emerald-500",
+  PUBLISHED: "bg-emerald-500",
+  SCHEDULED: "bg-blue-500",
+  CLOSED: "bg-slate-400",
+  ARCHIVED: "bg-purple-500",
+  DRAFT: "bg-amber-500",
 };
 
 const emptyQuestion = () => ({
@@ -37,6 +46,12 @@ const emptyQuestion = () => ({
   ],
   correctAnswer: 0,
 });
+
+const inputClass =
+  "w-full min-h-11 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10";
+
+const labelClass =
+  "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-500";
 
 export default function TeacherExams() {
   const [activeTab, setActiveTab] = useState("exams");
@@ -58,7 +73,6 @@ export default function TeacherExams() {
   const [examResults, setExamResults] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
 
-  // Draft questions are held client-side, then saved to the exam after creation.
   const [draftQuestions, setDraftQuestions] = useState([]);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [qForm, setQForm] = useState(emptyQuestion());
@@ -129,7 +143,6 @@ export default function TeacherExams() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, bankPage, limit]);
 
-  // ─── Wizard: create exam (Basic → Questions → Settings) ───
   const resetWizard = () => {
     setWizardStep(1);
     setDraftQuestions([]);
@@ -236,7 +249,6 @@ export default function TeacherExams() {
         0
       );
 
-      // 1) Create the exam shell (questions are linked next).
       const { data: created } = await api.post("/exams", {
         ...examForm,
         totalQuestions: draftQuestions.length,
@@ -251,7 +263,6 @@ export default function TeacherExams() {
 
       createdExamId = created.data.exam._id;
 
-      // 2) Add each question to THIS exam (with images).
       for (const q of draftQuestions) {
         const fd = new FormData();
         fd.append("questionText", q.questionText);
@@ -273,7 +284,6 @@ export default function TeacherExams() {
         });
       }
 
-      // 3) Publish now if requested.
       if (examForm.publishNow) {
         await api.put(`/exams/${createdExamId}/publish`);
       }
@@ -287,7 +297,7 @@ export default function TeacherExams() {
         try {
           await api.delete(`/exams/${createdExamId}`);
         } catch {
-          // ignore cleanup failure; the exam shell is invalid and should be checked manually
+          // ignore cleanup failure
         }
       }
       alertError(err.response?.data?.message || "Failed to create exam. No partial exam was kept.");
@@ -296,7 +306,6 @@ export default function TeacherExams() {
     }
   };
 
-  // ─── Exam actions ───
   const handlePublish = async (id) => {
     try {
       await api.put(`/exams/${id}/publish`);
@@ -416,38 +425,55 @@ export default function TeacherExams() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-full space-y-6 p-3 sm:p-5 lg:p-7 bg-slate-50">
+      
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-extrabold text-2xl text-slate-900">Exam Manager</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Create a unique exam with its own questions, conduct it, then archive it to the Question Bank.
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            resetWizard();
-            setShowWizard(true);
-          }}
-          className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm text-sm"
-        >
-          <Plus className="w-4 h-4" /> Create New Exam
-        </button>
-      </div>
+      <section className="relative overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+        <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-green-100/60 blur-3xl" />
+        <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-emerald-100/50 blur-3xl" />
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl w-full sm:w-fit">
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-green sm:text-[11px]">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+              Examination Management
+            </div>
+            <h1 className="font-heading text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+              Exam Manager
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">
+              Create unique exams, conduct them, and archive papers to the Question Bank.
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              resetWizard();
+              setShowWizard(true);
+            }}
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/10 sm:w-auto"
+          >
+            <Plus className="h-4 w-4" />
+            Create New Exam
+          </button>
+        </div>
+      </section>
+
+      {/* Tabs - Mobile Icon Only, Desktop Text */}
+      <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100/80 p-1.5 sm:inline-flex sm:w-auto sm:gap-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2 ${
-              activeTab === tab.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition sm:justify-start sm:px-5 ${
+              activeTab === tab.id
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
             }`}
           >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
+            <tab.icon className="h-5 w-5 shrink-0" />
+            <span className="hidden sm:inline truncate">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -455,112 +481,183 @@ export default function TeacherExams() {
       {/* ─── EXAMS TAB ─── */}
       {activeTab === "exams" && (
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search exams..."
-              className="w-full pl-10 pr-4 py-2.5 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition bg-white"
-            />
-          </div>
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div className="relative min-w-0">
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search exams..."
+                className={`${inputClass} bg-slate-50/50 pl-10`}
+              />
+            </div>
+          </section>
 
           {loading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : exams.length === 0 ? (
-            <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-              <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-              <h3 className="font-bold text-slate-600 mb-1">No exams yet</h3>
-              <p className="text-slate-400 text-sm">Create your first exam with its own questions.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {exams.map((exam) => (
-                <div key={exam._id} className="bg-white border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${statusColors[exam.status] || statusColors.DRAFT}`}>
-                          ● {exam.status}
-                        </span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
-                          {exam.testType?.replace(/_/g, " ")}
-                        </span>
-                        {exam.batch?.name && (
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border-blue-200">
-                            {exam.batch.name}
-                          </span>
-                        )}
-                        {exam.resultPublishMode && (
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold border-amber-200">
-                            Results: {exam.resultPublishMode}
-                          </span>
-                        )}
+            <div className="grid gap-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex gap-4">
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-xl bg-slate-100" />
+                    <div className="min-w-0 flex-1">
+                      <div className="h-4 w-40 animate-pulse rounded bg-slate-100" />
+                      <div className="mt-3 h-6 w-2/3 animate-pulse rounded bg-slate-100" />
+                      <div className="mt-4 flex gap-3">
+                        <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
+                        <div className="h-3 w-20 animate-pulse rounded bg-slate-100" />
                       </div>
-                      <h3 className="font-bold text-slate-800 text-base truncate">{exam.title}</h3>
-                      <div className="flex flex-wrap gap-4 text-xs text-slate-500 mt-2">
-                        <span>{exam.totalQuestions} questions</span>
-                        <span>{exam.duration} min</span>
-                        <span>{exam.totalMarks} marks</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={() => handleOpenResults(exam)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
-                      >
-                        <BarChart3 className="w-3.5 h-3.5 inline mr-1" /> Results
-                      </button>
-                      {exam.status !== "LIVE" && exam.status !== "CLOSED" && (
-                        <button
-                          onClick={() => handlePublish(exam._id)}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" /> Go Live
-                        </button>
-                      )}
-                      {exam.status === "LIVE" && (
-                        <button
-                          onClick={() => handleClose(exam._id)}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200"
-                        >
-                          <Archive className="w-3.5 h-3.5 inline mr-1" /> Close & Archive
-                        </button>
-                      )}
-                      {showManualResultPublishButton(exam) && (
-                        <button
-                          onClick={() => handlePublishResults(exam._id)}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
-                        >
-                          Publish Results
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setExamToDelete(exam)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded transition"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 </div>
               ))}
-              <Pagination
-                page={page}
-                totalPages={meta.pages}
-                totalItems={meta.total}
-                pageSize={limit}
-                onPageChange={setPage}
-                onPageSizeChange={(n) => {
-                  setLimit(n);
-                  setPage(1);
-                }}
-              />
+            </div>
+          ) : exams.length === 0 ? (
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white px-5 py-14 text-center shadow-sm sm:py-20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-brand-green">
+                <ClipboardList className="h-7 w-7" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-700">No exams yet</h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-400">
+                Create your first exam with its own questions using the button above.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {exams.map((exam) => {
+                const status = exam.status || "DRAFT";
+                return (
+                  <article
+                    key={exam._id}
+                    className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 sm:p-5"
+                  >
+                    <div className={`absolute -right-12 -top-12 h-28 w-28 rounded-full opacity-40 blur-3xl ${
+                      status === "LIVE" || status === "PUBLISHED" ? "bg-emerald-100" : status === "SCHEDULED" ? "bg-blue-100" : status === "DRAFT" ? "bg-amber-100" : "bg-slate-100"
+                    }`} />
+
+                    <div className="relative flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center">
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 sm:flex">
+                          <ClipboardList className="h-5 w-5" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <span className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${statusColors[status] || statusColors.DRAFT}`}>
+                              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotColors[status] || statusDotColors.DRAFT}`} />
+                              {status}
+                            </span>
+                            <span className="max-w-full truncate rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
+                              {exam.testType?.replace(/_/g, " ")}
+                            </span>
+                            {exam.batch?.name && (
+                              <span className="max-w-full truncate rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-blue-700">
+                                {exam.batch.name}
+                              </span>
+                            )}
+                            {exam.resultPublishMode && (
+                              <span className="max-w-full truncate rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                                Results: {exam.resultPublishMode}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="mt-2 truncate text-sm font-extrabold text-slate-800 sm:text-base">
+                            {exam.title}
+                          </h3>
+
+                          <div className="mt-3 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500">
+                            <span className="inline-flex items-center gap-1.5">
+                              <ClipboardList className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalQuestions} Qs
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.duration} min
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <BarChart3 className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalMarks} Marks
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions Grid */}
+                      <div className="grid min-w-0 grid-cols-3 gap-2 sm:flex sm:flex-wrap lg:w-auto lg:shrink-0 lg:flex-col lg:items-stretch">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenResults(exam)}
+                          className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[10px] font-bold text-slate-600 transition hover:bg-slate-100 sm:text-xs"
+                          title="Results"
+                        >
+                          <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline truncate">Results</span>
+                        </button>
+
+                        {exam.status !== "LIVE" && exam.status !== "CLOSED" && exam.status !== "PUBLISHED" && (
+                          <button
+                            type="button"
+                            onClick={() => handlePublish(exam._id)}
+                            className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-green-200 bg-green-50 px-3 text-[10px] font-bold text-green-700 transition hover:bg-green-100 sm:text-xs"
+                            title="Go Live"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Go Live</span>
+                          </button>
+                        )}
+
+                        {(exam.status === "LIVE" || exam.status === "PUBLISHED") && (
+                          <button
+                            type="button"
+                            onClick={() => handleClose(exam._id)}
+                            className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 text-[10px] font-bold text-purple-700 transition hover:bg-purple-100 sm:text-xs"
+                            title="Close & Archive"
+                          >
+                            <Archive className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Close & Archive</span>
+                          </button>
+                        )}
+
+                        {showManualResultPublishButton(exam) && (
+                          <button
+                            type="button"
+                            onClick={() => handlePublishResults(exam._id)}
+                            className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-[10px] font-bold text-amber-700 transition hover:bg-amber-100 sm:text-xs col-span-2 sm:col-span-1"
+                            title="Publish Results"
+                          >
+                            <Eye className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Publish Results</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setExamToDelete(exam)}
+                          className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-3 text-[10px] font-bold text-red-500 transition hover:bg-red-100 hover:text-red-600 sm:text-xs"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline truncate">Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+              
+              <div className="pt-2">
+                <Pagination
+                  page={page}
+                  totalPages={meta.pages}
+                  totalItems={meta.total}
+                  pageSize={limit}
+                  onPageChange={setPage}
+                  onPageSizeChange={(n) => {
+                    setLimit(n);
+                    setPage(1);
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -569,92 +666,139 @@ export default function TeacherExams() {
       {/* ─── QUESTION BANK (ARCHIVE) TAB ─── */}
       {activeTab === "bank" && (
         <div className="space-y-4">
-          <div className="bg-blue-50 border-blue-100 rounded-xl p-4 text-xs text-blue-800">
-            The Question Bank is the archive of completed exam papers. Open a paper to reconduct it,
-            publish it for student study, or download it. Nothing here is created manually.
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs font-medium leading-relaxed text-blue-800">
+            The Question Bank is the archive of completed exam papers. Open a paper to reconduct it, publish it for student study, or download it. Nothing here is created manually.
           </div>
 
           {archived.length === 0 ? (
-            <div className="bg-white border-slate-100 rounded-2xl p-12 text-center shadow-sm">
-              <Archive className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-              <h3 className="font-bold text-slate-600 mb-1">No archived exam papers</h3>
-              <p className="text-slate-400 text-sm">Close a live exam to archive it here.</p>
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white px-5 py-14 text-center shadow-sm sm:py-20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                <Archive className="h-7 w-7" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-700">No archived exam papers</h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-400">
+                Close a live exam to archive it here.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {archived.map((exam) => (
-                <div key={exam._id} className="bg-white border-slate-100 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-purple-100 text-purple-700 border-purple-200">
-                          <Archive className="w-3 h-3 inline mr-1" /> Archived
-                        </span>
-                        {exam.batch?.name && (
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border-blue-200">
-                            {exam.batch.name}
-                          </span>
-                        )}
-                        <span
-                          className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
-                            exam.studyVisible
-                              ? "bg-green-50 text-green-700 border-green-200"
-                              : "bg-slate-50 text-slate-500 border-slate-200"
-                          }`}
-                        >
-                          {exam.studyVisible ? "Visible to students" : "Hidden from students"}
-                        </span>
+                <article
+                  key={exam._id}
+                  className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-900/5 sm:p-5"
+                >
+                  <div className="relative flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-500 sm:flex">
+                        <Archive className="h-5 w-5" />
                       </div>
-                      <h3 className="font-bold text-slate-800 text-base truncate">{exam.title}</h3>
-                      <div className="flex flex-wrap gap-4 text-xs text-slate-500 mt-2">
-                        <span>{exam.totalQuestions} questions</span>
-                        <span>{exam.duration} min</span>
-                        <span>{exam.totalMarks} marks</span>
-                        {exam.archivedAt && (
-                          <span>Archived {new Date(exam.archivedAt).toLocaleDateString()}</span>
-                        )}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-purple-700">
+                            <Archive className="h-3 w-3 shrink-0" /> Archived
+                          </span>
+                          {exam.batch?.name && (
+                            <span className="max-w-full truncate rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-blue-700">
+                              {exam.batch.name}
+                            </span>
+                          )}
+                          <span className={`max-w-full truncate rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${
+                            exam.studyVisible
+                              ? "border-green-200 bg-green-50 text-green-700"
+                              : "border-slate-200 bg-slate-50 text-slate-500"
+                          }`}>
+                            {exam.studyVisible ? "Visible to students" : "Hidden"}
+                          </span>
+                        </div>
+
+                        <h3 className="mt-2 truncate text-sm font-extrabold text-slate-800 sm:text-base">
+                          {exam.title}
+                        </h3>
+
+                        <div className="mt-3 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ClipboardList className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalQuestions} Qs
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.duration} min
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <BarChart3 className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalMarks} Marks
+                          </span>
+                          {exam.archivedAt && (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" /> Archived {new Date(exam.archivedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
+
+                    {/* Actions Grid */}
+                    <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:w-auto lg:shrink-0 lg:flex-col lg:items-stretch">
                       <button
+                        type="button"
                         onClick={() => handleReconduct(exam)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-green-200 bg-green-50 px-3 text-[10px] font-bold text-green-700 transition hover:bg-green-100 sm:text-xs"
+                        title="Reconduct"
                       >
-                        <RefreshCw className="w-3.5 h-3.5 inline mr-1" /> Reconduct
+                        <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Reconduct</span>
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => handleStudyToggle(exam)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[10px] font-bold text-slate-600 transition hover:bg-slate-100 sm:text-xs"
+                        title={exam.studyVisible ? "Hide" : "Publish for Study"}
                       >
                         {exam.studyVisible ? (
-                          <><EyeOff className="w-3.5 h-3.5 inline mr-1" /> Hide</>
+                          <>
+                            <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Hide</span>
+                          </>
                         ) : (
-                          <><Eye className="w-3.5 h-3.5 inline mr-1" /> Publish for Study</>
+                          <>
+                            <Eye className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Publish for Study</span>
+                          </>
                         )}
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => handleDownload(exam)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200"
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 text-[10px] font-bold text-slate-600 transition hover:bg-slate-100 sm:text-xs"
+                        title="Download"
                       >
-                        <Download className="w-3.5 h-3.5 inline mr-1" /> Download
+                        <Download className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Download</span>
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => setExamToDelete(exam)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-3 text-[10px] font-bold text-red-500 transition hover:bg-red-100 hover:text-red-600 sm:text-xs"
+                        title="Delete"
                       >
-                        <Trash2 className="w-3.5 h-3.5 inline mr-1" /> Delete
+                        <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Delete</span>
                       </button>
                     </div>
                   </div>
-                </div>
+                </article>
               ))}
-              <Pagination
-                page={bankPage}
-                totalPages={bankMeta.pages}
-                totalItems={bankMeta.total}
-                pageSize={limit}
-                onPageChange={setBankPage}
-              />
+              
+              <div className="pt-2">
+                <Pagination
+                  page={bankPage}
+                  totalPages={bankMeta.pages}
+                  totalItems={bankMeta.total}
+                  pageSize={limit}
+                  onPageChange={setBankPage}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -664,170 +808,199 @@ export default function TeacherExams() {
       {activeTab === "submissions" && (
         <div>
           {examResults ? (
-            <div className="bg-white rounded-2xl border-slate-100 p-6 space-y-6">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2.5 py-1 rounded-full">
-                  Exam Submissions
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 p-5 sm:p-6">
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-indigo-700 border border-indigo-100">
+                  <BarChart3 className="h-3 w-3" /> Exam Submissions
                 </span>
-                <h2 className="font-extrabold text-xl text-slate-900 mt-2">{examResults.exam?.title}</h2>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
-                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.totalSubmissions || examResults.results?.length || 0}</div>
-                  <div className="text-xs text-slate-500 mt-1">Submissions</div>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
-                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.avgScore || 0}</div>
-                  <div className="text-xs text-slate-500 mt-1">Average Score</div>
-                </div>
-                <div className="p-4 bg-slate-50 rounded-xl border-slate-100 text-center">
-                  <div className="text-2xl font-extrabold text-slate-900">{examResults.analytics?.highestScore || 0}</div>
-                  <div className="text-xs text-slate-500 mt-1">Highest</div>
-                </div>
+                <h2 className="mt-2 truncate text-lg font-extrabold text-slate-900 sm:text-xl">
+                  {examResults.exam?.title}
+                </h2>
               </div>
 
-              {rankedSubmissionRows.length > 0 ? (
-                <>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => downloadExamResultSheet({
-                        examTitle: examResults.exam?.title || "Exam Results",
-                        rows: rankedSubmissionRows,
-                        batchName: examResults.exam?.batch?.name || "General",
-                        instituteName: "NEETVIDYA",
-                      })}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5" /> Download Result Sheet
-                    </button>
+              <div className="p-5 sm:p-6 space-y-6">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-slate-900">
+                      {examResults.analytics?.totalSubmissions || examResults.results?.length || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold text-slate-500 uppercase tracking-wider">Submissions</div>
                   </div>
+                  <div className="min-w-0 rounded-xl border border-slate-100 bg-slate-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-slate-900">
+                      {examResults.analytics?.avgScore || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold text-slate-500 uppercase tracking-wider">Avg Score</div>
+                  </div>
+                  <div className="min-w-0 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-emerald-700">
+                      {examResults.analytics?.highestScore || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Highest</div>
+                  </div>
+                </div>
 
-                  <div className="space-y-4">
-                    {rankedSubmissionRows.map((group) => (
-                      <div key={group.userId || group.studentId || group.studentName} className="border border-slate-200 rounded-2xl bg-slate-50/50 p-4 shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-3 border-b border-slate-200">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <span className="text-xs font-bold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">#{group.rank}</span>
-                            <div>
-                              <div className="font-bold text-slate-800">{group.studentName || "Student"}</div>
-                              <div className="text-xs text-slate-500">Student ID: {group.studentId || "—"}</div>
+                {rankedSubmissionRows.length > 0 ? (
+                  <>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => downloadExamResultSheet({
+                          examTitle: examResults.exam?.title || "Exam Results",
+                          rows: rankedSubmissionRows,
+                          batchName: examResults.exam?.batch?.name || "General",
+                          instituteName: "NEETVIDYA",
+                        })}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition shadow-sm"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download Result Sheet
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {rankedSubmissionRows.map((group) => (
+                        <div key={group.userId || group.studentId || group.studentName} className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-sm">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-3 border-b border-slate-200">
+                            <div className="flex items-center gap-3 flex-wrap min-w-0">
+                              <span className="shrink-0 text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                #{group.rank}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-bold text-slate-800 truncate">{group.studentName || "Student"}</div>
+                                <div className="text-xs text-slate-500 truncate">ID: {group.studentId || "—"}</div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+                              <span className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-semibold">Attempts: {group.totalAttempts}</span>
+                              <span className="px-2.5 py-1 rounded-full bg-white border border-slate-200 font-semibold">Latest: {group.obtainedMarks} / {group.totalMarks}</span>
+                              <span className={`px-2.5 py-1 rounded-full font-bold border ${group.isPublished ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
+                                {group.isPublished ? "Published" : "Pending"}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
-                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">Attempts: {group.totalAttempts}</span>
-                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">Latest Score: {group.obtainedMarks} / {group.totalMarks}</span>
-                            <span className="px-2 py-1 rounded-full bg-white border border-slate-200">{group.isPublished ? "Published" : "Pending"}</span>
+                          <div className="mt-3 space-y-2">
+                            {group.attempts?.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).map((attempt, idx) => (
+                              <div key={attempt._id || idx} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-1 rounded">Attempt {group.attempts.length - idx}</span>
+                                  <span className="text-xs text-slate-400 font-medium">
+                                    {attempt.createdAt ? new Date(attempt.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <span className="font-bold text-slate-800">{attempt.obtainedMarks} / {attempt.totalMarks}</span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${attempt.isPublished ? "bg-green-50 text-green-700 border border-green-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+                                    {attempt.isPublished ? "Published" : "Pending"}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-
-                        <div className="mt-3 space-y-2">
-                          {group.attempts?.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).map((attempt, idx) => (
-                            <div key={attempt._id || idx} className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Attempt {group.attempts.length - idx}</span>
-                                <span className="text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}</span>
-                              </div>
-
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="font-semibold">{attempt.obtainedMarks} / {attempt.totalMarks}</span>
-                                <span className={`text-[11px] font-semibold px-2 py-1 rounded-full ${attempt.isPublished ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
-                                  {attempt.isPublished ? "Published" : "Pending"}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <Trophy className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm font-bold text-slate-600">No submissions recorded yet.</p>
                   </div>
-                </>
-              ) : (
-                <div className="text-center py-8 text-slate-400 text-sm">No submissions recorded yet.</div>
-              )}
+                )}
+              </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-400">
-              <BarChart3 className="w-12 h-12 mx-auto mb-3 text-slate-200" />
-              <p className="font-semibold text-slate-500">Select an exam from the Exams tab to view submissions.</p>
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white px-5 py-14 text-center shadow-sm sm:py-20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                <BarChart3 className="h-7 w-7" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-700">No exam selected</h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-400">
+                Select an exam from the Exams tab to view its submissions.
+              </p>
             </div>
           )}
         </div>
       )}
 
-      {/* ─── CREATE EXAM WIZARD ─── */}
+      {/* ─── CREATE EXAM WIZARD MODAL ─── */}
       {showWizard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-[1.75rem]">
+            
             {/* Wizard header */}
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="font-extrabold text-xl text-slate-900">Create New Exam</h2>
-                <p className="text-slate-500 text-xs mt-0.5">
+            <div className="flex shrink-0 items-start justify-between border-b border-slate-100 bg-white p-5 sm:p-6">
+              <div className="min-w-0 pr-4">
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-brand-green border border-green-100">
+                  <Plus className="h-3 w-3" /> New Examination
+                </div>
+                <h2 className="truncate text-lg font-extrabold text-slate-900 sm:text-xl">Create New Exam</h2>
+                <p className="mt-1 text-xs text-slate-500">
                   Step {wizardStep} of 3 · {["Basic Details", "Add Questions", "Settings"][wizardStep - 1]}
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowWizard(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Steps indicator */}
-            <div className="px-5 pt-4 flex items-center gap-2 shrink-0">
+            <div className="px-5 pt-5 flex items-center gap-2 shrink-0">
               {[1, 2, 3].map((s) => (
                 <div key={s} className="flex items-center gap-2 flex-1">
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                      wizardStep >= s ? "bg-green-600 text-white" : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                    wizardStep >= s ? "bg-green-600 text-white shadow-sm" : "bg-slate-100 text-slate-400"
+                  }`}>
                     {s}
                   </div>
                   {s < 3 && (
-                    <div className={`h-0.5 flex-1 ${wizardStep > s ? "bg-green-600" : "bg-slate-100"}`} />
+                    <div className={`h-0.5 flex-1 rounded transition-colors ${wizardStep > s ? "bg-green-600" : "bg-slate-100"}`} />
                   )}
                 </div>
               ))}
             </div>
 
             {/* Wizard body */}
-            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-5">
               {wizardStep === 1 && (
-                <>
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Exam Title *</label>
+                    <label className={labelClass}>Exam Title *</label>
                     <input
                       value={examForm.title}
                       onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
-                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm"
+                      className={inputClass}
                       placeholder="e.g. NEET Mock Test #12 — Full Syllabus"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Batch / Course *</label>
+                      <label className={labelClass}>Batch / Course *</label>
                       <select
                         value={examForm.batch}
                         onChange={(e) => setExamForm({ ...examForm, batch: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                        className={inputClass}
                       >
                         <option value="">Select batch</option>
                         {batches.map((b) => (
                           <option key={b._id} value={b._id}>{b.name}</option>
                         ))}
                       </select>
-                      <p className="text-[11px] text-slate-400 mt-1">Every exam belongs to exactly one batch.</p>
+                      <p className="text-[11px] text-slate-400 mt-1.5">Every exam belongs to exactly one batch.</p>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Test Type</label>
+                      <label className={labelClass}>Test Type</label>
                       <select
                         value={examForm.testType}
                         onChange={(e) => setExamForm({ ...examForm, testType: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                        className={inputClass}
                       >
                         <option value="MOCK_TEST">Mock Test</option>
                         <option value="CHAPTER_TEST">Chapter Test</option>
@@ -837,69 +1010,71 @@ export default function TeacherExams() {
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Duration (min)</label>
+                      <label className={labelClass}>Duration (min)</label>
                       <input type="number" value={examForm.duration}
                         onChange={(e) => setExamForm({ ...examForm, duration: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                        className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Marks / Correct</label>
+                      <label className={labelClass}>Marks / Correct</label>
                       <input type="number" value={examForm.marksPerCorrect}
                         onChange={(e) => setExamForm({ ...examForm, marksPerCorrect: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                        className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Negative / Wrong</label>
+                      <label className={labelClass}>Negative / Wrong</label>
                       <input type="number" value={examForm.negativePerWrong}
                         onChange={(e) => setExamForm({ ...examForm, negativePerWrong: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                        className={inputClass} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Max Attempts Allowed</label>
+                    <label className={labelClass}>Max Attempts Allowed</label>
                     <input type="number" min="1" value={examForm.maxAttempts}
                       onChange={(e) => setExamForm({ ...examForm, maxAttempts: e.target.value })}
-                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
-                    <p className="text-[11px] text-slate-400 mt-1">Default is 1. Increase this to allow more than one attempt per learner.</p>
+                      className={inputClass} />
+                    <p className="text-[11px] text-slate-400 mt-1.5">Default is 1. Increase this to allow more than one attempt per learner.</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Start Time *</label>
+                      <label className={labelClass}>Start Time *</label>
                       <input type="datetime-local" value={examForm.startTime}
                         onChange={(e) => setExamForm({ ...examForm, startTime: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                        className={inputClass} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 mb-1.5">End Time *</label>
+                      <label className={labelClass}>End Time *</label>
                       <input type="datetime-local" value={examForm.endTime}
                         onChange={(e) => setExamForm({ ...examForm, endTime: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm" />
+                        className={inputClass} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Instructions</label>
-                    <textarea rows={2} value={examForm.instructions}
+                    <label className={labelClass}>Instructions</label>
+                    <textarea rows={3} value={examForm.instructions}
                       onChange={(e) => setExamForm({ ...examForm, instructions: e.target.value })}
-                      className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none"
+                      className={`${inputClass} resize-none`}
                       placeholder="Shown to students before they begin..." />
                   </div>
-                </>
+                </div>
               )}
 
               {wizardStep === 2 && (
-                <>
+                <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     <button
+                      type="button"
                       onClick={() => setShowQuestionForm(true)}
-                      className="inline-flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm"
+                      className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 shadow-sm"
                     >
                       <Plus className="w-4 h-4 text-green-600" /> Create Question (UI)
                     </button>
-                    <label className="inline-flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2.5 rounded-xl text-sm cursor-pointer">
+                    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 shadow-sm">
                       <FileSpreadsheet className="w-4 h-4 text-green-600" /> Import CSV
                       <input
+                        ref={csvInputRef}
                         type="file"
                         accept=".csv"
                         className="hidden"
@@ -907,55 +1082,57 @@ export default function TeacherExams() {
                       />
                     </label>
                     <button
+                      type="button"
                       onClick={downloadCSVTemplate}
-                      className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-slate-700 px-2"
+                      className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-transparent px-3 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                     >
-                      <Download className="w-3.5 h-3.5" /> Download template
+                      <Download className="w-3.5 h-3.5" /> Template
                     </button>
                   </div>
 
                   {csvPreview.length > 0 && (
-                    <div className="bg-green-50 border-green-100 rounded-xl p-4 text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-green-800">
+                    <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span className="font-bold text-green-800">
                           {csvPreview.length} rows parsed from CSV
                         </span>
                         <button
+                          type="button"
                           onClick={commitCSVToDraft}
-                          className="text-xs font-bold bg-green-600 text-white px-3 py-1.5 rounded-lg"
+                          className="inline-flex items-center justify-center text-xs font-bold bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
                         >
                           Add all to exam
                         </button>
                       </div>
-                      <p className="text-xs text-green-700 mt-1">
+                      <p className="text-xs text-green-700 mt-1.5 font-medium">
                         After adding, you can edit each question and attach images.
                       </p>
                     </div>
                   )}
 
                   {draftQuestions.length === 0 ? (
-                    <div className="border border-dashed border-slate-200 rounded-xl p-10 text-center">
-                      <Layers className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                      <p className="text-slate-500 text-sm">
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center">
+                      <Layers className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                      <p className="text-slate-500 text-sm font-medium">
                         No questions yet. Create one in the UI or import from CSV.
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {draftQuestions.map((q, i) => (
-                        <div key={i} className="bg-white border-slate-100 rounded-xl p-4 flex items-start gap-3">
-                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                        <div key={i} className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-extrabold text-slate-600 border border-slate-200">
                             {i + 1}
                           </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-slate-800 font-medium">{q.questionText}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-slate-800 break-words line-clamp-2">{q.questionText}</p>
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {q.options.map((o, oi) => (
                                 <span
                                   key={oi}
-                                  className={`text-[11px] px-2 py-0.5 rounded border ${
+                                  className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${
                                     oi === q.correctAnswer
-                                      ? "bg-green-50 text-green-700 border-green-200 font-semibold"
+                                      ? "bg-green-50 text-green-700 border-green-200 font-bold"
                                       : "bg-slate-50 text-slate-500 border-slate-100"
                                   }`}
                                 >
@@ -965,8 +1142,9 @@ export default function TeacherExams() {
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => removeDraftQuestion(i)}
-                            className="p-1.5 text-slate-300 hover:text-red-500 rounded transition shrink-0"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-300 transition hover:bg-red-50 hover:text-red-500"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -974,40 +1152,40 @@ export default function TeacherExams() {
                       ))}
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {wizardStep === 3 && (
-                <>
-                  <div className="bg-slate-50 border-slate-100 rounded-xl p-4 space-y-3">
-                    <h4 className="font-bold text-slate-700 text-sm">Result Publishing</h4>
-                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+                    <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">Result Publishing</h4>
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer font-medium">
                       <input
                         type="radio"
                         name="rpm"
                         checked={examForm.resultPublishMode === "IMMEDIATE"}
                         onChange={() => setExamForm({ ...examForm, resultPublishMode: "IMMEDIATE" })}
-                        className="accent-green-600"
+                        className="h-4 w-4 accent-green-600"
                       />
                       Publish result right after exam submission
                     </label>
-                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer font-medium">
                       <input
                         type="radio"
                         name="rpm"
                         checked={examForm.resultPublishMode === "MANUAL"}
                         onChange={() => setExamForm({ ...examForm, resultPublishMode: "MANUAL" })}
-                        className="accent-green-600"
+                        className="h-4 w-4 accent-green-600"
                       />
                       Publish manually later
                     </label>
-                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer">
+                    <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer font-medium">
                       <input
                         type="radio"
                         name="rpm"
                         checked={examForm.resultPublishMode === "SCHEDULED"}
                         onChange={() => setExamForm({ ...examForm, resultPublishMode: "SCHEDULED" })}
-                        className="accent-green-600"
+                        className="h-4 w-4 accent-green-600"
                       />
                       Publish at a scheduled time
                     </label>
@@ -1016,49 +1194,51 @@ export default function TeacherExams() {
                         type="datetime-local"
                         value={examForm.resultPublishAt}
                         onChange={(e) => setExamForm({ ...examForm, resultPublishAt: e.target.value })}
-                        className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm bg-white"
+                        className={inputClass}
                       />
                     )}
                   </div>
 
-                  <label className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer bg-slate-50 border-slate-100 rounded-xl p-4">
+                  <label className="flex items-start gap-4 text-sm text-slate-700 cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-green-200 hover:bg-green-50/30">
                     <input
                       type="checkbox"
                       checked={examForm.publishNow}
                       onChange={(e) => setExamForm({ ...examForm, publishNow: e.target.checked })}
-                      className="accent-green-600 w-4 h-4"
+                      className="mt-0.5 h-4 w-4 accent-green-600 rounded"
                     />
                     <div>
-                      <div className="font-semibold">Publish exam immediately</div>
-                      <div className="text-xs text-slate-500">
-                        Otherwise it stays a secret draft until you publish it.
+                      <div className="font-bold text-slate-800">Publish exam immediately</div>
+                      <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Otherwise it stays a secret draft until you publish it manually.
                       </div>
                     </div>
                   </label>
 
-                  <div className="bg-amber-50 border-amber-100 rounded-xl p-4 text-xs text-amber-800 flex gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-medium text-amber-800 leading-relaxed">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
                     <span>
                       Draft exams are never visible to students, even those in the selected batch.
                       Only you and other admins/faculty can see them until published.
                     </span>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
             {/* Wizard footer */}
-            <div className="p-5 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+            <div className="shrink-0 border-t border-slate-100 bg-slate-50/50 p-4 sm:p-5 flex items-center justify-between gap-3 rounded-b-[1.75rem]">
               <button
+                type="button"
                 onClick={() => (wizardStep === 1 ? setShowWizard(false) : setWizardStep(wizardStep - 1))}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition inline-flex items-center gap-1"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
               >
                 <ChevronLeft className="w-4 h-4" />
-                {wizardStep === 1 ? "Cancel" : "Back"}
+                <span className="hidden sm:inline">{wizardStep === 1 ? "Cancel" : "Back"}</span>
               </button>
 
               {wizardStep < 3 ? (
                 <button
+                  type="button"
                   onClick={() => {
                     if (wizardStep === 1 && (!examForm.title || !examForm.batch)) {
                       alertError("Title and batch are required");
@@ -1066,15 +1246,16 @@ export default function TeacherExams() {
                     }
                     setWizardStep(wizardStep + 1);
                   }}
-                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm inline-flex items-center gap-1"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-green-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/10"
                 >
                   Next <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={createExamWithQuestions}
                   disabled={savingExam}
-                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm inline-flex items-center gap-2"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Save className="w-4 h-4" />
                   {savingExam ? "Creating..." : `Create Exam (${draftQuestions.length} Q)`}
@@ -1087,33 +1268,40 @@ export default function TeacherExams() {
 
       {/* ─── ADD QUESTION (draft) MODAL ─── */}
       {showQuestionForm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="font-extrabold text-lg text-slate-900">Create Question</h2>
-                <p className="text-slate-500 text-xs mt-0.5">Text + image questions and options</p>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-[1.75rem]">
+            <div className="flex shrink-0 items-start justify-between border-b border-slate-100 bg-white p-5 sm:p-6">
+              <div className="min-w-0 pr-4">
+                <h2 className="truncate text-lg font-extrabold text-slate-900 sm:text-xl">Create Question</h2>
+                <p className="mt-1 text-xs text-slate-500">Text + image questions and options</p>
               </div>
-              <button onClick={() => setShowQuestionForm(false)} className="p-2 rounded-lg hover:bg-slate-100">
-                <X className="w-5 h-5" />
+              <button
+                type="button"
+                onClick={() => setShowQuestionForm(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleAddQuestionToDraft} className="p-5 space-y-4 overflow-y-auto flex-1">
+
+            <form onSubmit={handleAddQuestionToDraft} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Text *</label>
+                <label className={labelClass}>Question Text *</label>
                 <textarea
                   required
                   rows={3}
                   value={qForm.questionText}
                   onChange={(e) => setQForm({ ...qForm, questionText: e.target.value })}
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Question Image (optional)</label>
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 px-4 py-2.5 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 text-sm text-slate-600">
-                    <ImageIcon className="w-4 h-4" /> Upload Image
+                <label className={labelClass}>Question Image (optional)</label>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-green-400 hover:bg-green-50">
+                    <ImageIcon className="w-4 h-4 text-slate-400" /> Upload Image
                     <input type="file" accept="image/*" className="hidden"
                       onChange={(e) => {
                         const file = e.target.files[0];
@@ -1121,21 +1309,20 @@ export default function TeacherExams() {
                       }} />
                   </label>
                   {qForm.questionImagePreview && (
-                    <img src={qForm.questionImagePreview} alt="Preview" className="h-16 rounded-lg border" />
+                    <img src={qForm.questionImagePreview} alt="Preview" className="h-16 rounded-xl border border-slate-200 object-cover shadow-sm" />
                   )}
                 </div>
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">
-                  Options (select correct, add optional images)
-                </label>
-                <div className="space-y-2.5">
+                <label className={labelClass}>Options (select correct, add optional images)</label>
+                <div className="space-y-3">
                   {qForm.options.map((opt, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border-slate-200">
+                    <div key={idx} className={`flex min-w-0 items-center gap-2 rounded-xl border p-3 transition ${qForm.correctAnswer === idx ? "border-green-300 bg-green-50/50" : "border-slate-200 bg-slate-50/50"}`}>
                       <input type="radio" name="correct" checked={qForm.correctAnswer === idx}
                         onChange={() => setQForm({ ...qForm, correctAnswer: idx })}
-                        className="w-4 h-4 accent-green-600" />
-                      <span className="w-6 text-xs font-bold text-slate-500">{String.fromCharCode(65 + idx)}.</span>
+                        className="h-4 w-4 shrink-0 accent-green-600" />
+                      <span className="w-5 shrink-0 text-xs font-extrabold text-slate-500">{String.fromCharCode(65 + idx)}</span>
                       <input required value={opt.text}
                         onChange={(e) => {
                           const opts = [...qForm.options];
@@ -1143,8 +1330,8 @@ export default function TeacherExams() {
                           setQForm({ ...qForm, options: opts });
                         }}
                         placeholder={`Option ${String.fromCharCode(65 + idx)}`}
-                        className="flex-1 px-3 py-2 border-slate-200 rounded-lg text-sm" />
-                      <label className="p-2 rounded-lg border-slate-200 cursor-pointer hover:bg-slate-100">
+                        className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/10" />
+                      <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white transition hover:bg-slate-50">
                         <ImageIcon className="w-4 h-4 text-slate-400" />
                         <input type="file" accept="image/*" className="hidden"
                           onChange={(e) => {
@@ -1156,48 +1343,53 @@ export default function TeacherExams() {
                             }
                           }} />
                       </label>
-                      {opt.imagePreview && <img src={opt.imagePreview} className="h-8 rounded border" alt="" />}
+                      {opt.imagePreview && <img src={opt.imagePreview} className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 object-cover" alt="" />}
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Marks</label>
+                  <label className={labelClass}>Marks</label>
                   <input type="number" value={qForm.marks}
                     onChange={(e) => setQForm({ ...qForm, marks: e.target.value })}
-                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm" />
+                    className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Negative</label>
+                  <label className={labelClass}>Negative</label>
                   <input type="number" value={qForm.negativeMarks}
                     onChange={(e) => setQForm({ ...qForm, negativeMarks: e.target.value })}
-                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm" />
+                    className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5">Difficulty</label>
+                  <label className={labelClass}>Difficulty</label>
                   <select value={qForm.difficulty}
                     onChange={(e) => setQForm({ ...qForm, difficulty: e.target.value })}
-                    className="w-full px-3 py-2 border-slate-200 rounded-lg text-sm bg-white">
+                    className={inputClass}>
                     <option>Easy</option><option>Medium</option><option>Hard</option>
                   </select>
                 </div>
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Explanation</label>
+                <label className={labelClass}>Explanation</label>
                 <textarea rows={2} value={qForm.explanation}
                   onChange={(e) => setQForm({ ...qForm, explanation: e.target.value })}
-                  className="w-full px-3 py-2.5 border-slate-200 rounded-xl text-sm resize-none" />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowQuestionForm(false)}
-                  className="flex-1 py-2.5 border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-                <button type="submit"
-                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl">
-                  Add to Exam
-                </button>
+                  className={`${inputClass} resize-none`} />
               </div>
             </form>
+
+            <div className="shrink-0 border-t border-slate-100 bg-slate-50/50 p-4 sm:p-5 flex gap-3 rounded-b-[1.75rem]">
+              <button type="button" onClick={() => setShowQuestionForm(false)}
+                className="flex-1 min-h-11 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 transition hover:bg-slate-50 shadow-sm">
+                Cancel
+              </button>
+              <button type="submit" onClick={handleAddQuestionToDraft}
+                className="flex-1 min-h-11 rounded-xl bg-green-600 text-sm font-bold text-white transition hover:bg-green-700 shadow-sm inline-flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> Add to Exam
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1214,4 +1406,3 @@ export default function TeacherExams() {
     </div>
   );
 }
-
