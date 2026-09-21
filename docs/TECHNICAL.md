@@ -1,16 +1,17 @@
 # NEETVIDYA — Technical Documentation
-
+> **Version:** 1.0.0 (first release)
 > Complete technical reference for the NEETVIDYA medical-education platform.
 > Covers architecture, the full system flow, the database model, the API surface,
-> and an inventory of files that are now dead / redundant and safe to remove.
+> deployment, and a complete inventory of every file that is dead / redundant.
 >
 > **Audience:** developers joining or maintaining the project.
-> **Scope:** as-built (matches the current code on disk), not the original plan.
+> **Scope:** as-built — written by reading every file currently on disk (not the
+> original plan). Every path, model field and endpoint below is verified against
+> the code.
 
 ---
 
 ## Table of Contents
-
 1. [Project Overview](#1-project-overview)
 2. [Tech Stack](#2-tech-stack)
 3. [Repository Layout](#3-repository-layout)
@@ -22,12 +23,12 @@
 9. [API Surface](#9-api-surface)
 10. [Environment & Configuration](#10-environment--configuration)
 11. [Deployment](#11-deployment)
-12. [Files Kept for Review](#12-files-kept-for-review)
+12. [Files Kept for Review & Dead-Code Inventory](#12-files-kept-for-review--dead-code-inventory)
+13. [Roadmap / Not Yet Built](#13-roadmap--not-yet-built)
 
 ---
 
 ## 1. Project Overview
-
 NEETVIDYA is a coaching + examination-management platform for a NEET tutoring
 institute. It is split into a **public marketing website** and three
 **authenticated portals** (Student, Teacher, Admin), all served by a single
@@ -35,22 +36,24 @@ Express REST API backed by MongoDB.
 
 Core capabilities:
 
-- **Public website** — homepage with admin-managed hero/announcement bar, courses
-  (fixed two-programme catalogue), faculty, test-series promo, results/achievements,
-  testimonials, admission enquiry form.
+- **Public website** — homepage with admin-managed hero / announcement bar, the
+  fixed two-programme course catalogue, public batch listing, faculty, test-series
+  promo, results / achievements showcase, testimonials, and an admission enquiry form.
 - **Student portal** — dashboard, study materials (Unit → Chapter → Material,
   including video lectures), test series, CBT exams, results, performance analytics,
-  profile.
+  profile (self-service + avatar).
 - **Teacher workspace** — dashboard, Faculty Library (materials), exam authoring
   (create exams, attach exam-specific questions, import via CSV), result publishing,
-  exportable result sheets.
+  exportable result sheets (PDF).
 - **Admin panel** — students, teachers, batches, courses, exams, questions,
-  enquiries, achievements, contact settings, website settings, system health.
+  enquiries, achievements, testimonials, contact settings, website settings,
+  system health, admin profile/password.
 - **CBT exam engine** — attempts with server-enforced timing, per-exam fixed
-  question sets, randomisation, negative marking, auto-evaluation, rank/percentile,
-  gated result publishing.
+  question sets, question/option randomisation, negative marking, auto-evaluation,
+  result publishing gate, solutions review.
 - **Shareable public exam links** (`/e/:slug`) for advertising / virality.
 - **Batch-scoped notifications** — students only see notifications for their batches.
+- **Question Bank** — an archive of finished exam papers, reusable via exam reconduct.
 
 ---
 
@@ -67,14 +70,14 @@ Core capabilities:
 | HTTP | axios (interceptors for JWT + refresh) |
 | PDF | jspdf + jspdf-autotable |
 | Toasts/modals | sweetalert2 |
-| State | React Context + hooks |
+| State | React Context (`AuthContext`) + local hooks |
 | Backend | Node.js + Express 4 |
 | Database | MongoDB + Mongoose 8 |
 | Auth | JWT (access + refresh), bcryptjs |
 | File storage | Cloudinary (via multer memory upload) |
-| Email | nodemailer (SMTP) |
-| Validation | express-validator (installed; optional usage) |
-| Security | helmet, express-rate-limit, CORS, compression |
+| Email | nodemailer (SMTP; Ethereal fallback in dev) |
+| Validation | express-validator (installed; not wired into routes) |
+| Security | helmet, express-rate-limit, CORS, compression, morgan (dev) |
 
 ---
 
@@ -83,48 +86,59 @@ Core capabilities:
 ```
 NEETVIDYA/
 ├── package.json                 # root scripts (dev / install-all / build / start)
-├── HOWTORUN.md                  # how to install, seed and run
+├── .gitignore
 ├── README.md                    # short service summary
-├── TECHNICAL.md                 # ← this document
 ├── implimentation.md            # historical phase plan + completion status
 ├── codebase.py                  # (optional) utility: dumps source into codebase.md
+├── .vscode/settings.json
+├── docs/
+│   ├── HOWTORUN.md              # how to install, seed and run
+│   ├── project-plan.md          # original full project plan
+│   └── TECHNICAL.md             # ← this document
 ├── client/                      # React + Vite frontend
 │   ├── index.html
 │   ├── vite.config.js           # dev proxy /api → :5000
+│   ├── vercel.json              # SPA rewrites for Vercel
 │   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── .env / .env.example      # VITE_API_BASE_URL
 │   └── src/
 │       ├── App.jsx              # all routes
 │       ├── main.jsx
+│       ├── index.css
 │       ├── config/              # api.js, courses.js, images.js, constants.js
 │       ├── context/             # AuthContext.jsx
 │       ├── hooks/               # useContactSettings.js
 │       ├── layouts/             # Public / Student / Teacher / Admin / Exam
-│       ├── components/
-│       │   └── shared/          # reusable widgets (bell, modals, badges…)
+│       ├── components/shared/   # reusable widgets (bell, modals, badges…)
 │       ├── pages/
-│       │   ├── public/          # marketing + auth pages
-│       │   ├── student/
-│       │   ├── teacher/
-│       │   ├── admin/
-│       │   └── errors/
-│       └── utils/               # alert.js, csv.js, examResultPdf.js
+│       │   ├── public/          # marketing + auth pages (14)
+│       │   ├── student/         # (9)
+│       │   ├── teacher/         # (3)
+│       │   ├── admin/           # (11)
+│       │   └── errors/          # NotFound, Unauthorized (2)
+│       ├── utils/               # alert.js, csv.js, examResultPdf.js
+│       ├── assets/images/placeholders/   # .jpg / .png assets (36)
+│       └── assets/video/        # background mp4s (2)
 └── server/                      # Express + Mongoose backend
-    ├── .env.example
+    ├── .env / .env.example
+    ├── package.json
     └── src/
-        ├── server.js            # entry: connect DB, listen
+        ├── server.js            # entry: load env, connect DB, listen
         ├── app.js               # express app, middleware, mounts routes
-        ├── seed.js              # bootstrap admin only
+        ├── seed.js              # bootstrap admin only (idempotent)
         ├── config/              # db.js, env.js, cloudinary.js, constants.js
         ├── constants/           # enum catalogues (batch/exam/test types…)
-        ├── routes/              # one file per resource + index.js
-        ├── controllers/         # request handlers
-        ├── services/            # business logic
-        ├── models/              # Mongoose schemas
-        ├── middleware/          # auth, role, upload, rate-limit, error handler
+        ├── routes/              # one file per resource + index.js (23)
+        ├── controllers/         # request handlers (16 resources / 17 files)
+        ├── services/            # business logic (12 modules)
+        ├── models/              # 25 Mongoose schemas
+        ├── middleware/          # auth, role, upload, rateLimit, errorHandler
         └── utils/               # apiResponse, apiError, jwt, shuffle, slug, pagination
 ```
 
-> This tree reflects the cleaned repo (see §12 for the few files kept).
+> This tree reflects the repo exactly as it is on disk. Every folder listed here
+> contains only files that the running app imports (see §12 for the full audit).
 
 ---
 
@@ -213,18 +227,49 @@ Express app.js
   │  helmet/cors/compression/rate-limit/morgan
   ▼
 routes/index.js → routes/exam.routes.js  (GET "/")
-  │  protect  → verify JWT → req.user
-  │  authorize("admin","teacher")  → role gate
+  │  protect            → verify JWT → req.user
+  │  (no authorize gate — every logged-in role may read /exams)
   ▼
-exam.controller.getExams → exam.service.getExams
-  │  build role-aware filter (students: batch + permission; staff: all)
+exam.controller.getExams → exam.service.getExams / getStudentExams
+  │  role-aware filter (students: batch + permission + study archive; staff: all)
   ▼
-Mongoose Exam.find(...).populate(...)
+Mongoose Exam.find(...).populate(course / batch / subjects / testSeries)
   ▼
 MongoDB Atlas
   ▼
 apiResponse(res, 200, "...", { exams })   →   JSON to browser
 ```
+
+### Request lifecycle (typical write / exam start)
+```
+Browser
+  │  POST /api/attempts/exam/:examId/start  (Bearer token)
+  ▼
+protect → authorize("student","admin") → attempt.controller.startAttempt
+  │
+  ▼
+attempt.service.startAttempt(examId, userId, user)
+  │  exam.service.assertExamAccess(user, exam)   ← 403 if no batch / permission
+  │  reject unless exam.status === "LIVE" and now ∈ [startTime, endTime]
+  │  resume existing IN_PROGRESS attempt, else enforce maxAttempts
+  │  serverEndTime = now + duration (server-authoritative clock)
+  │  shuffle questionOrder + optionOrders
+  ▼
+Attempt.create(...)  →  Mongo  →  apiResponse(200, { attemptId, questions, … })
+```
+
+### Frontend route map (`client/src/App.jsx`)
+| Layout | Path | Page |
+|---|---|---|
+| PublicLayout | `/` · `/about` · `/courses` · `/faculty` · `/test-series` · `/results` · `/contact` | marketing pages |
+| (none) | `/e/:slug` | PublicExamLanding (shareable exam link) |
+| (none) | `/login` · `/register` · `/terms` · `/verify-email` · `/forgot-password` · `/reset-password` | auth pages |
+| StudentLayout (role: student) | `/student` · `/student/learn` · `/student/tests` · `/student/tests/study/:examId` · `/student/results` · `/student/performance` · `/student/profile` | student portal |
+| (none) | `/exam/:examId/instructions` | ExamInstructions |
+| ExamLayout (role: student) | `/exam/:examId/attempt` | ExamPage (CBT) |
+| TeacherLayout (role: teacher) | `/teacher` · `/teacher/materials` · `/teacher/exams` (**`/teacher/classes` → redirect to materials**, `/teacher/questions` → redirect to exams) | teacher workspace |
+| AdminLayout (role: admin) | `/admin` · `/admin/students` · `/admin/teachers` · `/admin/batches` · `/admin/courses` · `/admin/questions` · `/admin/exams` · `/admin/enquiries` · `/admin/achievements` · `/admin/contact-settings` · `/admin/settings` | admin panel |
+| (none) | `/unauthorized` · `*` | Unauthorized · NotFound |
 
 ---
 
@@ -445,39 +490,49 @@ manageStudents, accessWebsiteSettings), `isActive`.
 ### Exams & results
 
 - **Exam** — `title, description, testType (DPP|CHAPTER_TEST|UNIT_TEST|MOCK_TEST|
-  PYQ), testSeries, course, batch (req), questions[]→Question, subjects[],
-  totalQuestions, totalMarks, marksPerCorrect, negativePerWrong, duration,
-  startTime, endTime, maxAttempts, randomizeQuestions, randomizeOptions,
-  status (DRAFT|SCHEDULED|PUBLISHED|LIVE|CLOSED|ARCHIVED), instructions,
-  resultPublishMode (IMMEDIATE|MANUAL|SCHEDULED), resultPublishAt,
-  resultsPublished, permittedStudents[]→User, shareSlug (unique), isPublic,
-  isArchived, archivedAt, studyVisible, reconductedFrom→Exam,
-  eligibleBatches[]/eligibleStudentTypes[] (legacy), createdBy`. Indexes:
-  `(batch,status)`, `(isArchived,studyVisible)`.
+  PYQ), testSeries, course, examScope (BATCH|COURSE, default BATCH), batch,
+  questions[]→Question, subjects[]→Subject, totalQuestions (required),
+  totalMarks (required), marksPerCorrect (default 4), negativePerWrong (default 1),
+  duration (min, required), startTime (required), endTime (required),
+  maxAttempts (default 1), randomizeQuestions (default true), randomizeOptions
+  (default true), status (DRAFT|SCHEDULED|PUBLISHED|LIVE|CLOSED|ARCHIVED),
+  instructions, resultPublishMode (IMMEDIATE|MANUAL|SCHEDULED, default MANUAL),
+  resultPublishAt, resultsPublishedAt, resultsPublished, permittedStudents[]→User,
+  shareSlug (unique, sparse), isPublic (default false), isArchived, archivedAt,
+  studyVisible, reconductedFrom→Exam, eligibleBatches[]/eligibleStudentTypes[]
+  (legacy), createdBy, publishedAt`. Indexes: `(batch,status)`, `(course,status)`,
+  `(isArchived,studyVisible)`.
 - **Question** — `questionText, questionImageUrl/PublicId, options[]{text,imageUrl,
   order}, correctAnswer (index), explanation + image, subject, batch, unit,
   chapter, topic, difficulty, marks, negativeMarks, source, year, tags[],
   createdBy, isActive`. Indexes: `(subject,chapter)`, `difficulty`, `(source,year)`.
-- **Attempt** — `exam→Exam, student→User, startedAt, serverEndTime, submittedAt,
+- **Attempt** — `exam→Exam (required), student→User (required), startedAt
+  (required), serverEndTime (required), submittedAt,
   status (IN_PROGRESS|SUBMITTED|AUTO_SUBMITTED|ABANDONED),
-  answers[]{question,selectedOption,markedForReview,timeSpent}, currentQuestion,
-  questionOrder[], optionOrders[][], totalScore, correct/wrong/unattempted Count,
-  accuracy, timeTaken, tabSwitchCount, isFullScreen`. Index `(exam,student)`.
+  answers[]{question,selectedOption (Number|null),markedForReview,timeSpent},
+  currentQuestion, questionOrder[]→Question, optionOrders[][] (Number),
+  totalScore, correctCount, wrongCount, unattemptedCount, accuracy, timeTaken,
+  tabSwitchCount, isFullScreen`. Index `(exam,student)`.
 - **Result** — `attempt→Attempt (unique), exam→Exam, student→User, totalMarks,
-  obtainedMarks, counts, accuracy, timeTaken, percentage, rank, percentile,
-  isPublished, publishedAt, subjectBreakdown[], chapterBreakdown[]`.
+  obtainedMarks, correctCount, wrongCount, unattemptedCount, accuracy, timeTaken,
+  percentage, rank, percentile, isPublished (default false), publishedAt,
+  subjectBreakdown[]{subject,correct,wrong,unattempted,marks},
+  chapterBreakdown[]{chapter,correct,wrong,unattempted}`.
+- **ExamPermission** — `student→User, exam→Exam, grantedBy→User, reason, isActive`.
+  Unique `(student, exam)`. Grants exam access to students outside the exam's batch.
 
 ### Messaging & website
-
 - **Notification** — `title, message, type (MATERIAL|LECTURE|TEST|RESULT|
-  ANNOUNCEMENT|GENERAL), scope (BATCH|STUDENT|ROLE), targetRole, targetBatches[],
-  targetStudents[], readBy[]→User, createdBy, isActive`. Visibility is batch-scoped
-  by default (`scope: BATCH`).
-- **WebsiteContent** — singleton-per-section CMS: `section (unique enum), slides[],
-  blocks[], stats[], announcementBar, isVisible, meta`.
-- **ContactSettings** — singleton: institute contact, socials, WhatsApp/Telegram,
-  office hours, map embed.
-- **Testimonial / Achievement / Enquiry / ActivityLog** — see diagram.
+  ANNOUNCEMENT|GENERAL), scope (BATCH|STUDENT|ROLE, default BATCH), targetRole
+  (student|teacher|all), targetBatches[]→Batch, targetStudents[]→User, isRead,
+  readBy[]→User, createdBy, isActive`. Visibility is batch-scoped by default.
+- **WebsiteContent** — singleton-per-section CMS: `section (unique enum of 12
+  sections), slides[], blocks[], stats[], announcementBar{…}, isVisible, meta(Mixed)`.
+- **ContactSettings** — singleton: institute email/phone, address/city/state,
+  telegramChannelLink, whatsappGroupLink/Number/DefaultMessage, socials,
+  officeHours, mapEmbedUrl. Ships with sensible defaults for the institute.
+- **Testimonial / Achievement / Enquiry / ActivityLog** — see diagram; fields
+  there mirror the schemas exactly.
 
 > The announcement bar is not a separate collection — it lives on
 > `WebsiteContent` (`section: "ANNOUNCEMENT_BAR"`).
@@ -486,10 +541,15 @@ manageStudents, accessWebsiteSettings), `isActive`.
 
 ## 7. Authentication & Authorization
 
-**Tokens.** Login returns an access token (default 7d) and refresh token (30d).
-The client stores `neetvidya_token` / `neetvidya_refresh` in `localStorage`. The
-axios request interceptor attaches the access token; on `401`, the response
-interceptor calls `POST /auth/refresh` and retries once, else redirects to `/login`.
+**Tokens.** Login returns an access token (default `7d`) and a refresh token
+(`30d`). The client stores `neetvidya_token` / `neetvidya_refresh` in
+`localStorage`. The axios request interceptor attaches the access token; on `401`,
+the response interceptor calls `POST /auth/refresh` and retries once, else clears
+tokens and redirects to `/login`. `GET /auth/me` rehydrates the session on load
+(`AuthContext`).
+
+**Login identifiers.** `POST /auth/login` accepts an **email OR a student ID**
+(any value starting with `NV-` is looked up via the `Student` profile).
 
 **Password model.**
 - Self-registered users choose their own password.
@@ -501,22 +561,33 @@ interceptor calls `POST /auth/refresh` and retries once, else redirects to `/log
   deprecated).
 
 **Roles.** `student | teacher | admin`, enforced server-side by
-`middleware/role.middleware.js` (`authorize(...)`).
+`middleware/role.middleware.js` (`authorize(...)`, aliased `requireRole(...)`).
+`protect` (`middleware/auth.middleware.js`) verifies the JWT, loads the user
+(`select("-password")`), rejects inactive accounts, and sets `req.user`.
 
-**First-login gate & profile.** Full `protectedRoute.jsx` blocks the portal and
-forces password change when `mustChangePassword` is true. Students keep full
-self-service profile/password. Teachers also self-manage password (decision A);
-admins cannot edit a teacher's profile/password from the panel.
+**Client-side guard.** `ProtectedRoute` also treats `admin` as a super-role: an
+admin passes any `role="…"` gate (`user.role !== role && user.role !== "admin"`).
 
-**Batch access (post-Phase-1).** `buildAccessibleBatchFilter()` returns the plain
-active-batch filter for **all** roles — every teacher sees every batch. Teachers
-are **not** restricted to their `assignedTeachers` list (retained only for
-display/back-compat).
+**Self-service.** Every logged-in role can `PUT /auth/profile` and
+`PUT /auth/change-password`. Students additionally manage profile + avatar
+(`/students/my`, `/students/my/avatar`).
 
-**Exam access rule.** `Student.batches[]` membership grants exam access directly.
-A student outside the exam's batch needs an explicit `ExamPermission` grant
-(outsiders / EXAM_ONLY / GUEST), requested via the prefilled WhatsApp button and
-granted by an admin.
+**Batch access.** `buildAccessibleBatchFilter()` in `services/batch.service.js`
+returns the plain `{ isActive: true, ...extra }` filter for **every** role — every
+teacher sees every batch. `assignedTeachers` is retained on the model for
+display/back-compat (and still powers a teacher-dashboard counter) but does **not**
+restrict access.
+
+**Exam access rule.** `services/exam.service.js → canAccessExam()`:
+- Staff (admin/teacher) always pass.
+- Draft/secret exams are never visible to students.
+- A student may access an exam only when it is released (`PUBLISHED`/`LIVE`) **or**
+  it is a study-visible archive (`CLOSED`/`ARCHIVED` + `studyVisible`), **and**
+  they belong to one of the exam's target batches (batch membership, or for a
+  course-scoped exam, any batch of that course) **or** hold an active
+  `ExamPermission`.
+- `GET /exams/:id/access-check` returns `{ hasBatchAccess, needsPermission }` so
+  the UI can show **Start Exam** vs a prefilled **“Request permission on WhatsApp”** CTA.
 
 ---
 
@@ -540,28 +611,33 @@ Student → /student/tests  →  GET /exams (batch-filtered)
    →  ExamPage (CBT): autosave PUT /attempts/:id/save (answers, marks-for-review,
         currentQuestion, tabSwitchCount)
    →  POST /attempts/:id/submit  (or auto-submit at serverEndTime)
-        →  evaluation.service computes score, counts, accuracy, subject/chapter breakdown
-        →  Attempt.status = SUBMITTED, Result created (isPublished=false)
-   →  Result visibility gated by Exam.resultPublishMode
-   →  Once published → Rank/percentile computed → student sees ResultPage + solutions
+        →  evaluation.service.evaluateAttempt():
+             computes totalScore, correct/wrong/unattempted, accuracy,
+             subjectBreakdown, chapterBreakdown, percentage
+        →  Attempt.status = SUBMITTED ; Result created
+   →  Result.isPublished = (Exam.resultPublishMode === "IMMEDIATE")
+   →  When released (immediate / manual publish / scheduled due) → student sees
+        ResultPage; GET /results/:attemptId/solutions returns the answer key
 ```
 
 ### (c) Exam authoring (teacher/admin)
 ```
-Create exam (DRAFT, batch required)
-   →  attach questions to THIS exam (UI or CSV import)  →  set totalQ/Marks/duration
-   →  publishExam (sets shareSlug)  →  students of the batch notified
-   →  Copy Link button  →  /e/:slug public preview (no questions exposed)
-   →  after closing → archiveExam (becomes part of the Question Bank)
+Create exam  (DRAFT; scope = single BATCH, or whole COURSE for admin)
+   →  attach questions to THIS exam (UI or CSV import)  →  set totalQ / marks / duration
+   →  publishExam → status LIVE, shareSlug generated, target-batch students notified
+   →  "Copy Link" →  /e/:slug public preview (NO questions exposed)
+   →  closeExam  →  status CLOSED + isArchived (paper becomes Question Bank entry)
+   →  reconductExam clones an archived paper into a fresh DRAFT (own question copy)
 ```
 
 ### (d) Batch-scoped notifications
 ```
 Emitter (material added / exam published / results published)
-   →  notification.service.notifyBatch(batchId, …)
-Students see:  targetStudents=me  OR  (scope=BATCH AND targetBatches ∈ my batches)
-              OR  (scope=ROLE AND targetRole ∈ [all, myRole])
-→  No global floods.
+   →  notification.service.notifyBatch(batchId, { title, message, type })
+Students see a notification when:
+   targetStudents = me   OR   (scope=BATCH AND targetBatches ∈ my batches)
+   OR (scope=ROLE AND targetRole ∈ [all, myRole])
+→  No global floods. getUnreadCount uses readBy[] (per-user read tracking).
 ```
 
 ### (e) Faculty Library material publish (Unit → Chapter → Material)
@@ -576,8 +652,20 @@ Teacher picks Batch + Subject (defaults: Biology, Physics, Chemistry, Mathematic
 ### (f) Public enquiry
 ```
 Visitor submits /contact form  →  POST /enquiries
-   →  admin sees it in AdminEnquiries (status PENDING → CONTACTED → RESOLVED)
-   →  exportable to CSV
+   →  admin sees it in AdminEnquiries (PENDING → CONTACTED → RESOLVED)
+   →  exportable to CSV (client/src/utils/csv.js)
+```
+
+### (g) Results publishing & scheduled release
+```
+Exam.resultPublishMode:
+   IMMEDIATE → Result.isPublished=true at evaluation time
+   MANUAL    → hidden until admin/teacher hits PUT /exams/:id/publish-results
+   SCHEDULED → released when now ≥ resultPublishAt
+               (services/exam.service.publishScheduledResults() is called on each
+                student-dashboard read, releasing anything due)
+Publishing sets Result.isPublished/publishedAt for the whole exam and
+notifies the target batches.
 ```
 
 ---
@@ -590,41 +678,51 @@ role column = `authorize(...)` gate; `—` = public.
 | Base | Method & Path | Auth / Role | Purpose |
 |---|---|
 | health | GET `/api/health` | — | liveness |
-| auth | POST `/auth/register` | — | self-register (rate-limited) |
+| auth | POST `/auth/register` | — (rate-limited) | self-register (student) |
 | | GET `/auth/verify-email` | — | verify via token |
-| | POST `/auth/resend-verification` | — | resend verify |
-| | POST `/auth/login` | — | login (rate-limited) |
+| | POST `/auth/resend-verification` | — (rate-limited) | resend verify email |
+| | POST `/auth/login` | — (rate-limited) | login by email **or** studentId |
 | | POST `/auth/refresh` | — | rotate access token |
-| | POST `/auth/forgot-password` | — | send reset link |
-| | POST `/auth/reset-password` | — | reset with token |
+| | POST `/auth/forgot-password` | — (rate-limited) | send reset link |
+| | POST `/auth/reset-password` | — (rate-limited) | reset with token |
 | | GET `/auth/me` | protect | current user |
 | | PUT `/auth/profile` | protect | update own profile |
 | | PUT `/auth/change-password` | protect | change own password |
-| | POST `/auth/admin/create-student` | admin | create student |
-| | POST `/auth/admin/create-teacher` | admin | create teacher |
-| students | GET `/students` | admin,teacher | list |
-| | GET `/students/my` | student | own profile (populated batches+groups) |
-| | PUT `/students/my`, `/my/avatar` | student | update profile/avatar |
+| | POST `/auth/admin/create-student` | admin | create student (default pw) |
+| | POST `/auth/admin/create-teacher` | admin | create teacher (default pw) |
+| students | GET `/students` | admin, teacher | list |
+| | GET `/students/my` | student | own profile (batches + groups) |
+| | PUT `/students/my` , `/students/my/avatar` | student | update profile / avatar |
 | | GET `/students/:id` | protect | one student |
-| | PUT `/students/:id`, `/toggle-active` | admin | edit / toggle |
+| | PUT `/students/:id` | admin | edit student |
+| | PUT `/students/:id/toggle-active` | admin | activate / deactivate |
 | | DELETE `/students/:id` | admin | remove |
 | teachers | GET `/teachers/public` | — | public faculty list |
 | | GET `/teachers` | admin | list |
 | | GET `/teachers/my` | teacher | own profile |
-| | PUT `/teachers/:id`, `/permissions`, `/toggle-active` | admin | manage |
-| batches | GET `/batches` | protect | list (role-aware) |
-| | POST/PUT/DELETE `/batches[/:id]` | admin | CRUD |
-| | POST/DELETE `/batches/:id/students[/:studentId]` | admin | membership |
+| | PUT `/teachers/:id` | admin | edit teacher |
+| | PUT `/teachers/:id/permissions` | admin | update permissions map |
+| | PUT `/teachers/:id/toggle-active` | admin | activate / deactivate |
+| | DELETE `/teachers/:id` | admin | remove |
+| batches | GET `/batches/public` | — | public catalogue |
+| | GET `/batches` | protect | list |
+| | POST `/batches` | admin | create |
+| | PUT `/batches/:id` , DELETE `/batches/:id` | admin | edit / soft-delete |
+| | POST `/batches/:id/students` | admin | add students |
+| | DELETE `/batches/:id/students/:studentId` | admin | remove student |
 | | GET `/batches/:id/students` | protect | roster |
 | enrollments | GET `/enrollments/my` | student | own enrollments |
 | | POST `/enrollments` | admin | enroll student |
-| courses | GET `/courses`, `/courses/:id` | — | list/one |
-| | POST/PUT/DELETE `/courses[/:id]` | admin | CRUD |
+| courses | GET `/courses` , GET `/courses/:id` | — | list / one |
+| | POST `/courses` | admin | create |
+| | PUT `/courses/:id` , DELETE `/courses/:id` | admin | edit / soft-delete |
 | academics | GET `/academics/subjects` | — | list (lazy-seeds defaults) |
-| | POST `/academics/subjects` | admin,teacher | create custom subject |
-| | GET `/academics/units`, `/chapters` | — | taxonomy reads |
-| | POST `/academics/units`, `/chapters` | admin,teacher | create |
-| | GET `/academics/tree/:courseId` | — | tree |
+| | POST `/academics/subjects` | admin, teacher | create custom subject |
+| | GET `/academics/units` , `/academics/chapters` | — | taxonomy reads |
+| | POST `/academics/units` , `/academics/chapters` | admin, teacher | create |
+| | PUT/DELETE `/academics/units/:id` | admin, teacher | rename / delete (cascades chapters) |
+| | PUT/DELETE `/academics/chapters/:id` | admin, teacher | rename / delete |
+| | GET `/academics/tree/:courseId` | — | subjects + chapters for a course |
 | materials | GET `/materials`, `/materials/tree` | protect | list/tree |
 | | GET `/materials/my` | student | my batch materials |
 | | POST `/materials` | admin,teacher | upload (multipart) |
@@ -710,63 +808,124 @@ VITE_API_BASE_URL=http://localhost:5000/api
 Without it, the client uses the `/api` dev proxy from `client/vite.config.js`.
 **The variable name is `VITE_API_BASE_URL` — not `VITE_API_URL`.**
 
+> `config/env.js` only *warns* if `JWT_SECRET` is missing (dev fallbacks live in
+> `utils/jwt.js`). `config/cloudinary.js` uses dummy credentials when the env vars
+> are absent. `email.service.js` falls back to an **Ethereal test inbox** when
+> `NODE_ENV !== production` and no SMTP creds are set, printing a preview URL.
+
 ### Server constants (`server/src/config/constants.js`)
 - `DEFAULT_PASSWORD = "Neetvidya@123"` — constant password for admin-created accounts.
-- `DEFAULT_SUBJECTS = ["Biology","Physics","Chemistry","Mathematics"]` (lazily seeded).
+- `DEFAULT_SUBJECTS = ["Biology","Physics","Chemistry","Mathematics"]` (lazily seeded on first `GET /academics/subjects`).
 - `CUSTOM_SUBJECT_LABEL = "Other"`.
 
-### Frontend constants (`client/src/config/constants.js`)
-Enums (ROLES, TEST_TYPES, BATCH_TYPES, STUDENT_TYPES, EXAM_STATUS, RESOURCE_TYPES)
-and `BATCH_BADGE_CONFIG`. Fixed programme catalogue lives in
-`client/src/config/courses.js` (SANKALP, UDAAN).
+### Server enum catalogues (`server/src/constants/`)
+`roles.js` (STUDENT/TEACHER/ADMIN), `batchTypes.js`, `studentTypes.js`,
+`testTypes.js`, `examStatus.js`, `resourceTypes.js`, `enrollmentStatus.js`,
+`achievementCategories.js`, `questionStates.js`, `cloudinaryFolders.js`
+(MATERIALS, LECTURES, TEACHERS, COURSES, WEBSITE, QUESTIONS, ACHIEVEMENTS).
+
+### Frontend config
+- `client/src/config/constants.js` — `ROLES`, `TEST_TYPES`, `BATCH_TYPES`,
+  `STUDENT_TYPES`, `EXAM_STATUS`, `RESOURCE_TYPES`, `BATCH_BADGE_CONFIG`.
+  **Only `BATCH_BADGE_CONFIG` is imported today** (`StudentBadge.jsx`); the other
+  exports are currently unused (see §12).
+- `client/src/config/courses.js` — the **fixed** SANKALP / UDAAN programme
+  catalogue (fees, duration, images) + `getCourseByValue()`.
+- `client/src/config/images.js` — imports and maps all placeholder assets.
+- `client/src/hooks/useContactSettings.js` — fetches `/contact-settings` with a
+  hard-coded default object as fallback.
 
 ---
 
 ## 11. Deployment
 
-- **Frontend** → Vercel (build `client/`). Set `VITE_API_BASE_URL` in the Vercel
-  dashboard (e.g. `https://neetvidya.onrender.com/api`) and redeploy (Vite inlines
-  it at build time).
-- **Backend** → Render (root `server/`). Set `MONGODB_URI`, JWT secrets, Cloudinary,
-  SMTP, and `CLIENT_URL=https://neetvidya.vercel.app`.
-- **Database** → MongoDB Atlas. **Files** → Cloudinary. **Email** → SMTP provider.
+- **Frontend → Vercel** (build `client/`). Set `VITE_API_BASE_URL` in the Vercel
+  dashboard (e.g. `https://neetvidya.onrender.com/api`) and redeploy — Vite inlines
+  it at build time. `client/vercel.json` rewrites all non-`assets/` paths to
+  `index.html` so client-side routing works.
+- **Backend → Render** (root `server/`). Set `MONGODB_URI`, `JWT_SECRET`,
+  `JWT_REFRESH_SECRET`, Cloudinary vars, SMTP vars, and
+  `CLIENT_URL=https://neetvidya.vercel.app`.
+- **Database → MongoDB Atlas. Files → Cloudinary. Email → SMTP provider.**
 
 ```
 GitHub push
-   ├── Vercel  → client/  → build → CDN
+   ├── Vercel  → client/  → vite build → CDN
    ├── Render  → server/  → npm install → start (src/server.js)
    └── Render  ──► MongoDB Atlas + Cloudinary + SMTP
 ```
 
+Root scripts (`package.json`):
+`npm run dev` (server + client via concurrently) · `npm run server` · `npm run client`
+· `npm run install-all` · `npm run build` · `npm start`.
+
 ---
 
-## 12. Files Kept for Review
+## 12. Files Kept for Review & Dead-Code Inventory
+This section is the outcome of a full audit. **Nothing here is left implicit.**
 
-The repo has already been cleaned of its redundant files — unused models,
-unused middleware, unused utilities and unused frontend components have been
-removed, and the component/middleware/utils folders now contain only what the
-app actually imports. This section lists the small remainder that was retained
-on purpose or that may still warrant a decision.
-
-### Kept on purpose
+### 12.1 Not part of the runtime app, kept on purpose
 | File | Reason |
 |---|---|
-| `codebase.py` | Optional dev utility that dumps the repo into `codebase.md` for AI context. Not part of the app; harmless to keep if useful. |
-| `implimentation.md` | Historical phase plan (now fully delivered). Useful as a changelog. |
-| `server/src/services/email.service.js` | Only the `sendWelcomeEmail()` helper inside it is unused (admin-created accounts send no mail). The rest of the file (verification + reset emails) is live, so the file stays. |
+| `codebase.py` | Optional dev utility that dumps the repo into `codebase.md` for AI context. Not imported by the app. |
+| `implimentation.md` | Historical phase plan (now fully delivered); useful as a changelog. |
+| `docs/project-plan.md` | Original full project plan (reference only). |
+| `client/src/pages/public/TermsPage.jsx` | Static Terms & Privacy page — **live, routed** at `/terms`. Keep as long as you publish T&C. |
 
-### Possibly redundant — decide case-by-case
-| File | Notes |
-|---|---|
-| `client/src/pages/admin/AdminSettings.jsx` (`/admin/settings`) | Generic settings page; verify it isn't superseded by `AdminContactSettings` before removing. |
-| `TeacherExams.jsx` + `AdminExams.jsx` | Both exist and are routed (`/teacher/exams`, `/admin/exams`). They overlap heavily — consider consolidating into one shared screen to cut maintenance. |
-| `client/src/pages/public/TermsPage.jsx` | Minimal/static; keep only if you publish T&C. |
+### 12.2 Dead / unused code that still exists (safe to remove or wire up)
+| File / symbol | Status | Notes |
+|---|---|---|
+| `email.service.js → sendWelcomeEmail()` | **Unused** | Defined and exported but never called (admin-created accounts intentionally send no mail). The rest of the file (verification + reset) is live, so the file stays; only this one function is dead. |
+| `rateLimiter.middleware.js → examLimiter` | **Unused** | Exported but never applied to any route. Only `authLimiter` is used (`auth.routes.js`). |
+| `question.service.js → getRandomQuestions()` | **Unused** | Exported, never called — exams use their own fixed question sets. |
+| `course.service.js → addSubjectToCourse()` | **Unused** | Exported, never called (subjects are created via `/academics/subjects`). |
+| `constants/cloudinaryFolders.js → LECTURES` | **Unused key** | The "lectures" system is retired; no folder key references remain. |
+| `constants/questionStates.js` | **Unused file** | Not imported anywhere (answer states are computed inline). |
+| `constants/examStatus.js`, `roles.js`, `batchTypes.js`, `studentTypes.js`, `testTypes.js`, `resourceTypes.js`, `enrollmentStatus.js`, `achievementCategories.js` | **Unused files** | The running code relies on inline enums in the Mongoose schemas / controllers, not these catalogues. Kept as documentation of the enum values. |
+| `config/env.js → validateEnv()` | **Unused** | Exported but never called from `server.js`/`app.js`. |
+| `middleware/upload.middleware.js` | **Used** | `uploadImage` / `uploadPDF` are used by `upload.routes.js`. Keep. |
+| `client/src/config/constants.js → ROLES, TEST_TYPES, BATCH_TYPES, STUDENT_TYPES, EXAM_STATUS, RESOURCE_TYPES` | **Unused exports** | Only `BATCH_BADGE_CONFIG` is imported (by `StudentBadge.jsx`). The other enums are declared but not referenced. |
+| `models/Notification.js → isRead` (field) | **Legacy** | Kept for back-compat; read tracking now uses `readBy[]`. |
+| `models/Attempt.js → isFullScreen` (field) | **Legacy** | Stored but not enforced server-side. |
+| `Exam → eligibleBatches[]`, `eligibleStudentTypes[]` | **Legacy fields** | Marked "legacy compatibility" in the model; superseded by `examScope` + `permittedStudents`. |
+| `client/src/utils/alert.js`, `csv.js`, `examResultPdf.js` | **Used** | alert = sweetalert2 wrappers; csv = enquiry/export; examResultPdf = PDF result sheet. Keep. |
 
-### Current state of the cleaned folders
-| Location | Contents |
+### 12.3 Overlap worth consolidating (not dead — both routed)
+| Item | Notes |
 |---|---|
-| `server/src/models/` | 25 collections (the full set used at runtime) |
-| `server/src/middleware/` | `auth`, `role`, `upload`, `rateLimiter`, `errorHandler` |
-| `server/src/utils/` | `apiResponse`, `apiError`, `jwt`, `shuffle`, `slug`, `pagination` |
-| `client/src/components/` | only components that are actually imported |
-| `client/src/assets/images/placeholders/` | `.jpg` / `.png` assets only (no duplicate `.svg`) |
+| `client/src/pages/admin/AdminExams.jsx` (`/admin/exams`) **and** `client/src/pages/teacher/TeacherExams.jsx` (`/teacher/exams`) | Both live and routed; they overlap heavily (both consume `ExamCreateWizard`, question authoring and result screens). Consider extracting shared screens to cut maintenance. |
+| `client/src/pages/admin/AdminSettings.jsx` (`/admin/settings`) **and** `AdminContactSettings.jsx` (`/admin/contact-settings`) | Distinct purposes: `AdminSettings` = admin profile / password / system info; `AdminContactSettings` = public contact & links. No redundancy — both are needed. |
+| `services/exam.service.js` **and** `services/attempt.service.js` | Both implement `startAttempt` (service-level `exam.service.startAttempt` and the routed `attempt.service.startAttempt`). The routed path is `attempt.service`; `exam.service.startAttempt` is currently not reached from a route. Worth unifying. |
+
+### 12.4 Current state of every folder (exact file counts)
+| Location | Count | Contents |
+|---|---|---|
+| `server/src/models/` | 25 | The full runtime schema set (see §5). |
+| `server/src/routes/` | 24 | One file per resource (23) + the `index.js` aggregator. |
+| `server/src/controllers/` | 17 | One per resource (`achievement` … `website`). |
+| `server/src/services/` | 12 | `attempt, auth, batch, cloudinary, course, dashboard, email, evaluation, exam, notification, question, website`. |
+| `server/src/middleware/` | 5 | `auth, role, upload, rateLimiter, errorHandler`. |
+| `server/src/utils/` | 6 | `apiError, apiResponse, jwt, pagination, shuffle, slug`. |
+| `server/src/config/` | 4 | `db, env, cloudinary, constants`. |
+| `server/src/constants/` | 10 | Enum catalogues + cloudinary folders (some unused — §12.2). |
+| `client/src/components/shared/` | 12 | `ChangePasswordModal, ConfirmModal, ErrorBoundary, ExamCreateWizard, HomeButton, MotionReveal, NotificationBell, Pagination, ProtectedRoute, StudentBadge, TelegramLink, WhatsAppLink`. |
+| `client/src/pages/` | 39 | public(14) · student(9) · teacher(3) · admin(11) · errors(2). |
+| `client/src/assets/images/placeholders/` | 36 | `.jpg` / `.png` only (no duplicate `.svg`). |
+| `client/src/assets/video/` | 2 | background `.mp4` clips. |
+
+---
+
+## 13. Roadmap / Not Yet Built
+
+The following are **outside the current first release** (present in the original
+plan, not implemented on disk): payment-gateway enrolment and fees collection,
+Google OAuth, a real-time chat / messaging service, live-class module, AI
+assistant, and a mobile app. `Enrollment` already carries payment-shaped fields
+(`paymentStatus`, `amountPaid/Total`, `paymentId`) to make those features additive
+later without a schema rebuild.
+
+---
+
+*End of document. Every path and field above was verified against the source tree
+at the time of writing (25 models · 24 route files · 17 controllers · 12 services ·
+39 client pages).*
