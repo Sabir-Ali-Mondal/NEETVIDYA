@@ -13,8 +13,35 @@ import {
   Users,
   UserCheck,
   UserX,
+  Pencil,
+  Trash2,
+  Upload,
+  ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
+import ConfirmModal from "../../components/shared/ConfirmModal";
+
+const emptyCreateForm = () => ({
+  name: "",
+  email: "",
+  phone: "",
+  qualification: "",
+  experience: "",
+  specialisation: "",
+  bio: "",
+});
+
+const emptyEditForm = () => ({
+  name: "",
+  phone: "",
+  qualification: "",
+  experience: "",
+  specialisation: "",
+  bio: "",
+  photoUrl: "",
+  photoPublicId: "",
+});
 
 export default function AdminTeachers() {
   const [teachers, setTeachers] = useState([]);
@@ -24,15 +51,19 @@ export default function AdminTeachers() {
   const [creating, setCreating] = useState(false);
   const [viewingTeacher, setViewingTeacher] = useState(null);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    qualification: "",
-    experience: "",
-    specialisation: "",
-    bio: "",
-  });
+  // Edit state
+  const [editingTeacher, setEditingTeacher] = useState(null);
+  const [editForm, setEditForm] = useState(emptyEditForm());
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  // Delete state
+  const [deletingTeacher, setDeletingTeacher] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [form, setForm] = useState(emptyCreateForm());
 
   const fetchTeachers = async () => {
     setLoading(true);
@@ -63,17 +94,7 @@ export default function AdminTeachers() {
       );
 
       setShowCreate(false);
-
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        qualification: "",
-        experience: "",
-        specialisation: "",
-        bio: "",
-      });
-
+      setForm(emptyCreateForm());
       fetchTeachers();
     } catch (err) {
       alertError(
@@ -97,6 +118,114 @@ export default function AdminTeachers() {
       fetchTeachers();
     } catch {
       alertError("Failed to update status");
+    }
+  };
+
+  // ── Edit ─────────────────────
+  const openEdit = (teacher) => {
+    setEditingTeacher(teacher);
+    setImageFile(null);
+    setImagePreview(teacher.photoUrl || "");
+    setEditForm({
+      name: teacher.user?.name || "",
+      phone: teacher.user?.phone || "",
+      qualification: teacher.qualification || "",
+      experience: teacher.experience || "",
+      specialisation: teacher.specialisation || "",
+      bio: teacher.bio || "",
+      photoUrl: teacher.photoUrl || "",
+      photoPublicId: teacher.photoPublicId || "",
+    });
+  };
+
+  const closeEdit = () => {
+    setEditingTeacher(null);
+    setEditForm(emptyEditForm());
+    setImageFile(null);
+    setImagePreview("");
+    setUploadingImage(false);
+  };
+
+  const handlePickImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alertError("Please choose an image file");
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setEditForm((f) => ({ ...f, photoUrl: "", photoPublicId: "" }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editingTeacher) return;
+    setSaving(true);
+
+    try {
+      let photoUrl = editForm.photoUrl;
+      let photoPublicId = editForm.photoPublicId;
+
+      // A newly picked file is uploaded first, then its URL is saved on the profile.
+      if (imageFile) {
+        setUploadingImage(true);
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        fd.append("folder", "neetvidya/teachers");
+
+        const { data } = await api.post("/upload/image", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        photoUrl = data.data?.url || "";
+        photoPublicId = data.data?.publicId || "";
+        setUploadingImage(false);
+      }
+
+      await api.put(`/teachers/${editingTeacher._id}`, {
+        name: editForm.name,
+        phone: editForm.phone,
+        qualification: editForm.qualification,
+        experience: editForm.experience,
+        specialisation: editForm.specialisation,
+        bio: editForm.bio,
+        photoUrl,
+        photoPublicId,
+      });
+
+      alertSuccess("Faculty details updated");
+      closeEdit();
+      fetchTeachers();
+    } catch (err) {
+      setUploadingImage(false);
+      alertError(err.response?.data?.message || "Failed to update faculty");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Delete ───────────────────
+  const handleDelete = async () => {
+    if (!deletingTeacher) return;
+    setDeleting(true);
+
+    try {
+      await api.delete(`/teachers/${deletingTeacher._id}`);
+      alertSuccess("Faculty deleted");
+      setDeletingTeacher(null);
+      fetchTeachers();
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to delete faculty");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -229,10 +358,17 @@ export default function AdminTeachers() {
               >
                 {/* Identity */}
                 <div className="flex min-w-0 items-center gap-3.5">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-700 text-xl font-extrabold text-white shadow-lg shadow-green-900/10">
-                    {t.user?.name?.charAt(0)?.toUpperCase() ||
-                      "T"}
-                  </div>
+                  {t.photoUrl || t.user?.avatar ? (
+                    <img
+                      src={t.photoUrl || t.user?.avatar}
+                      alt={t.user?.name || "Faculty"}
+                      className="h-14 w-14 shrink-0 rounded-2xl object-cover shadow-lg shadow-green-900/10"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-700 text-xl font-extrabold text-white shadow-lg shadow-green-900/10">
+                      {t.user?.name?.charAt(0)?.toUpperCase() || "T"}
+                    </div>
+                  )}
 
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-2">
@@ -317,12 +453,10 @@ export default function AdminTeachers() {
                 )}
 
                 {/* Actions */}
-                <div className="mt-5 grid min-w-0 grid-cols-[1fr_40px_40px] gap-2 border-t border-slate-100 pt-4">
+                <div className="mt-5 flex min-w-0 items-center gap-2 border-t border-slate-100 pt-4">
                   <button
-                    onClick={() =>
-                      toggleActive(t._id, t.isActive)
-                    }
-                    className={`min-w-0 min-h-10 rounded-xl border px-2 text-xs font-extrabold transition ${
+                    onClick={() => toggleActive(t._id, t.isActive)}
+                    className={`min-w-0 flex-1 min-h-10 rounded-xl border px-2 text-xs font-extrabold transition ${
                       t.isActive
                         ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
                         : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
@@ -350,17 +484,21 @@ export default function AdminTeachers() {
                     <Eye className="h-4 w-4" />
                   </button>
 
-                  {t.user?.email ? (
-                    <a
-                      href={`mailto:${t.user.email}?subject=NEETVIDYA Faculty Communication`}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
-                      title={`Email ${t.user.name}`}
-                    >
-                      <Mail className="h-4 w-4" />
-                    </a>
-                  ) : (
-                    <div className="h-10 w-10 shrink-0" />
-                  )}
+                  <button
+                    onClick={() => openEdit(t)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                    title="Edit Faculty"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={() => setDeletingTeacher(t)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                    title="Delete Faculty"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </article>
             ))}
@@ -753,6 +891,233 @@ export default function AdminTeachers() {
           </div>
         </div>
       )}
+
+      {/* Edit Teacher Modal */}
+      {editingTeacher && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div className="flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:max-h-[92dvh] sm:max-w-2xl sm:rounded-[2rem]">
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6 sm:py-5">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <Pencil className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0">
+                  <h2 className="truncate text-lg font-extrabold text-slate-900">
+                    Edit Faculty
+                  </h2>
+
+                  <p className="mt-0.5 truncate text-xs text-slate-400">
+                    {editingTeacher.user?.email}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeEdit}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <form
+              onSubmit={handleUpdate}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            >
+              <div className="space-y-5 p-5 sm:p-6">
+                {/* Faculty image (public faculty area) */}
+                <div className="rounded-2xl border-slate-200 bg-slate-50/70 p-4">
+                  <label className={labelClass}>Faculty Image</label>
+
+                  <div className="mt-1 flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-slate-200 bg-white">
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Faculty preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-slate-300" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs leading-5 text-slate-500">
+                        This image is shown in the public faculty area.
+                        Upload a banner or portrait photo — it stays until you
+                        replace or remove it.
+                      </p>
+
+                      <div className="mt-3 flex-wrap gap-2">
+                        <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                          {uploadingImage ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4" />
+                          )}
+                          {imagePreview ? "Replace Image" : "Upload Image"}
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePickImage}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {imagePreview && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="inline-flex min-h-10 items-center gap-2 rounded-xl border-red-200 bg-red-50 px-3.5 text-xs font-bold text-red-600 transition hover:bg-red-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </button>
+                        )}
+                      </div>
+
+                      <p className="mt-2 text-[11px] text-slate-400">
+                        JPG or PNG. The image is uploaded when you save.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Full Name</label>
+
+                    <input
+                      required
+                      value={editForm.name}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className={labelClass}>Phone</label>
+
+                    <input
+                      value={editForm.phone}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, phone: e.target.value }))
+                      }
+                      className={inputClass}
+                      placeholder="+91 XXXXX"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className={labelClass}>Specialisation</label>
+
+                    <input
+                      value={editForm.specialisation}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          specialisation: e.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                      placeholder="e.g. Mechanics & Electromagnetism"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className={labelClass}>Qualification</label>
+
+                    <input
+                      value={editForm.qualification}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          qualification: e.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                      placeholder="e.g. M.Sc Physics, B.Ed"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className={labelClass}>Experience</label>
+
+                    <input
+                      value={editForm.experience}
+                      onChange={(e) =>
+                        setEditForm((f) => ({
+                          ...f,
+                          experience: e.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                      placeholder="e.g. 10+ Years in NEET Coaching"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Short Bio</label>
+
+                    <textarea
+                      value={editForm.bio}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, bio: e.target.value }))
+                      }
+                      rows={4}
+                      className={`${inputClass} resize-none py-3`}
+                      placeholder="Brief professional bio..."
+                    />
+                  </div>
+                </div>
+
+                {/* Actions inside scrollable body */}
+                <div className="grid grid-cols-1 gap-2.5 pt-1 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={closeEdit}
+                    className="hidden min-h-11 rounded-xl border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-50 sm:block"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={saving || uploadingImage}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-white shadow-lg shadow-green-900/10 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-start-2"
+                  >
+                    {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      <ConfirmModal
+        isOpen={Boolean(deletingTeacher)}
+        onClose={() => !deleting && setDeletingTeacher(null)}
+        onConfirm={handleDelete}
+        title="Delete Faculty?"
+        message={
+          deletingTeacher
+            ? `This permanently removes ${deletingTeacher.user?.name || "this faculty member"} and their login account. This cannot be undone.`
+            : ""
+        }
+        confirmLabel={deleting ? "Deleting..." : "Delete"}
+        danger
+      />
     </div>
   );
 }

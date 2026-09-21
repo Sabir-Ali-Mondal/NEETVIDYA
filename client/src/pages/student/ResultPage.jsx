@@ -526,9 +526,21 @@ export default function ResultPage() {
                                         )}
                                       </span>
 
-                                      <span className="leading-5">
-                                        {opt.text}
-                                      </span>
+                                      <div className="min-w-0">
+                                        <span className="leading-5">
+                                          {opt.text}
+                                        </span>
+
+                                        {opt.imageUrl && (
+                                          <img
+                                            src={opt.imageUrl}
+                                            alt={`Option ${String.fromCharCode(
+                                              65 + optIdx
+                                            )}`}
+                                            className="mt-1.5 max-h-40 rounded-lg border-slate-200 bg-white object-contain"
+                                          />
+                                        )}
+                                      </div>
                                     </div>
 
                                     <div className="flex shrink-0 items-center gap-2">

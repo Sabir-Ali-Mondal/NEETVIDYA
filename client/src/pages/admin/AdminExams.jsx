@@ -17,9 +17,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Trophy,
+  Link2,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
+import ExamCreateWizard from "../../components/shared/ExamCreateWizard";
+import { Archive, RefreshCw, Download, Eye, EyeOff, FileSpreadsheet } from "lucide-react";
+import Pagination from "../../components/shared/Pagination";
 
 const statusColors = {
   LIVE: "bg-green-50 text-green-700 border-green-200",
@@ -51,11 +55,16 @@ const labelClass =
 
 export default function AdminExams() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("exams");
   const [exams, setExams] = useState([]);
+  const [archived, setArchived] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [bankPage, setBankPage] = useState(1);
+  const [bankMeta, setBankMeta] = useState({ total: 0, pages: 1 });
 
   const [showCreate, setShowCreate] = useState(false);
   const [editingExam, setEditingExam] = useState(null);
@@ -68,6 +77,9 @@ export default function AdminExams() {
     title: "",
     description: "",
     testType: "MOCK_TEST",
+    // Scope: "BATCH" (one batch) or "COURSE" (every batch of a course).
+    examScope: "BATCH",
+    course: "",
     batch: "",
     totalQuestions: 180,
     totalMarks: 720,
@@ -94,23 +106,60 @@ export default function AdminExams() {
     }
   };
 
+  const fetchBank = async () => {
+    try {
+      const { data } = await api.get(`/exams/bank?page=${bankPage}&limit=20`);
+      setArchived(data.data?.exams || []);
+      setBankMeta({
+        total: data.data?.total || 0,
+        pages: data.data?.pages || 1,
+      });
+    } catch {
+      setArchived([]);
+    }
+  };
+
   const fetchDependencies = async () => {
     try {
       const { data: bRes } = await api.get("/batches");
-      setBatches(bRes.data.data?.batches || []);
+      setBatches(bRes.data?.batches || []);
+    } catch {}
+
+    try {
+      const { data: cRes } = await api.get("/courses");
+      setCourses(cRes.data?.courses || []);
     } catch {}
   };
+
+  // Batch -> course id, whether course is populated or a raw id.
+  const getBatchCourseId = (batch) =>
+    (batch?.course && typeof batch.course === "object"
+      ? batch.course._id
+      : batch?.course) || "";
+
+  const batchesForCourse = (courseId) =>
+    batches.filter((b) => getBatchCourseId(b) === courseId);
 
   useEffect(() => {
     fetchExams();
     fetchDependencies();
   }, []);
 
+  useEffect(() => {
+    if (activeTab === "bank") fetchBank();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, bankPage]);
+
   const handleCreateExam = async (e) => {
     e.preventDefault();
 
-    if (!form.batch) {
-      alertError("Please select a batch — every exam belongs to one batch");
+    if (form.examScope === "COURSE") {
+      if (!form.course) {
+        alertError("Please select a course for a course-wide exam");
+        return;
+      }
+    } else if (!form.batch) {
+      alertError("Please select a batch, or switch the scope to a whole course");
       return;
     }
 
@@ -128,7 +177,10 @@ export default function AdminExams() {
         totalMarks: Number(form.totalMarks || 40),
         duration: Number(form.duration || 60),
         maxAttempts: Number(form.maxAttempts || 1),
-        batch: form.batch,
+        examScope: form.examScope,
+        // A course-wide exam is not tied to a single batch.
+        batch: form.examScope === "BATCH" ? form.batch : undefined,
+        course: form.examScope === "COURSE" ? form.course : undefined,
         questions: form.questions || [],
       });
 
@@ -154,10 +206,19 @@ export default function AdminExams() {
         title: editingExam.title,
         description: editingExam.description,
         testType: editingExam.testType,
+        examScope: editingExam.examScope || "BATCH",
         batch:
-          typeof editingExam.batch === "object"
+          (editingExam.examScope || "BATCH") === "COURSE"
+            ? undefined
+            : typeof editingExam.batch === "object"
             ? editingExam.batch?._id
             : editingExam.batch,
+        course:
+          editingExam.examScope === "COURSE"
+            ? typeof editingExam.course === "object"
+              ? editingExam.course?._id
+              : editingExam.course
+            : undefined,
         totalQuestions: Number(editingExam.totalQuestions || 10),
         totalMarks: Number(editingExam.totalMarks || 40),
         duration: Number(editingExam.duration || 60),
@@ -190,10 +251,57 @@ export default function AdminExams() {
   const handleClose = async (examId) => {
     try {
       await api.put(`/exams/${examId}/close`);
-      alertSuccess("Exam has been closed");
+      alertSuccess("Exam closed and archived to Question Bank");
       fetchExams();
+      if (activeTab === "bank") fetchBank();
     } catch (err) {
       alertError(err.response?.data?.message || "Failed to close exam");
+    }
+  };
+
+  const handleReconduct = async (exam) => {
+    try {
+      await api.post(`/exams/${exam._id}/reconduct`, {
+        title: `${exam.title} (Reconduct)`,
+      });
+      alertSuccess("New exam draft created from archive");
+      setActiveTab("exams");
+      fetchExams();
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to reconduct");
+    }
+  };
+
+  const handleStudyToggle = async (exam) => {
+    try {
+      await api.put(`/exams/${exam._id}/study-visibility`, {
+        studyVisible: !exam.studyVisible,
+      });
+      alertSuccess(
+        exam.studyVisible
+          ? "Hidden from students"
+          : "Published for student study"
+      );
+      fetchBank();
+    } catch {
+      alertError("Failed to update visibility");
+    }
+  };
+
+  const handleDownloadExam = async (exam) => {
+    try {
+      const { data } = await api.get(`/exams/${exam._id}/download`);
+      const blob = new Blob([JSON.stringify(data.data.pack, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${exam.title.replace(/\s+/g, "-")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alertError("Failed to download exam");
     }
   };
 
@@ -208,6 +316,7 @@ export default function AdminExams() {
     try {
       const { data } = await api.get(`/exams/${exam._id}/results`);
       setExamResults(data.data);
+      setActiveTab("submissions");
     } catch (err) {
       alertError(err.response?.data?.message || "Failed to load results");
       setExamResults(null);
@@ -346,6 +455,31 @@ export default function AdminExams() {
         </div>
       </section>
 
+      {/* Tabs — Exams · Question Bank · Submissions */}
+      <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100/80 p-1.5 sm:inline-flex sm:w-auto sm:gap-1">
+        {[
+          { id: "exams", label: "Exams", icon: ClipboardList },
+          { id: "bank", label: "Question Bank", icon: Archive },
+          { id: "submissions", label: "Submissions", icon: BarChart3 },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition sm:justify-start sm:px-5 ${
+              activeTab === tab.id
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:bg-white/70 hover:text-slate-700"
+            }`}
+          >
+            <tab.icon className="h-5 w-5 shrink-0" />
+            <span className="hidden sm:inline truncate">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "exams" && (
+      <>
       {/* Filters */}
       <section className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -637,239 +771,245 @@ export default function AdminExams() {
           })}
         </div>
       )}
+      </>
+      )}
 
-      {/* Create Exam Modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-[1.75rem]">
-            <div className="flex shrink-0 items-start justify-between border-b border-slate-100 bg-white p-5 sm:p-6">
-              <div className="min-w-0">
-                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-brand-green">
-                  <Plus className="h-3 w-3" />
-                  New Examination
-                </div>
-
-                <h2 className="truncate text-lg font-extrabold text-slate-900 sm:text-xl">
-                  Create New Exam
-                </h2>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Configure CBT test parameters and schedule.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowCreate(false)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleCreateExam}
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6"
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Exam Title *</label>
-                  <input
-                    required
-                    value={form.title}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g. All India Grand Mock Test – 01"
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Test Type</label>
-                  <select
-                    value={form.testType}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        testType: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  >
-                    <option value="MOCK_TEST">Mock Test</option>
-                    <option value="CHAPTER_TEST">Chapter Test</option>
-                    <option value="UNIT_TEST">Unit Test</option>
-                    <option value="DPP">
-                      Daily Practice Problem (DPP)
-                    </option>
-                    <option value="PYQ">
-                      Previous Year Questions (PYQ)
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Batch / Course *</label>
-                  <select
-                    required
-                    value={form.batch}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        batch: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  >
-                    <option value="">Select a batch</option>
-
-                    {batches.map((b) => (
-                      <option key={b._id} value={b._id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Total Questions</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.totalQuestions}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        totalQuestions: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Total Marks</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.totalMarks}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        totalMarks: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Duration (Minutes)</label>
-                  <input
-                    type="number"
-                    min="5"
-                    value={form.duration}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        duration: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Max Attempts Allowed</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.maxAttempts}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        maxAttempts: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Start Time *</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    value={form.startTime}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        startTime: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>End Time *</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    value={form.endTime}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        endTime: e.target.value,
-                      }))
-                    }
-                    className={inputClass}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Instructions</label>
-                  <textarea
-                    rows={4}
-                    value={form.instructions}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        instructions: e.target.value,
-                      }))
-                    }
-                    className={`${inputClass} resize-none`}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4 sm:flex sm:justify-end sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreate(false)}
-                  className="hidden min-h-11 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:block"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={savingExam}
-                  className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-1"
-                >
-                  <Save className="h-4 w-4" />
-                  {savingExam ? "Creating..." : "Save Draft Exam"}
-                </button>
-              </div>
-            </form>
+      {/* --------- QUESTION BANK (ARCHIVE) TAB --------- */}
+      {activeTab === "bank" && (
+        <div className="space-y-4">
+          <div className="rounded-2xl border-blue-100 bg-blue-50 p-4 text-xs font-medium leading-relaxed text-blue-800">
+            The Question Bank is the archive of completed exam papers. Open a
+            paper to reconduct it, publish it for student study, or download it.
+            Nothing here is created manually.
           </div>
+
+          {archived.length === 0 ? (
+            <div className="overflow-hidden rounded-[1.75rem] border-slate-200 bg-white px-5 py-14 text-center shadow-sm sm:py-20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                <Archive className="h-7 w-7" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-700">
+                No archived exam papers
+              </h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-400">
+                Close a live exam to archive it here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {archived.map((exam) => (
+                <article
+                  key={exam._id}
+                  className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-lg hover:shadow-slate-900/5 sm:p-5"
+                >
+                  <div className="relative flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-500 sm:flex">
+                        <Archive className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border-purple-200 bg-purple-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-purple-700">
+                            <Archive className="h-3 w-3 shrink-0" /> Archived
+                          </span>
+                          {exam.batch?.name && (
+                            <span className="max-w-full truncate rounded-full border-blue-100 bg-blue-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-blue-700">
+                              {exam.batch.name}
+                            </span>
+                          )}
+                          <span
+                            className={`max-w-full truncate rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide ${
+                              exam.studyVisible
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : "border-slate-200 bg-slate-50 text-slate-500"
+                            }`}
+                          >
+                            {exam.studyVisible ? "Visible to students" : "Hidden"}
+                          </span>
+                        </div>
+                        <h3 className="mt-2 truncate text-sm font-extrabold text-slate-800 sm:text-base">
+                          {exam.title}
+                        </h3>
+                        <div className="mt-3 flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-slate-500">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ClipboardList className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalQuestions} Qs
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.duration} min
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <BarChart3 className="h-3.5 w-3.5 shrink-0 text-slate-400" /> {exam.totalMarks} Marks
+                          </span>
+                          {exam.archivedAt && (
+                            <span className="inline-flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" /> Archived {new Date(exam.archivedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:w-auto lg:shrink-0 lg:flex-col lg:items-stretch">
+                      <button
+                        type="button"
+                        onClick={() => handleReconduct(exam)}
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-green-200 bg-green-50 px-3 text-[10px] font-bold text-green-700 transition hover:bg-green-100 sm:text-xs"
+                        title="Reconduct"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Reconduct</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleStudyToggle(exam)}
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-slate-200 bg-slate-50 px-3 text-[10px] font-bold text-slate-600 transition hover:bg-slate-100 sm:text-xs"
+                        title={exam.studyVisible ? "Hide" : "Publish for Study"}
+                      >
+                        {exam.studyVisible ? (
+                          <>
+                            <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Hide</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline truncate">Publish for Study</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadExam(exam)}
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-slate-200 bg-slate-50 px-3 text-[10px] font-bold text-slate-600 transition hover:bg-slate-100 sm:text-xs"
+                        title="Download"
+                      >
+                        <Download className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Download</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExamToDelete(exam)}
+                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl border-red-100 bg-red-50 px-3 text-[10px] font-bold text-red-500 transition hover:bg-red-100 hover:text-red-600 sm:text-xs"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline truncate">Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+              <div className="pt-2">
+                <Pagination
+                  page={bankPage}
+                  totalPages={bankMeta.pages}
+                  totalItems={bankMeta.total}
+                  pageSize={20}
+                  onPageChange={setBankPage}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* --------- SUBMISSIONS TAB --------- */}
+      {activeTab === "submissions" && (
+        <div>
+          {examResults ? (
+            <div className="overflow-hidden rounded-[1.75rem] border-slate-200 bg-white shadow-sm">
+              <div className="border-b border-slate-100 p-5 sm:p-6">
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-indigo-700">
+                  <BarChart3 className="h-3 w-3" /> Exam Submissions
+                </span>
+                <h2 className="mt-2 truncate text-lg font-extrabold text-slate-900 sm:text-xl">
+                  {examResults.exam?.title}
+                </h2>
+              </div>
+
+              <div className="space-y-6 p-5 sm:p-6">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="min-w-0 rounded-xl border-slate-100 bg-slate-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-slate-900">
+                      {examResults.analytics?.totalSubmissions || examResults.results?.length || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">Submissions</div>
+                  </div>
+                  <div className="min-w-0 rounded-xl border-slate-100 bg-slate-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-slate-900">
+                      {examResults.analytics?.avgScore || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">Avg Score</div>
+                  </div>
+                  <div className="min-w-0 rounded-xl border-emerald-100 bg-emerald-50 p-4 text-center">
+                    <div className="truncate text-2xl font-extrabold text-emerald-700">
+                      {examResults.analytics?.highestScore || 0}
+                    </div>
+                    <div className="mt-1 truncate text-[10px] font-bold uppercase tracking-wider text-emerald-600">Highest</div>
+                  </div>
+                </div>
+
+                {loadingResults ? (
+                  <div className="flex justify-center py-14">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+                  </div>
+                ) : !examResults.results || examResults.results.length === 0 ? (
+                  <div className="rounded-2xl border-dashed border-slate-200 bg-slate-50 px-5 py-12 text-center">
+                    <Trophy className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                    <p className="text-sm font-bold text-slate-600">No submissions recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {examResults.results.map((r, i) => (
+                      <div
+                        key={r._id || i}
+                        className="flex min-w-0 items-center gap-3 rounded-xl border-slate-200 bg-white p-4 shadow-sm"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-extrabold text-slate-700">
+                          #{i + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-slate-800">
+                            {r.student?.name || r.studentName || "Student"}
+                          </div>
+                          <div className="truncate text-[10px] text-slate-400">
+                            {r.student?.email || r.studentId}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-xs font-bold text-slate-700">
+                          {r.obtainedMarks} / {r.totalMarks || examResults.exam?.totalMarks}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-[1.75rem] border-slate-200 bg-white px-5 py-14 text-center shadow-sm sm:py-20">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+                <BarChart3 className="h-7 w-7" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-700">No exam selected</h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-400">
+                Select an exam from the Exams tab to view its submissions.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Exam Modal — the shared, full exam manager (identical to faculty) */}
+      <ExamCreateWizard
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        batches={batches}
+        courses={courses}
+        allowCourseScope={true}
+        onCreated={() => {
+          setActiveTab("exams");
+          fetchExams();
+        }}
+      />
 
       {/* Edit Exam Modal */}
       {editingExam && (
@@ -946,30 +1086,87 @@ export default function AdminExams() {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Batch / Course *</label>
+                  <label className={labelClass}>Assign Exam To *</label>
                   <select
-                    value={
-                      editingExam.batch?._id ||
-                      editingExam.batch ||
-                      ""
-                    }
+                    value={editingExam.examScope || "BATCH"}
                     onChange={(e) =>
                       setEditingExam((prev) => ({
                         ...prev,
-                        batch: e.target.value,
+                        examScope: e.target.value,
                       }))
                     }
                     className={inputClass}
                   >
-                    <option value="">Select a batch</option>
-
-                    {batches.map((b) => (
-                      <option key={b._id} value={b._id}>
-                        {b.name}
-                      </option>
-                    ))}
+                    <option value="BATCH">A specific batch</option>
+                    <option value="COURSE">
+                      An entire course (all its batches)
+                    </option>
                   </select>
                 </div>
+
+                {(editingExam.examScope || "BATCH") === "COURSE" ? (
+                  <div>
+                    <label className={labelClass}>Course *</label>
+                    <select
+                      value={
+                        editingExam.course?._id ||
+                        editingExam.course ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        setEditingExam((prev) => ({
+                          ...prev,
+                          course: e.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                    >
+                      <option value="">Select a course</option>
+                      {courses.map((c) => (
+                        <option key={c._id} value={c._id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={labelClass}>Batch *</label>
+                    <select
+                      value={
+                        editingExam.batch?._id ||
+                        editingExam.batch ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        setEditingExam((prev) => ({
+                          ...prev,
+                          batch: e.target.value,
+                        }))
+                      }
+                      className={inputClass}
+                    >
+                      <option value="">
+                        {batches.length === 0
+                          ? "No batches available"
+                          : "Select a batch"}
+                      </option>
+
+                      {batches.map((b) => (
+                        <option key={b._id} value={b._id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {batches.length === 0 && (
+                      <p className="mt-1.5 text-[11px] font-medium text-amber-600">
+                        No batches yet — create one in the Batches section, or
+                        assign this exam to a whole course above.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className={labelClass}>Duration (Minutes)</label>

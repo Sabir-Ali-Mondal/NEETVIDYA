@@ -13,9 +13,11 @@ import {
   X,
   Save,
   UserMinus,
+  UserPlus,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
-import { DEFAULT_COURSES, getCourseByValue } from "../../config/courses";
 import ConfirmModal from "../../components/shared/ConfirmModal";
 
 const batchTypeColors = {
@@ -93,6 +95,13 @@ const getStudentId = (student) =>
   student?.user?._id ||
   student?.user?.id;
 
+// A batch's `course` may be a populated object ({ _id, name }) or a plain id.
+const getCourseName = (course) =>
+  (course && typeof course === "object" ? course.name : "") || "";
+
+const getCourseId = (course) =>
+  (course && typeof course === "object" ? course._id : course) || "";
+
 export default function AdminBatches() {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
@@ -105,9 +114,14 @@ export default function AdminBatches() {
   const [viewingBatch, setViewingBatch] = useState(null);
   const [batchStudents, setBatchStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
-  const [studentToEnroll, setStudentToEnroll] = useState("");
+  const [studentsToEnroll, setStudentsToEnroll] = useState([]);
+  const [studentSearch, setStudentSearch] = useState("");
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [enrollingStudent, setEnrollingStudent] = useState(false);
+
+  // Courses created in the Courses section — batches pick from these.
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
 
   const [editingBatch, setEditingBatch] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -129,8 +143,22 @@ export default function AdminBatches() {
     }
   };
 
+  const fetchCourses = async () => {
+    setLoadingCourses(true);
+
+    try {
+      const { data } = await api.get("/courses");
+      setCourses(data.data?.courses || []);
+    } catch {
+      setCourses([]);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
+
   useEffect(() => {
     fetchBatches();
+    fetchCourses();
   }, []);
 
   const resetCreateForm = () => {
@@ -170,7 +198,8 @@ export default function AdminBatches() {
   const handleOpenStudents = async (batch) => {
     setViewingBatch(batch);
     setLoadingStudents(true);
-    setStudentToEnroll("");
+    setStudentsToEnroll([]);
+    setStudentSearch("");
 
     try {
       const [bRes, sRes] = await Promise.all([
@@ -206,19 +235,32 @@ export default function AdminBatches() {
     }
   };
 
-  const handleEnrollStudent = async (e) => {
-    e.preventDefault();
+  // Toggle one student into/out of the pending selection (multi-select).
+  const toggleStudentSelection = (studentId) => {
+    setStudentsToEnroll((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
 
-    if (!studentToEnroll || !viewingBatch) return;
+  const handleEnrollStudents = async (e) => {
+    e?.preventDefault?.();
+
+    if (!studentsToEnroll.length || !viewingBatch) return;
 
     setEnrollingStudent(true);
 
     try {
       await api.post(`/batches/${viewingBatch._id}/students`, {
-        studentIds: [studentToEnroll],
+        studentIds: studentsToEnroll,
       });
 
-      alertSuccess("Student enrolled into batch successfully");
+      alertSuccess(
+        studentsToEnroll.length === 1
+          ? "Student enrolled into batch successfully"
+          : `${studentsToEnroll.length} students enrolled into batch`
+      );
 
       const { data } = await api.get(
         `/batches/${viewingBatch._id}/students`
@@ -235,12 +277,12 @@ export default function AdminBatches() {
           : []
       );
 
-      setStudentToEnroll("");
+      setStudentsToEnroll([]);
       fetchBatches();
     } catch (err) {
       alertError(
         err.response?.data?.message ||
-          "Failed to enroll student"
+          "Failed to enroll students"
       );
     } finally {
       setEnrollingStudent(false);
@@ -332,6 +374,30 @@ export default function AdminBatches() {
       b.name?.toLowerCase().includes(search.toLowerCase()) ||
       b.code?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Students currently selected (pending enrollment). Multiple allowed.
+  const selectedStudents = allStudents.filter((s) =>
+    studentsToEnroll.includes(String(getStudentId(s)))
+  );
+
+  // Students not yet in this batch, narrowed by the enroll-modal search box
+  // (matches name, student id or email).
+  const enrollableStudents = allStudents
+    .filter(
+      (student) =>
+        !batchStudents.some(
+          (enrolled) => getStudentId(enrolled) === (student?._id || student?.user?._id)
+        )
+    )
+    .filter((student) => {
+      const q = studentSearch.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        getStudentName(student).toLowerCase().includes(q) ||
+        String(student.studentId || "").toLowerCase().includes(q) ||
+        getStudentEmail(student).toLowerCase().includes(q)
+      );
+    });
 
   return (
     <div className="min-h-full space-y-5 p-3 sm:space-y-6 sm:p-5 lg:p-7">
@@ -444,9 +510,7 @@ export default function AdminBatches() {
       ) : (
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           {filtered.map((batch) => {
-            const course =
-              getCourseByValue(batch.course)?.name ||
-              batch.course?.name;
+            const course = getCourseName(batch.course);
 
             return (
               <article
@@ -566,10 +630,7 @@ export default function AdminBatches() {
                       onClick={() =>
                         setEditingBatch({
                           ...batch,
-                          course:
-                            typeof batch.course === "object"
-                              ? batch.course?._id || ""
-                              : batch.course || "",
+                          course: getCourseId(batch.course),
                         })
                       }
                       className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5 text-xs font-bold text-green-700 transition hover:bg-green-100"
@@ -697,17 +758,22 @@ export default function AdminBatches() {
                     }
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
                   >
-                    <option value="">Select a course</option>
+                    <option value="">
+                      {loadingCourses ? "Loading courses..." : "Select a course"}
+                    </option>
 
-                    {DEFAULT_COURSES.map((course) => (
-                      <option
-                        key={course.value}
-                        value={course.value}
-                      >
+                    {courses.map((course) => (
+                      <option key={course._id} value={course._id}>
                         {course.name}
                       </option>
                     ))}
                   </select>
+
+                  {!loadingCourses && courses.length === 0 && (
+                    <p className="mt-1.5 text-[11px] font-medium text-amber-600">
+                      No courses yet — create one in the Courses section first.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -887,77 +953,6 @@ export default function AdminBatches() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
-              <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
-                <div className="mb-2.5">
-                  <p className="text-sm font-bold text-slate-800">
-                    Enroll Student
-                  </p>
-
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Add an existing student to this batch.
-                  </p>
-                </div>
-
-                <form
-                  onSubmit={handleEnrollStudent}
-                  className="flex flex-col gap-2.5 sm:flex-row"
-                >
-                  <select
-                    value={studentToEnroll}
-                    onChange={(e) =>
-                      setStudentToEnroll(e.target.value)
-                    }
-                    disabled={
-                      loadingStudents || enrollingStudent
-                    }
-                    className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-700 outline-none transition focus:border-brand-green focus:ring-4 focus:ring-green-500/10"
-                  >
-                    <option value="">
-                      Select a student to enroll...
-                    </option>
-
-                    {allStudents
-                      .filter(
-                        (student) =>
-                          !batchStudents.some(
-                            (enrolled) =>
-                              getStudentId(enrolled) ===
-                              student?._id
-                          )
-                      )
-                      .map((student) => (
-                        <option
-                          key={student._id}
-                          value={student._id}
-                        >
-                          {getStudentName(student)}
-                          {student.studentId
-                            ? ` (${student.studentId})`
-                            : getStudentEmail(student)
-                            ? ` (${getStudentEmail(student)})`
-                            : ""}
-                        </option>
-                      ))}
-                  </select>
-
-                  <button
-                    type="submit"
-                    disabled={
-                      !studentToEnroll ||
-                      loadingStudents ||
-                      enrollingStudent
-                    }
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-2.5 text-sm font-bold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Plus className="h-4 w-4" />
-
-                    {enrollingStudent
-                      ? "Enrolling..."
-                      : "Enroll"}
-                  </button>
-                </form>
-              </div>
-
               <div>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -1073,6 +1068,180 @@ export default function AdminBatches() {
                 )}
               </div>
 
+              <div className="mt-6 rounded-2xl border-slate-200 bg-white p-4 shadow-sm">
+                {/* Header */}
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-slate-800">
+                      Enroll Students
+                    </p>
+
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Search and select one or more students to add to this batch.
+                    </p>
+                  </div>
+
+                  {selectedStudents.length > 0 && (
+                    <span className="shrink-0 rounded-full bg-brand-green px-2.5 py-1 text-[11px] font-bold text-white">
+                      {selectedStudents.length} selected
+                    </span>
+                  )}
+                </div>
+
+                {/* Selected students chips */}
+                {selectedStudents.length > 0 && (
+                  <div className="mt-3 flex-wrap gap-2">
+                    {selectedStudents.map((student) => {
+                      const sid = String(getStudentId(student));
+                      return (
+                        <span
+                          key={sid}
+                          className="inline-flex max-w-full items-center gap-2 rounded-full border-green-200 bg-green-50 py-1 pl-1 pr-2.5"
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-700 text-[11px] font-extrabold text-white">
+                            {getStudentName(student).charAt(0).toUpperCase()}
+                          </span>
+
+                          <span className="truncate text-xs font-bold text-slate-700">
+                            {getStudentName(student)}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleStudentSelection(sid)}
+                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-white hover:text-red-500"
+                            aria-label={`Remove ${getStudentName(student)}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={() => setStudentsToEnroll([])}
+                      className="rounded-full px-2 py-1 text-[11px] font-bold text-slate-400 underline-offset-2 transition hover:text-red-500 hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+
+                {/* Search box */}
+                <div className="relative mt-3">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                  <input
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    disabled={loadingStudents || enrollingStudent}
+                    placeholder="Search by name, student ID or email..."
+                    className="min-h-11 w-full rounded-xl border-slate-200 bg-slate-50/70 pl-10 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-green focus:bg-white focus:ring-4 focus:ring-green-500/10 disabled:opacity-60"
+                  />
+                </div>
+
+                {/* Results list — stays visible so several can be picked */}
+                <div className="mt-2 max-h-72 overflow-y-auto overscroll-contain rounded-xl border-slate-200 bg-white">
+                  {loadingStudents ? (
+                    <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading students...
+                    </div>
+                  ) : enrollableStudents.length === 0 ? (
+                    <div className="px-4 py-8 text-center">
+                      <p className="text-sm font-semibold text-slate-600">
+                        {studentSearch.trim()
+                          ? "No matching students"
+                          : "All students are already enrolled"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {studentSearch.trim()
+                          ? "Try a different name, ID or email."
+                          : "Every student is already in this batch."}
+                      </p>
+                    </div>
+                  ) : (
+                    enrollableStudents.map((student) => {
+                      const sid = String(getStudentId(student));
+                      const isPicked = studentsToEnroll.includes(sid);
+                      return (
+                        <div
+                          key={sid}
+                          className={`flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 transition last:border-b-0 ${
+                            isPicked ? "bg-green-50/70" : "hover:bg-brand-soft"
+                          }`}
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-extrabold text-slate-600">
+                            {getStudentName(student).charAt(0).toUpperCase()}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-slate-800">
+                              {getStudentName(student)}
+                            </p>
+
+                            <p className="truncate text-[11px] text-slate-400">
+                              {[student.studentId, getStudentEmail(student)]
+                                .filter(Boolean)
+                                .join(" · ") || "—"}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleStudentSelection(sid)}
+                            className={`inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
+                              isPicked
+                                ? "bg-brand-green text-white hover:bg-green-700"
+                                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                            }`}
+                          >
+                            {isPicked ? (
+                              <>
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Selected
+                              </>
+                            ) : (
+                              "Select"
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Enroll action */}
+                <button
+                  type="button"
+                  onClick={handleEnrollStudents}
+                  disabled={
+                    studentsToEnroll.length === 0 ||
+                    loadingStudents ||
+                    enrollingStudent
+                  }
+                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 text-sm font-bold text-white shadow-md shadow-green-900/10 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {enrollingStudent ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+
+                  {enrollingStudent
+                    ? "Enrolling..."
+                    : studentsToEnroll.length === 0
+                    ? "Select students to enroll"
+                    : `Enroll ${studentsToEnroll.length} ${
+                        studentsToEnroll.length === 1 ? "Student" : "Students"
+                      }`}
+                </button>
+              </div>
               <div className="mt-6 pb-6">
                 {/* HIDDEN ON MOBILE */}
                 <button
@@ -1200,11 +1369,8 @@ export default function AdminBatches() {
                   >
                     <option value="">Select a course</option>
 
-                    {DEFAULT_COURSES.map((course) => (
-                      <option
-                        key={course.value}
-                        value={course.value}
-                      >
+                    {courses.map((course) => (
+                      <option key={course._id} value={course._id}>
                         {course.name}
                       </option>
                     ))}

@@ -1,19 +1,25 @@
 
 import { useState, useEffect } from "react";
 import api from "../../config/api";
-import images from "../../config/images";
 import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 
-const getTeacherFallbackImage = (teacher) => {
-  const teacherName = teacher?.user?.name || teacher?.name || "";
+// Faculty images are uploaded by the admin per teacher (Teacher.photoUrl).
+// There is no automatic image taken from src/assets, so a teacher whose image
+// is replaced or removed never shows a stale placeholder. When no image has
+// been uploaded we render a neutral inline placeholder instead.
+const getTeacherImage = (teacher) =>
+  teacher?.photoUrl || teacher?.user?.avatar || "";
 
-  if (teacherName.toLowerCase().includes("ramij")) return images.teacher2;
-  if (teacherName.toLowerCase().includes("bheshma")) return images.teacher1;
-
-  const imageList = [images.teacher1, images.teacher2, images.teacher3, images.teacher4, images.teacher5, images.teacher6];
-  const index = teacherName ? teacherName.length % imageList.length : 0;
-  return imageList[index];
-};
+const FacultyPlaceholder = ({ name }) => (
+ <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-emerald-50 via-white to-slate-100">
+    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl font-extrabold text-brand-green shadow-sm">
+      {name?.charAt(0)?.toUpperCase() || "N"}
+    </div>
+    <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
+      NEETVIDYA
+    </span>
+ </div>
+);
 
 export default function FacultyPage() {
   const [teachers, setTeachers] = useState([]);
@@ -86,14 +92,18 @@ export default function FacultyPage() {
                 key={teacher._id}
                 className="group relative overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
               >
-                {/* Full poster image */}
+                {/* Faculty image — admin-uploaded only, no src/assets fallback */}
                 <div className="overflow-hidden rounded-[1.5rem] bg-white">
-                  <img
-                    src={teacher.photoUrl || teacher.user?.avatar || getTeacherFallbackImage(teacher)}
-                    alt={`Faculty profile of ${teacher.user?.name || teacher.name}`}
-                    loading="lazy"
-                    className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                  />
+                  {getTeacherImage(teacher) ? (
+                    <img
+                      src={getTeacherImage(teacher)}
+                      alt={`Faculty profile of ${teacher.user?.name || teacher.name}`}
+                      loading="lazy"
+                      className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <FacultyPlaceholder name={teacher.user?.name || teacher.name} />
+                  )}
                 </div>
 
                 {/* Faculty information */}

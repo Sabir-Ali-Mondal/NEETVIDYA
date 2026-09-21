@@ -1,21 +1,59 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Target,
   ArrowRight,
   CheckCircle2,
   Sparkles,
+  Layers,
+  Clock,
+  Users,
+  ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import api from "../../config/api";
 import images from "../../config/images";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import useContactSettings from "../../hooks/useContactSettings";
 import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
-import { DEFAULT_COURSES } from "../../config/courses";
 import homeBackgroundVideo from "../../assets/video/green_black_background.mp4";
+
+// Fallback image when a course has no uploaded banner.
+const COURSE_FALLBACK_IMAGE = images.courseNeetDropper;
 
 export default function HomePage() {
   const { settings } = useContactSettings();
+
+  // Live course catalogue + their batches (replaces the old hardcoded list).
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [openBatches, setOpenBatches] = useState(null);
+
+  useEffect(() => {
+    Promise.all([
+      api.get("/courses").catch(() => ({ data: {} })),
+      api.get("/batches/public").catch(() => ({ data: {} })),
+    ])
+      .then(([cRes, bRes]) => {
+        setCourses(cRes.data?.data?.courses || []);
+        setBatches(bRes.data?.data?.batches || []);
+      })
+      .finally(() => setCoursesLoading(false));
+  }, []);
+
+  // A batch's `course` may be a populated object ({ _id, name }) or a raw id.
+  const batchCourseId = (batch) =>
+    (batch?.course && typeof batch.course === "object"
+      ? batch.course._id
+      : batch?.course) || "";
+
+  const batchesForCourse = (courseId) =>
+    batches.filter((b) => batchCourseId(b) === courseId);
+
+  const toggleBatches = (courseId) =>
+    setOpenBatches((cur) => (cur === courseId ? null : courseId));
 
   const methodology = [
     {
@@ -223,81 +261,188 @@ export default function HomePage() {
             </div>
           </Reveal>
 
-          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
-            {DEFAULT_COURSES.map((course, i) => (
-              <FadeInCard
-                key={course.value}
-                delay={i * 0.1}
-                className="group flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
-              >
-                <div className="relative overflow-hidden rounded-[1.5rem] bg-brand-soft">
-                  <img
-                    src={course.image}
-                    alt={course.name}
-                    loading="lazy"
-                    className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-[1.03] sm:h-56"
-                  />
+          {coursesLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-green border-t-transparent" />
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="mx-auto max-w-2xl rounded-[2rem] border-dashed border-brand-green/30 bg-white/80 p-8 text-center shadow-sm">
+              <p className="font-heading text-xl font-extrabold text-brand-dark">
+                No courses published yet
+              </p>
+              <p className="mt-2 text-sm text-slate-500">
+                Our programmes will appear here once published.
+              </p>
+            </div>
+          ) : (
+            <div className="mx-auto grid max-w-5xl items-start gap-8 md:grid-cols-2">
+              {courses.map((course, i) => {
+                const courseBatches = batchesForCourse(course._id);
+                const isOpen = openBatches === course._id;
 
-                  <div className="absolute left-4 top-4">
-                    <span className="inline-flex rounded-full border border-white/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-brand-dark shadow-sm backdrop-blur">
-                      {course.targetClass}
-                    </span>
-                  </div>
-                </div>
+                return (
+                  <FadeInCard
+                    key={course._id}
+                    delay={i * 0.1}
+                    className="flex flex-col overflow-hidden rounded-[2rem] border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
+                  >
+                    <div className="relative overflow-hidden rounded-[1.5rem] bg-brand-soft">
+                      <img
+                        src={course.coverImageUrl || COURSE_FALLBACK_IMAGE}
+                        alt={course.name}
+                        loading="lazy"
+                        className="h-52 w-full object-cover transition-transform duration-700 group-hover:scale-[1.03] sm:h-56"
+                      />
 
-                <div className="flex flex-1 flex-col px-4 pb-4 pt-6 sm:px-5 sm:pb-5">
-                  <h3 className="font-heading text-2xl font-extrabold text-brand-dark transition-colors duration-300 group-hover:text-brand-green">
-                    {course.name}
-                  </h3>
+                      {course.targetClass && (
+                        <div className="absolute left-4 top-4">
+                          <span className="inline-flex rounded-full border-white/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-brand-dark shadow-sm backdrop-blur">
+                            {course.targetClass}
+                          </span>
+                        </div>
+                      )}
 
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
-                    {course.description}
-                  </p>
-
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {course.features.map((feature) => (
-                      <span
-                        key={feature}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-slate-700"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-brand-green" />
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto pt-7">
-                    <div className="flex items-end justify-between gap-4 border-t border-slate-100 pt-5">
-                      <div>
-                        <span className="block text-xs font-medium text-slate-500">
-                          Fees
-                        </span>
-
-                        <span className="font-heading text-2xl font-extrabold text-brand-dark">
-                          ₹{course.feeAmount.toLocaleString("en-IN")}
-                        </span>
-                      </div>
-
-                      <Link
-                        to="/register"
-                        className="btn-primary group/btn !px-5 !py-2.5 text-sm"
-                      >
-                        Enroll Now
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
-                      </Link>
+                      {courseBatches.length > 0 && (
+                        <div className="absolute right-4 top-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border-white/80 bg-brand-green px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                            <Layers className="h-3.5 w-3.5" />
+                            {courseBatches.length}{" "}
+                            {courseBatches.length === 1 ? "batch" : "batches"}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </div>
-              </FadeInCard>
-            ))}
-          </div>
+
+                    <div className="flex flex-1 flex-col px-4 pb-4 pt-6 sm:px-5 sm:pb-5">
+                      <h3 className="font-heading text-2xl font-extrabold text-brand-dark transition-colors duration-300 group-hover:text-brand-green">
+                        {course.name}
+                      </h3>
+
+                      {course.description && (
+                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                          {course.description}
+                        </p>
+                      )}
+
+                      {course.features?.length > 0 && (
+                        <div className="mt-5 flex-wrap gap-2">
+                          {course.features.slice(0, 4).map((feature) => (
+                            <span
+                              key={feature}
+                              className="inline-flex items-center gap-1.5 rounded-full border-slate-200 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-slate-700"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5 text-brand-green" />
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Batches (revealed by the Show Batches button) */}
+                      {isOpen && (
+                        <div className="mt-5 space-y-2.5">
+                          {courseBatches.length === 0 ? (
+                            <div className="rounded-2xl border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
+                              <p className="text-sm font-bold text-slate-600">
+                                No batches running yet
+                              </p>
+                            </div>
+                          ) : (
+                            courseBatches.map((batch) => (
+                              <div
+                                key={batch._id}
+                                className="rounded-2xl border-slate-200 bg-slate-50/70 p-4"
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="rounded-lg bg-white px-2.5 py-1 font-mono text-[11px] font-black text-slate-600">
+                                    {batch.code || "—"}
+                                  </span>
+
+                                  <span className="rounded-lg border-slate-200 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                    {batch.batchType?.replace(/_/g, " ") ||
+                                      "NEET UG"}
+                                  </span>
+                                </div>
+
+                                <p className="mt-2 text-sm font-extrabold text-brand-dark">
+                                  {batch.name}
+                                </p>
+
+                                {batch.schedule && (
+                                  <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                                    {batch.schedule}
+                                  </p>
+                                )}
+
+                                <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                                  <Users className="h-3.5 w-3.5" />
+                                  {batch.students?.length || 0} students
+                                  {batch.capacity
+                                    ? ` · ${batch.capacity} seats`
+                                    : ""}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {/* Fees + enroll */}
+                      <div className="mt-auto pt-7">
+                        <div className="flex items-end justify-between gap-4 border-t border-slate-100 pt-5">
+                          <div>
+                            <span className="block text-xs font-medium text-slate-500">
+                              Fees
+                            </span>
+
+                            <span className="font-heading text-2xl font-extrabold text-brand-dark">
+                              ₹
+                              {(course.feeAmount || 0).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+
+                          <Link
+                            to="/register"
+                            className="btn-primary group/btn !px-5 !py-2.5 text-sm"
+                          >
+                            Enroll Now
+                            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+                          </Link>
+                        </div>
+
+                        {/* Show Batches — full-width, at the bottom of the card */}
+                        <button
+                          type="button"
+                          onClick={() => toggleBatches(course._id)}
+                          aria-expanded={isOpen}
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border-brand-green/30 bg-white px-4 py-3 text-sm font-bold text-brand-green transition-all duration-300 hover:bg-brand-soft"
+                        >
+                          <Layers className="h-4 w-4" />
+                          {isOpen ? "Hide Batches" : "Show Batches"}
+                          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-extrabold">
+                            {courseBatches.length}
+                          </span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform duration-300 ${
+                              isOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </FadeInCard>
+                );
+              })}
+            </div>
+          )}
 
           <Reveal className="mx-auto mt-12 max-w-2xl text-center sm:mt-14">
             <Link
               to="/courses"
               className="btn-primary group inline-flex items-center justify-center gap-2 !px-8 !py-3.5 text-base shadow-elevated hover:shadow-glow-green"
             >
-              View Batches &amp; Timings
+              Enroll for Individual Batches
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
 

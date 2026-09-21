@@ -131,6 +131,68 @@ router.post("/chapters", protect, authorize("admin", "teacher"), async (req, res
   }
 });
 
+// ── Edit / delete academic structure (admin + teacher) ──────
+// Rename an existing unit (fixes typos).
+router.put("/units/:id", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !name.trim()) {
+      return next(new ApiError(400, "Unit name is required"));
+    }
+    const unit = await Unit.findByIdAndUpdate(
+      req.params.id,
+      { name: name.trim(), ...(description !== undefined ? { description } : {}) },
+      { new: true, runValidators: true }
+    );
+    if (!unit) return next(new ApiError(404, "Unit not found"));
+    return apiResponse(res, 200, "Unit updated", { unit });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete a unit and the chapters that belong to it.
+router.delete("/units/:id", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const unit = await Unit.findByIdAndDelete(req.params.id);
+    if (!unit) return next(new ApiError(404, "Unit not found"));
+    await Chapter.deleteMany({ unit: req.params.id });
+    return apiResponse(res, 200, "Unit deleted", { unit });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Rename an existing chapter (fixes typos).
+router.put("/chapters/:id", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !name.trim()) {
+      return next(new ApiError(400, "Chapter name is required"));
+    }
+    const chapter = await Chapter.findByIdAndUpdate(
+      req.params.id,
+      { name: name.trim(), ...(description !== undefined ? { description } : {}) },
+      { new: true, runValidators: true }
+    );
+    if (!chapter) return next(new ApiError(404, "Chapter not found"));
+    return apiResponse(res, 200, "Chapter updated", { chapter });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete a chapter.
+router.delete("/chapters/:id", protect, authorize("admin", "teacher"), async (req, res, next) => {
+  try {
+    const chapter = await Chapter.findByIdAndDelete(req.params.id);
+    if (!chapter) return next(new ApiError(404, "Chapter not found"));
+    return apiResponse(res, 200, "Chapter deleted", { chapter });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/tree/:courseId", async (req, res, next) => {
   try {
     const subjects = await Subject.find({ course: req.params.courseId, isActive: true });

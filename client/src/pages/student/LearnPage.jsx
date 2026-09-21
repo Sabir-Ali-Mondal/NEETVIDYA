@@ -48,29 +48,53 @@ export default function LearnPage() {
 
   const q = search.trim().toLowerCase();
 
-  const filteredTree = q
-    ? tree
-        .map((u) => ({
-          ...u,
-          chapters: u.chapters
-            .map((c) => ({
-              ...c,
-              materials: c.materials.filter(
-                (m) =>
-                  m.title?.toLowerCase().includes(q) ||
-                  m.description?.toLowerCase().includes(q)
-              ),
+  // Backend tree: batch → subject → unit → chapter → materials.
+  // Filter leaves by search, then drop any empty parent levels.
+  const matchMaterial = (m) =>
+    !q ||
+    m.title?.toLowerCase().includes(q) ||
+    m.description?.toLowerCase().includes(q);
+
+  const filteredTree = tree
+    .map((batch) => ({
+      ...batch,
+      subjects: batch.subjects
+        .map((subject) => ({
+          ...subject,
+          units: subject.units
+            .map((unit) => ({
+              ...unit,
+              chapters: unit.chapters
+                .map((c) => ({
+                  ...c,
+                  materials: c.materials.filter(matchMaterial),
+                }))
+                .filter((c) => c.materials.length > 0),
             }))
-            .filter((c) => c.materials.length > 0),
+            .filter((u) => u.chapters.length > 0),
         }))
-        .filter((u) => u.chapters.length > 0)
-    : tree;
+        .filter((s) => s.units.length > 0),
+    }))
+    .filter((b) => b.subjects.length > 0);
+
+  // Show the batch level only when the student is in more than one batch.
+  const showBatchLevel = filteredTree.length > 1;
 
   const totalMaterials = filteredTree.reduce(
-    (unitTotal, unit) =>
-      unitTotal +
-      unit.chapters.reduce(
-        (chapterTotal, chapter) => chapterTotal + chapter.materials.length,
+    (batchTotal, batch) =>
+      batchTotal +
+      batch.subjects.reduce(
+        (subjTotal, subject) =>
+          subjTotal +
+          subject.units.reduce(
+            (unitTotal, unit) =>
+              unitTotal +
+              unit.chapters.reduce(
+                (chTotal, chapter) => chTotal + chapter.materials.length,
+                0
+              ),
+            0
+          ),
         0
       ),
     0
@@ -177,163 +201,207 @@ export default function LearnPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredTree.map((unit) => {
-              const unitOpen = expandedUnits[unit._id] ?? true;
-
-              const materialCount = unit.chapters.reduce(
-                (n, c) => n + c.materials.length,
-                0
-              );
-
-              return (
-                <div
-                  key={unit._id}
-                  className="min-w-0 overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-sm transition-shadow hover:shadow-md"
-                >
-                  {/* Unit */}
-                  <button
-                    type="button"
-                    onClick={() => toggleUnit(unit._id)}
-                    className="flex min-h-[68px] w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
-                      {unitOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
+          <div className="space-y-4">
+            {filteredTree.map((batch) => (
+              <div key={batch._id || "unassigned"} className="space-y-4">
+                {/* Batch level — only when the student belongs to >1 batch */}
+                {showBatchLevel && (
+                  <div className="flex min-w-0 items-center gap-3 rounded-[1.25rem] bg-brand-black px-4 py-3.5 text-white shadow-sm sm:px-5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-lime">
+                      <BookOpen className="h-4 w-4" />
                     </span>
-
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
-                      <Layers className="h-4 w-4" />
-                    </span>
-
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-extrabold text-brand-dark sm:text-base">
-                        {unit.name}
-                      </span>
-
-                      <span className="mt-0.5 block text-[10px] text-slate-400">
-                        {unit.chapters.length}{" "}
-                        {unit.chapters.length === 1 ? "Chapter" : "Chapters"}
-                      </span>
-                    </span>
-
-                    <span className="hidden shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500 sm:inline-flex">
-                      {materialCount}{" "}
-                      {materialCount === 1 ? "material" : "materials"}
-                    </span>
-                  </button>
-
-                  {unitOpen && (
-                    <div className="border-t border-slate-100">
-                      {unit.chapters.map((chapter) => {
-                        const chapOpen =
-                          expandedChapters[chapter._id] ?? true;
-
-                        return (
-                          <div
-                            key={chapter._id}
-                            className="border-b border-slate-100 last:border-b-0"
-                          >
-                            {/* Chapter */}
-                            <button
-                              type="button"
-                              onClick={() => toggleChapter(chapter._id)}
-                              className="flex min-h-[54px] w-full min-w-0 items-center gap-2.5 bg-slate-50/70 px-4 py-3 text-left transition hover:bg-slate-100 sm:px-6"
-                            >
-                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm">
-                                {chapOpen ? (
-                                  <ChevronDown className="h-3.5 w-3.5" />
-                                ) : (
-                                  <ChevronRight className="h-3.5 w-3.5" />
-                                )}
-                              </span>
-
-                              <FolderOpen className="h-4 w-4 shrink-0 text-slate-400" />
-
-                              <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-600 sm:text-sm">
-                                {chapter.name}
-                              </span>
-
-                              <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[9px] font-bold text-slate-400 shadow-sm">
-                                {chapter.materials.length}
-                              </span>
-                            </button>
-
-                            {/* Materials */}
-                            {chapOpen && (
-                              <div className="divide-y divide-slate-100">
-                                {chapter.materials.map((mat) => (
-                                  <div
-                                    key={mat._id}
-                                    className="flex min-w-0 flex-col gap-3 px-4 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6"
-                                  >
-                                    <div className="flex min-w-0 items-center gap-3">
-                                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600">
-                                        {mat.type === "VIDEO" ? (
-                                          <Video className="h-4 w-4" />
-                                        ) : mat.type === "LINK" ? (
-                                          <LinkIcon className="h-4 w-4" />
-                                        ) : (
-                                          <FileText className="h-4 w-4" />
-                                        )}
-                                      </div>
-
-                                      <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-bold text-brand-dark">
-                                          {mat.title}
-                                        </p>
-
-                                        <p className="mt-0.5 truncate text-[11px] text-slate-400">
-                                          {mat.description ||
-                                            mat.subject?.name ||
-                                            mat.type ||
-                                            "Material"}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    <a
-                                      href={mat.fileUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="flex min-h-9 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100 sm:w-auto"
-                                    >
-                                      {mat.type === "VIDEO" ? (
-                                        <>
-                                          <Video className="h-3.5 w-3.5" />
-                                          Watch
-                                        </>
-                                      ) : mat.fileUrl?.includes(
-                                          "drive.google"
-                                        ) ||
-                                        mat.fileUrl?.includes("youtube") ||
-                                        mat.fileUrl?.includes("youtu.be") ? (
-                                        <>
-                                          <ExternalLink className="h-3.5 w-3.5" />
-                                          Open
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Download className="h-3.5 w-3.5" />
-                                          View
-                                        </>
-                                      )}
-                                    </a>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                    <div className="min-w-0 flex-1">
+                      <p className="min-w-0 truncate text-sm font-extrabold">
+                        {batch.name}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {batch.subjects.length}{" "}
+                        {batch.subjects.length === 1 ? "subject" : "subjects"}
+                      </p>
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                    {batch.code && (
+                      <span className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-300">
+                        {batch.code}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {batch.subjects.map((subject) => (
+                  <div key={subject._id || "unassigned"} className="space-y-3">
+                    <div className="flex min-w-0 items-center gap-2 px-1">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                      <h2 className="min-w-0 truncate text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                        {subject.name}
+                      </h2>
+                    </div>
+
+                    {subject.units.map((unit) => {
+                      const unitKey = `${batch._id || "u"}:${subject._id || "u"}:${unit._id}`;
+                      const unitOpen = expandedUnits[unitKey] ?? true;
+                      const materialCount = unit.chapters.reduce(
+                        (n, c) => n + c.materials.length,
+                        0
+                      );
+
+                      return (
+                        <div
+                          key={unitKey}
+                          className="min-w-0 overflow-hidden rounded-[1.5rem] border-slate-200/80 bg-white shadow-sm transition-shadow hover:shadow-md"
+                        >
+                          {/* Unit */}
+                          <button
+                            type="button"
+                            onClick={() => toggleUnit(unitKey)}
+                            className="flex min-h-[68px] w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+                          >
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
+                              {unitOpen ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </span>
+
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+                              <Layers className="h-4 w-4" />
+                            </span>
+
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-extrabold text-brand-dark sm:text-base">
+                                {unit.name}
+                              </span>
+
+                              <span className="mt-0.5 block text-[10px] text-slate-400">
+                                {unit.chapters.length}{" "}
+                                {unit.chapters.length === 1
+                                  ? "Chapter"
+                                  : "Chapters"}
+                              </span>
+                            </span>
+
+                            <span className="hidden shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500 sm:inline-flex">
+                              {materialCount}{" "}
+                              {materialCount === 1 ? "material" : "materials"}
+                            </span>
+                          </button>
+
+                          {unitOpen && (
+                            <div className="border-t border-slate-100">
+                              {unit.chapters.map((chapter) => {
+                                const chapKey = `${unitKey}:${chapter._id}`;
+                                const chapOpen =
+                                  expandedChapters[chapKey] ?? true;
+
+                                return (
+                                  <div
+                                    key={chapKey}
+                                    className="border-b border-slate-100 last:border-b-0"
+                                  >
+                                    {/* Chapter */}
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleChapter(chapKey)}
+                                      className="flex min-h-[54px] w-full min-w-0 items-center gap-2.5 bg-slate-50/70 px-4 py-3 text-left transition hover:bg-slate-100 sm:px-6"
+                                    >
+                                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 shadow-sm">
+                                        {chapOpen ? (
+                                          <ChevronDown className="h-3.5 w-3.5" />
+                                        ) : (
+                                          <ChevronRight className="h-3.5 w-3.5" />
+                                        )}
+                                      </span>
+
+                                      <FolderOpen className="h-4 w-4 shrink-0 text-slate-400" />
+
+                                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-600 sm:text-sm">
+                                        {chapter.name}
+                                      </span>
+
+                                      <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[9px] font-bold text-slate-400 shadow-sm">
+                                        {chapter.materials.length}
+                                      </span>
+                                    </button>
+
+                                    {/* Materials */}
+                                    {chapOpen && (
+                                      <div className="divide-y divide-slate-100">
+                                        {chapter.materials.map((mat) => (
+                                          <div
+                                            key={mat._id}
+                                            className="flex min-w-0 flex-col gap-3 px-4 py-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6"
+                                          >
+                                            <div className="flex min-w-0 items-center gap-3">
+                                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-emerald-100 bg-emerald-50 text-emerald-600">
+                                                {mat.type === "VIDEO" ? (
+                                                  <Video className="h-4 w-4" />
+                                                ) : mat.type === "LINK" ? (
+                                                  <LinkIcon className="h-4 w-4" />
+                                                ) : (
+                                                  <FileText className="h-4 w-4" />
+                                                )}
+                                              </div>
+
+                                              <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-bold text-brand-dark">
+                                                  {mat.title}
+                                                </p>
+
+                                                <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                                                  {mat.description ||
+                                                    mat.type ||
+                                                    "Material"}
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            <a
+                                              href={mat.fileUrl}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="flex min-h-9 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-extrabold text-emerald-700 transition hover:bg-emerald-100 sm:w-auto"
+                                            >
+                                              {mat.type === "VIDEO" ? (
+                                                <>
+                                                  <Video className="h-3.5 w-3.5" />
+                                                  Watch
+                                                </>
+                                              ) : mat.fileUrl?.includes(
+                                                  "drive.google"
+                                                ) ||
+                                                mat.fileUrl?.includes(
+                                                  "youtube"
+                                                ) ||
+                                                mat.fileUrl?.includes(
+                                                  "youtu.be"
+                                                ) ? (
+                                                <>
+                                                  <ExternalLink className="h-3.5 w-3.5" />
+                                                  Open
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Download className="h-3.5 w-3.5" />
+                                                  View
+                                                </>
+                                              )}
+                                            </a>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         )}
       </div>

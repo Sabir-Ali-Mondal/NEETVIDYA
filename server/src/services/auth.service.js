@@ -228,7 +228,7 @@ const adminCreateTeacher = async (data) => {
   // Constant default password — the teacher is forced to change it on first login.
   const user = await User.create({
     name: data.name,
-    email: data,
+    email: data.email,
     password: DEFAULT_PASSWORD,
     phone: data.phone,
     role: "teacher",

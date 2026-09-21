@@ -134,7 +134,16 @@ export default function StudyExamPage() {
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-current text-[10px] font-bold">
                         {String.fromCharCode(65 + optionIndex)}
                       </span>
-                      <span className="flex-1 leading-relaxed">{option.text}</span>
+                      <div className="flex-1">
+                        <span className="leading-relaxed">{option.text}</span>
+                        {option.imageUrl && (
+                          <img
+                            src={option.imageUrl}
+                            alt={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                            className="mt-2 max-h-48 rounded-lg border-slate-200 bg-white object-contain"
+                          />
+                        )}
+                      </div>
                       {isCorrect && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />}
                     </div>
                   );

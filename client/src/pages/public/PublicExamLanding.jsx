@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import api from "../../config/api";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
+import HomeButton from "../../components/shared/HomeButton";
 import useContactSettings from "../../hooks/useContactSettings";
 
 export default function PublicExamLanding() {
@@ -35,9 +36,10 @@ export default function PublicExamLanding() {
     load();
   }, [slug]);
 
+  // Ready-made request message. The student simply sends it — the team knows
+  // exactly which exam (and which batch) they want access to.
   const waMessage = exam
-    ? `Hello NEETVIDYA! I want to attend the exam "${exam.title}"${exam.batchName ? ` (Batch: ${exam.batchName})` : ""
-    }. Please share the permission / details.`
+    ? `Hello NEETVIDYA!\n\nI am interested in this exam and would like to request access:\n- Exam: ${exam.title}\n${exam.batchName ? `- Batch: ${exam.batchName}${exam.batchCode ? ` (${exam.batchCode})` : ""}\n` : ""}- Type: ${exam.testType?.replace(/_/g, " ") || "Exam"}\n\nPlease grant me permission to attempt this exam. Thank you!`
     : settings.whatsappDefaultMessage;
 
   if (loading) {
@@ -86,10 +88,14 @@ export default function PublicExamLanding() {
           className="overflow-hidden rounded-[2rem] border-white/70 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur-xl"
         >
           <div className="bg-brand-black px-6 py-7 text-white sm:px-8 sm:py-9">
-            <span className="inline-flex items-center gap-2 rounded-full border-brand-lime/20 bg-brand-lime/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-brand-lime">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-lime" />
-              NEETVIDYA Exam
-            </span>
+            <div className="flex items-start justify-between gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full border-brand-lime/20 bg-brand-lime/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-brand-lime">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-lime" />
+                NEETVIDYA Exam
+              </span>
+
+              <HomeButton label="Visit NEETVIDYA" />
+            </div>
 
             <h1 className="mt-4 font-heading text-2xl font-extrabold tracking-tight sm:text-3xl">
               {exam.title}
@@ -165,17 +171,22 @@ export default function PublicExamLanding() {
                 Log in to take this exam
               </Link>
 
-              <div className="rounded-xl border-green-100 bg-green-50/60 p-3.5">
-                <p className="text-xs leading-5 text-green-800">
-                  Not in this batch yet? Request access on WhatsApp and our team
-                  will grant you exam permission.
+              <div className="rounded-xl border-green-100 bg-green-50/70 p-4">
+                <p className="text-xs font-semibold text-green-900">
+                  {exam.batchName
+                    ? `Not in the "${exam.batchName}" batch yet?`
+                    : "Not enrolled yet?"}
                 </p>
-                <div className="mt-2">
+                <p className="mt-1 text-xs leading-5 text-green-800/90">
+                  Send us a ready-made request on WhatsApp for this exact exam
+                  and our team will grant you access.
+                </p>
+                <div className="mt-2.5">
                   <WhatsAppLink
                     number={settings.whatsappNumber}
                     message={waMessage}
                     label="Request exam access on WhatsApp"
-                    className="!text-sm !font-bold"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 hover:text-white"
                   />
                 </div>
               </div>

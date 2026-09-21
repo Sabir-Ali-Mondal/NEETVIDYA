@@ -14,6 +14,9 @@ import {
   ChevronRight,
   Layers,
   FolderOpen,
+  Pencil,
+  Check,
+  Users,
   AlertTriangle,
   Video,
   FileImage,
@@ -44,6 +47,14 @@ export default function TeacherMaterials() {
   const [creatingChapter, setCreatingChapter] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
   const [newChapterName, setNewChapterName] = useState("");
+
+  // Inline rename + delete for the academic structure (fix typos, remove wrong nodes).
+  const [editingUnitId, setEditingUnitId] = useState(null);
+  const [editingUnitName, setEditingUnitName] = useState("");
+  const [editingChapterId, setEditingChapterId] = useState(null);
+  const [editingChapterName, setEditingChapterName] = useState("");
+  const [unitToDelete, setUnitToDelete] = useState(null);
+  const [chapterToDelete, setChapterToDelete] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -78,8 +89,8 @@ export default function TeacherMaterials() {
         api.get("/batches"),
       ]);
 
-      setSubjects(sRes.data?.subjects || []);
-      setBatches(bRes.data?.batches || []);
+      setSubjects(sRes.data?.data?.subjects || []);
+      setBatches(bRes.data?.data?.batches || []);
     } catch {
       // ignore
     }
@@ -185,6 +196,83 @@ export default function TeacherMaterials() {
       );
     } finally {
       setCreatingChapter(false);
+    }
+  };
+
+  // ── Rename / delete academic nodes ─────────────────────────
+  const handleRenameUnit = async (unit) => {
+    if (!editingUnitName.trim()) {
+      alertError("Unit name cannot be empty");
+      return;
+    }
+    try {
+      const { data } = await api.put(`/academics/units/${unit._id}`, {
+        name: editingUnitName.trim(),
+      });
+      const updated = data.data.unit;
+      setUnits((prev) =>
+        prev.map((u) => (u._id === unit._id ? { ...u, name: updated.name } : u))
+      );
+      setEditingUnitId(null);
+      setEditingUnitName("");
+      alertSuccess("Unit renamed");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to rename unit");
+    }
+  };
+
+  const handleDeleteUnit = async () => {
+    if (!unitToDelete) return;
+    try {
+      await api.delete(`/academics/units/${unitToDelete._id}`);
+      setUnits((prev) => prev.filter((u) => u._id !== unitToDelete._id));
+      if (form.unit === unitToDelete._id) {
+        setForm((f) => ({ ...f, unit: "", chapter: "" }));
+      }
+      alertSuccess("Unit deleted");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to delete unit");
+    } finally {
+      setUnitToDelete(null);
+    }
+  };
+
+  const handleRenameChapter = async (chapter) => {
+    if (!editingChapterName.trim()) {
+      alertError("Chapter name cannot be empty");
+      return;
+    }
+    try {
+      const { data } = await api.put(`/academics/chapters/${chapter._id}`, {
+        name: editingChapterName.trim(),
+      });
+      const updated = data.data.chapter;
+      setChapters((prev) =>
+        prev.map((c) =>
+          c._id === chapter._id ? { ...c, name: updated.name } : c
+        )
+      );
+      setEditingChapterId(null);
+      setEditingChapterName("");
+      alertSuccess("Chapter renamed");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to rename chapter");
+    }
+  };
+
+  const handleDeleteChapter = async () => {
+    if (!chapterToDelete) return;
+    try {
+      await api.delete(`/academics/chapters/${chapterToDelete._id}`);
+      setChapters((prev) => prev.filter((c) => c._id !== chapterToDelete._id));
+      if (form.chapter === chapterToDelete._id) {
+        setForm((f) => ({ ...f, chapter: "" }));
+      }
+      alertSuccess("Chapter deleted");
+    } catch (err) {
+      alertError(err.response?.data?.message || "Failed to delete chapter");
+    } finally {
+      setChapterToDelete(null);
     }
   };
 
@@ -301,17 +389,49 @@ export default function TeacherMaterials() {
     return matchSearch && matchBatch;
   });
 
-  const grouped = filtered.reduce((acc, m) => {
-    const unitName = m.unit?.name || "Unsorted Unit";
-    const chapterName = m.chapter?.name || "Unsorted Chapter";
+  // Nested grouping: batch → subject → unit → chapter → materials.
+  // Keyed by id at every level so identically-named nodes from different
+  // batches never merge together.
+  const grouped = filtered.reduce((batches, m) => {
+    const bKey = m.batch?._id || "unassigned";
+    if (!batches[bKey]) {
+      batches[bKey] = {
+        batch: m.batch || null,
+        subjects: {},
+      };
+    }
+    const batchNode = batches[bKey];
 
-    acc[unitName] = acc[unitName] || {};
-    acc[unitName][chapterName] =
-      acc[unitName][chapterName] || [];
+    const sKey = m.subject?._id || "unassigned";
+    if (!batchNode.subjects[sKey]) {
+      batchNode.subjects[sKey] = {
+        subject: m.subject || null,
+        units: {},
+      };
+    }
+    const subjectNode = batchNode.subjects[sKey];
 
-    acc[unitName][chapterName].push(m);
+    const unit = m.unit || {};
+    const uKey = unit._id || `name:${unit.name || "Unsorted Unit"}`;
+    if (!subjectNode.units[uKey]) {
+      subjectNode.units[uKey] = {
+        unit,
+        chapters: {},
+      };
+    }
+    const unitNode = subjectNode.units[uKey];
 
-    return acc;
+    const chapter = m.chapter || {};
+    const cKey = chapter._id || `name:${chapter.name || "Unsorted Chapter"}`;
+    if (!unitNode.chapters[cKey]) {
+      unitNode.chapters[cKey] = {
+        chapter,
+        materials: [],
+      };
+    }
+    unitNode.chapters[cKey].materials.push(m);
+
+    return batches;
   }, {});
 
   const toggle = (key) => {
@@ -482,23 +602,39 @@ export default function TeacherMaterials() {
             </p>
           </div>
         ) : (
-          <div className="min-w-0 space-y-4">
-            {Object.entries(grouped).map(([unitName, chapters]) => {
-              const unitMaterials = Object.values(chapters).flat();
-              const isExpanded = !!expanded[unitName];
+          <div className="min-w-0 space-y-5">
+            {Object.entries(grouped).map(([batchKey, batchNode]) => {
+              const batchName = batchNode.batch?.name || "Unassigned batch";
+              const batchCode = batchNode.batch?.code || "";
+              const subjectEntries = Object.entries(batchNode.subjects);
+              const batchMaterialCount = subjectEntries.reduce(
+                (sum, [, s]) =>
+                  sum +
+                  Object.values(s.units).reduce(
+                    (uSum, u) =>
+                      uSum +
+                      Object.values(u.chapters).reduce(
+                        (cSum, c) => cSum + c.materials.length,
+                        0
+                      ),
+                    0
+                  ),
+                0
+              );
+              const batchExpanded = expanded[`batch:${batchKey}`] !== false;
 
               return (
                 <section
-                  key={unitName}
-                  className="min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-100 bg-white shadow-sm transition hover:shadow-md"
+                  key={batchKey}
+                  className="min-w-0 overflow-hidden rounded-[1.75rem] border-slate-200 bg-white shadow-sm"
                 >
-                  {/* Unit */}
+                  {/* Batch header */}
                   <button
-                    onClick={() => toggle(unitName)}
-                    className="flex min-h-[68px] w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+                    onClick={() => toggle(`batch:${batchKey}`)}
+                    className="flex min-h-[72px] w-full min-w-0 items-center gap-3 bg-slate-900/95 px-4 py-4 text-left transition hover:bg-slate-900 sm:px-6"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
-                      {isExpanded ? (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-brand-lime">
+                      {batchExpanded ? (
                         <ChevronDown className="h-5 w-5" />
                       ) : (
                         <ChevronRight className="h-5 w-5" />
@@ -506,139 +642,202 @@ export default function TeacherMaterials() {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Layers className="hidden h-4 w-4 shrink-0 text-brand-green sm:block" />
-
-                        <h2 className="min-w-0 truncate text-sm font-extrabold text-slate-800 sm:text-base">
-                          {unitName}
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Users className="h-4 w-4 shrink-0 text-brand-lime" />
+                        <h2 className="min-w-0 truncate text-sm font-extrabold text-white sm:text-base">
+                          {batchName}
                         </h2>
+                        {batchCode && (
+                          <span className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-300">
+                            {batchCode}
+                          </span>
+                        )}
                       </div>
-
                       <p className="mt-1 text-[11px] text-slate-400">
-                        {Object.keys(chapters).length}{" "}
-                        {Object.keys(chapters).length === 1
-                          ? "chapter"
-                          : "chapters"}
+                        {subjectEntries.length}{" "}
+                        {subjectEntries.length === 1 ? "subject" : "subjects"} ·{" "}
+                        {batchMaterialCount}{" "}
+                        {batchMaterialCount === 1 ? "material" : "materials"}
                       </p>
                     </div>
-
-                    <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500 sm:px-3">
-                      {unitMaterials.length}{" "}
-                      {unitMaterials.length === 1
-                        ? "material"
-                        : "materials"}
-                    </span>
                   </button>
 
-                  {isExpanded && (
-                    <div className="border-t border-slate-100">
-                      {Object.entries(chapters).map(
-                        ([chapterName, items]) => (
+                  {batchExpanded && (
+                    <div className="space-y-4 border-t border-slate-100 bg-slate-50/40 p-3 sm:p-4">
+                      {subjectEntries.map(([subjectKey, subjectNode]) => {
+                        const subjectName =
+                          subjectNode.subject?.name || "No subject";
+                        const unitEntries = Object.entries(subjectNode.units);
+                        const subjectExpanded =
+                          expanded[`subj:${batchKey}:${subjectKey}`] !== false;
+
+                        return (
                           <div
-                            key={chapterName}
-                            className="min-w-0 border-b border-slate-100 last:border-b-0"
+                            key={subjectKey}
+                            className="min-w-0 overflow-hidden rounded-[1.25rem] border-slate-200 bg-white shadow-sm"
                           >
-                            {/* Chapter */}
-                            <div className="flex min-w-0 items-center gap-2 bg-slate-50/70 px-4 py-3 sm:px-6">
-                              <FolderOpen className="h-4 w-4 shrink-0 text-slate-400" />
+                            {/* Subject header */}
+                            <button
+                              onClick={() =>
+                                toggle(`subj:${batchKey}:${subjectKey}`)
+                              }
+                              className="flex min-h-[52px] w-full min-w-0 items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50"
+                            >
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                {subjectExpanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="min-w-0 truncate text-sm font-extrabold text-slate-800">
+                                  {subjectName}
+                                </h3>
+                                <p className="mt-0.5 text-[10px] text-slate-400">
+                                  {unitEntries.length}{" "}
+                                  {unitEntries.length === 1 ? "unit" : "units"}
+                                </p>
+                              </div>
+                            </button>
 
-                              <span className="min-w-0 truncate text-xs font-bold text-slate-600 sm:text-sm">
-                                {chapterName}
-                              </span>
-
-                              <span className="shrink-0 text-[10px] font-semibold text-slate-400">
-                                {items.length}
-                              </span>
-                            </div>
-
-                            {/* Materials */}
-                            <div className="divide-y divide-slate-100">
-                              {items.map((m) => {
-                                const TypeIcon = getTypeIcon(m.type);
-
-                                return (
-                                  <div
-                                    key={m._id}
-                                    className="min-w-0 overflow-hidden px-4 py-3.5 transition hover:bg-slate-50 sm:px-6"
-                                  >
-                                    <div className="flex min-w-0 items-start gap-3">
-                                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600">
-                                        <TypeIcon className="h-4 w-4" />
+                            {subjectExpanded && (
+                              <div className="space-y-3 border-t border-slate-100 p-3">
+                                {unitEntries.map(([unitKey, unitNode]) => {
+                                  const chapterEntries = Object.entries(
+                                    unitNode.chapters
+                                  );
+                                  return (
+                                    <div
+                                      key={unitKey}
+                                      className="min-w-0 overflow-hidden rounded-xl border-slate-100 bg-slate-50/60"
+                                    >
+                                      {/* Unit header */}
+                                      <div className="flex min-w-0 items-center gap-2 px-3.5 py-3">
+                                        <Layers className="h-4 w-4 shrink-0 text-brand-green" />
+                                        <span className="min-w-0 truncate text-xs font-extrabold text-slate-700 sm:text-sm">
+                                          {unitNode.unit?.name || "Unsorted Unit"}
+                                        </span>
+                                        <span className="ml-auto shrink-0 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-slate-500">
+                                          {chapterEntries.length}{" "}
+                                          {chapterEntries.length === 1
+                                            ? "chapter"
+                                            : "chapters"}
+                                        </span>
                                       </div>
 
-                                      <div className="min-w-0 flex-1 pt-0.5">
-                                        <p className="break-words text-sm font-bold leading-5 text-slate-800">
-                                          {m.title}
-                                        </p>
+                                      {chapterEntries.map(
+                                        ([chapterKey, chapterNode]) => (
+                                          <div
+                                            key={chapterKey}
+                                            className="min-w-0 border-t border-slate-100 bg-white"
+                                          >
+                                            {/* Chapter header */}
+                                            <div className="flex min-w-0 items-center gap-2 bg-slate-50/70 px-3.5 py-2.5">
+                                              <FolderOpen className="h-4 w-4 shrink-0 text-slate-400" />
+                                              <span className="min-w-0 truncate text-xs font-bold text-slate-600">
+                                                {chapterNode.chapter?.name ||
+                                                  "Unsorted Chapter"}
+                                              </span>
+                                              <span className="ml-auto shrink-0 text-[10px] font-semibold text-slate-400">
+                                                {chapterNode.materials.length}
+                                              </span>
+                                            </div>
 
-                                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-400">
-                                          <span className="max-w-full truncate">
-                                            {m.batch?.name || "—"}
-                                          </span>
+                                            {/* Materials */}
+                                            <div className="divide-y divide-slate-100">
+                                              {chapterNode.materials.map((m) => {
+                                                const TypeIcon = getTypeIcon(
+                                                  m.type
+                                                );
+                                                return (
+                                                  <div
+                                                    key={m._id}
+                                                    className="min-w-0 overflow-hidden px-3.5 py-3 transition hover:bg-slate-50"
+                                                  >
+                                                    <div className="flex min-w-0 items-start gap-3">
+                                                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-green-100 bg-green-50 text-green-600">
+                                                        <TypeIcon className="h-4 w-4" />
+                                                      </div>
 
-                                          <span className="hidden text-slate-300 sm:inline">
-                                            •
-                                          </span>
+                                                      <div className="min-w-0 flex-1 pt-0.5">
+                                                        <p className="break-words text-sm font-bold leading-5 text-slate-800">
+                                                          {m.title}
+                                                        </p>
 
-                                          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-bold uppercase tracking-wide text-slate-500">
-                                            {getTypeLabel(m.type)}
-                                          </span>
-                                        </div>
-                                      </div>
+                                                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-[10px] text-slate-400">
+                                                          <span className="inline-flex max-w-full items-center gap-1 rounded-full border-blue-200 bg-blue-50 px-2 py-0.5 font-bold uppercase tracking text-blue-700">
+                                                            <Users className="h-3 w-3 shrink-0" />
+                                                            For: {batchName}
+                                                            {batchCode
+                                                              ? ` (${batchCode})`
+                                                              : ""}
+                                                          </span>
+                                                          <span className="rounded-full bg-slate-100 px-2 py-0.5 font-bold uppercase tracking-wide text-slate-500">
+                                                            {getTypeLabel(m.type)}
+                                                          </span>
+                                                        </div>
+                                                      </div>
 
-                                      {/* Desktop actions */}
-                                      <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                                        <a
-                                          href={m.fileUrl}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
-                                        >
-                                          <ExternalLink className="h-3.5 w-3.5" />
-                                          View
-                                        </a>
+                                                      {/* Desktop actions */}
+                                                      <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                                                        <a
+                                                          href={m.fileUrl}
+                                                          target="_blank"
+                                                          rel="noreferrer"
+                                                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                                                        >
+                                                          <ExternalLink className="h-3.5 w-3.5" />
+                                                          View
+                                                        </a>
+                                                        <button
+                                                          onClick={() =>
+                                                            setMaterialToDelete(m)
+                                                          }
+                                                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
+                                                          aria-label="Delete material"
+                                                        >
+                                                          <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                      </div>
+                                                    </div>
 
-                                        <button
-                                          onClick={() =>
-                                            setMaterialToDelete(m)
-                                          }
-                                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
-                                          aria-label="Delete material"
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                      </div>
+                                                    {/* Mobile actions */}
+                                                    <div className="mt-3 grid-cols-[1fr_42px] gap-2 sm:hidden">
+                                                      <a
+                                                        href={m.fileUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                                                      >
+                                                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                                        View Material
+                                                      </a>
+                                                      <button
+                                                        onClick={() =>
+                                                          setMaterialToDelete(m)
+                                                        }
+                                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-red-50 text-red-500 transition hover:bg-red-100"
+                                                        aria-label="Delete material"
+                                                      >
+                                                        <Trash2 className="h-4 w-4" />
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        )
+                                      )}
                                     </div>
-
-                                    {/* Mobile actions */}
-                                    <div className="mt-3 grid grid-cols-[1fr_42px] gap-2 sm:hidden">
-                                      <a
-                                        href={m.fileUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-green-50 px-3 text-xs font-bold text-green-700 transition hover:bg-green-100"
-                                      >
-                                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                        View Material
-                                      </a>
-
-                                      <button
-                                        onClick={() =>
-                                          setMaterialToDelete(m)
-                                        }
-                                        className="flex h-10 w-full items-center justify-center rounded-xl bg-red-50 text-red-500 transition hover:bg-red-100"
-                                        aria-label="Delete material"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                        )
-                      )}
+                        );
+                      })}
                     </div>
                   )}
                 </section>
@@ -829,6 +1028,76 @@ export default function TeacherMaterials() {
                     ))}
                   </select>
 
+                  {/* Manage existing units — rename (fix typos) or delete */}
+                  {units.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {units.map((u) => (
+                        <div
+                          key={u._id}
+                          className="flex min-w-0 items-center gap-2 rounded-lg border-slate-200 bg-white px-2.5 py-1.5"
+                        >
+                          {editingUnitId === u._id ? (
+                            <>
+                              <input
+                                value={editingUnitName}
+                                onChange={(e) =>
+                                  setEditingUnitName(e.target.value)
+                                }
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleRenameUnit(u);
+                                  if (e.key === "Escape") setEditingUnitId(null);
+                                }}
+                                className="min-w-0 flex-1 rounded-md border-green-300 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-green-500/20"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRenameUnit(u)}
+                                title="Save"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-green-600 transition hover:bg-green-50"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingUnitId(null)}
+                                title="Cancel"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600">
+                                {u.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingUnitId(u._id);
+                                  setEditingUnitName(u.name);
+                                }}
+                                title="Rename unit"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setUnitToDelete(u)}
+                                title="Delete unit"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
                     <input
                       value={newUnitName}
@@ -893,6 +1162,77 @@ export default function TeacherMaterials() {
                       </option>
                     ))}
                   </select>
+
+                  {/* Manage existing chapters — rename (fix typos) or delete */}
+                  {chapters.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {chapters.map((c) => (
+                        <div
+                          key={c._id}
+                          className="flex min-w-0 items-center gap-2 rounded-lg border-slate-200 bg-white px-2.5 py-1.5"
+                        >
+                          {editingChapterId === c._id ? (
+                            <>
+                              <input
+                                value={editingChapterName}
+                                onChange={(e) =>
+                                  setEditingChapterName(e.target.value)
+                                }
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleRenameChapter(c);
+                                  if (e.key === "Escape")
+                                    setEditingChapterId(null);
+                                }}
+                                className="min-w-0 flex-1 rounded-md border-green-300 bg-white px-2 py-1 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-green-500/20"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRenameChapter(c)}
+                                title="Save"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-green-600 transition hover:bg-green-50"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingChapterId(null)}
+                                title="Cancel"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600">
+                                {c.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingChapterId(c._id);
+                                  setEditingChapterName(c.name);
+                                }}
+                                title="Rename chapter"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setChapterToDelete(c)}
+                                title="Delete chapter"
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row">
                     <input
@@ -1105,6 +1445,26 @@ export default function TeacherMaterials() {
         title="Delete Material"
         message={`Are you sure you want to remove "${materialToDelete?.title}"?`}
         confirmLabel="Delete Material"
+        danger={true}
+      />
+
+      <ConfirmModal
+        isOpen={!!unitToDelete}
+        onClose={() => setUnitToDelete(null)}
+        onConfirm={handleDeleteUnit}
+        title="Delete Unit"
+        message={`Delete the unit "${unitToDelete?.name}"? Its chapters will be removed too.`}
+        confirmLabel="Delete Unit"
+        danger={true}
+      />
+
+      <ConfirmModal
+        isOpen={!!chapterToDelete}
+        onClose={() => setChapterToDelete(null)}
+        onConfirm={handleDeleteChapter}
+        title="Delete Chapter"
+        message={`Delete the chapter "${chapterToDelete?.name}"?`}
+        confirmLabel="Delete Chapter"
         danger={true}
       />
     </div>

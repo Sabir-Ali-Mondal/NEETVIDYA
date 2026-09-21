@@ -57,14 +57,25 @@ const createBatch = async (data, userId) => {
 
 const getBatches = async (filter = {}, user = null) => {
   const batches = await Batch.find(buildAccessibleBatchFilter(user, filter))
+    .populate("course", "name slug targetClass duration feeAmount")
     .populate("assignedTeachers.teacher", "name")
     .populate("assignedTeachers.subject", "name")
     .sort({ createdAt: -1 });
   return batches;
 };
 
+// Public catalogue: active batches only, no auth required. Used by /courses.
+const getPublicBatches = async (filter = {}) => {
+  const batches = await Batch.find({ isActive: true, ...filter })
+    .populate("course", "name slug targetClass duration feeAmount")
+    .select("name code batchType course schedule capacity students color academicYear")
+    .sort({ createdAt: -1 });
+  return batches;
+};
+
 const getBatchById = async (id) => {
   const batch = await Batch.findById(id)
+    .populate("course", "name slug")
     .populate("assignedTeachers.teacher", "name email")
     .populate("assignedTeachers.subject", "name");
   if (!batch) throw new ApiError(404, "Batch not found");
@@ -129,6 +140,7 @@ const removeStudentFromBatch = async (batchId, studentUserId) => {
 module.exports = {
   createBatch,
   getBatches,
+  getPublicBatches,
   getBatchById,
   updateBatch,
   deleteBatch,

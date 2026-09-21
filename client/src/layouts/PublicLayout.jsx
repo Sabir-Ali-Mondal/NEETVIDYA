@@ -122,27 +122,34 @@ export default function PublicLayout() {
       </div>
 
       {/* =========================================================
-          MAIN HEADER
-      ========================================================= */}
+    MAIN HEADER
+========================================================= */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-brand-black/90 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
           <div className="flex h-16 items-center justify-between sm:h-[4.5rem]">
 
-            {/* Logo */}
+            {/* =====================================================
+          LOGO
+      ===================================================== */}
             <Link
               to="/"
-              className="group flex items-center"
+              className="group flex h-full items-center"
               aria-label="NEETVIDYA Home"
             >
               <img
                 src={images.logo}
                 alt="NEETVIDYA"
-                className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.04] sm:h-10"
+                className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.04] sm:h-14 lg:h-16"
               />
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* =====================================================
+          DESKTOP NAVIGATION
+      ===================================================== */}
             <nav className="hidden items-center gap-1 md:flex lg:gap-1.5">
+
               {navLinks.map((link) => {
                 const active = location.pathname === link.path;
 
@@ -150,11 +157,10 @@ export default function PublicLayout() {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`relative rounded-xl px-3 py-2 text-sm transition-all duration-200 lg:px-3.5 ${
-                      active
+                    className={`relative rounded-xl px-3 py-2 text-sm transition-all duration-200 lg:px-3.5 ${active
                         ? "font-semibold text-brand-lime"
                         : "font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                    }`}
+                      }`}
                   >
                     {link.label}
 
@@ -172,10 +178,14 @@ export default function PublicLayout() {
                   </Link>
                 );
               })}
+
             </nav>
 
-            {/* Desktop Actions */}
+            {/* =====================================================
+          DESKTOP ACTIONS
+      ===================================================== */}
             <div className="hidden items-center gap-2.5 md:flex">
+
               <Link
                 to="/login"
                 className="rounded-xl px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
@@ -188,16 +198,24 @@ export default function PublicLayout() {
                 className="btn-primary group !rounded-xl !px-5 !py-2.5 text-sm shadow-glow-green"
               >
                 Join NEETVIDYA
+
                 <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
               </Link>
+
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* =====================================================
+          MOBILE MENU BUTTON
+      ===================================================== */}
             <button
               type="button"
               className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-gray-300 transition-all hover:bg-white/10 hover:text-white md:hidden"
               onClick={() => setMobileOpen((open) => !open)}
-              aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-label={
+                mobileOpen
+                  ? "Close navigation menu"
+                  : "Open navigation menu"
+              }
               aria-expanded={mobileOpen}
             >
               {mobileOpen ? (
@@ -206,12 +224,13 @@ export default function PublicLayout() {
                 <Menu className="h-5 w-5" />
               )}
             </button>
+
           </div>
         </div>
 
-        {/* =======================================================
-            MOBILE NAVIGATION
-        ======================================================= */}
+        {/* =========================================================
+      MOBILE NAVIGATION
+  ========================================================= */}
         <AnimatePresence initial={false}>
           {mobileOpen && (
             <motion.div
@@ -234,10 +253,14 @@ export default function PublicLayout() {
               }}
               className="overflow-hidden border-t border-white/10 md:hidden"
             >
+
               <div className="px-4 pb-5 pt-3 sm:px-6">
+
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3">
 
+                  {/* Mobile Links */}
                   <nav className="space-y-1">
+
                     {navLinks.map((link) => {
                       const active = location.pathname === link.path;
 
@@ -246,11 +269,10 @@ export default function PublicLayout() {
                           key={link.path}
                           to={link.path}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
-                            active
+                          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${active
                               ? "bg-brand-green/10 font-semibold text-brand-lime"
                               : "font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                          }`}
+                            }`}
                         >
                           <span>{link.label}</span>
 
@@ -260,9 +282,12 @@ export default function PublicLayout() {
                         </Link>
                       );
                     })}
+
                   </nav>
 
+                  {/* Mobile Actions */}
                   <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
+
                     <Link
                       to="/login"
                       onClick={() => setMobileOpen(false)}
@@ -278,15 +303,18 @@ export default function PublicLayout() {
                     >
                       Join NEETVIDYA
                     </Link>
+
                   </div>
 
                 </div>
+
               </div>
+
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
 
+      </header>
       {/* =========================================================
           PAGE CONTENT
       ========================================================= */}
@@ -315,6 +343,7 @@ export default function PublicLayout() {
       ========================================================= */}
       <footer className="relative overflow-hidden border-t border-white/10 bg-brand-black py-16 text-gray-400">
 
+        {/* Background Glow */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-green/10 blur-3xl"
@@ -327,28 +356,34 @@ export default function PublicLayout() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-          <div className="grid gap-10 md:grid-cols-12 lg:gap-16">
+          <div className="grid gap-12 md:grid-cols-12 lg:gap-16">
 
-            {/* Brand */}
-            <div className="md:col-span-5">
+            {/* =====================================================
+          BRAND
+      ===================================================== */}
+            <div className="md:col-span-5 flex flex-col items-center text-center">
+
+              {/* Large Logo */}
               <Link
                 to="/"
-                className="inline-flex items-center"
+                className="inline-flex items-center justify-center"
               >
                 <img
                   src={images.logo}
                   alt="NEETVIDYA"
-                  className="h-10 w-auto object-contain sm:h-11"
+                  className="h-20 w-auto object-contain sm:h-24 lg:h-28"
                 />
               </Link>
 
-              <p className="mt-5 max-w-md text-sm leading-7 text-gray-400">
-                NEETVIDYA is a student-focused medical coaching institute
-                built around concept-based learning, regular practice,
-                NCERT mastery, and structured NEET preparation.
+              {/* Short Description */}
+              <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
+                Concept-based NEET preparation with focused learning,
+                regular practice, and NCERT mastery.
               </p>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              {/* Contact Buttons */}
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+
                 <TelegramLink
                   url={settings.telegramChannelLink}
                   label="Telegram Channel"
@@ -361,10 +396,13 @@ export default function PublicLayout() {
                   label="Admissions Helpline"
                   className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-emerald-400 transition-colors hover:border-emerald-400/30 hover:bg-white/10"
                 />
+
               </div>
 
+              {/* Social Links */}
               {socialLinks.length > 0 && (
-                <div className="mt-5 flex items-center gap-2.5">
+                <div className="mt-5 flex items-center justify-center gap-2.5">
+
                   {socialLinks.map(({ label, href, icon: Icon }) => (
                     <a
                       key={label}
@@ -377,43 +415,59 @@ export default function PublicLayout() {
                       <Icon className="h-4 w-4" />
                     </a>
                   ))}
+
                 </div>
               )}
+
             </div>
 
-            {/* Explore */}
+            {/* =====================================================
+          EXPLORE
+      ===================================================== */}
             <div className="md:col-span-3">
+
               <h4 className="font-heading text-xs font-bold uppercase tracking-[0.2em] text-white">
                 Explore
               </h4>
 
               <ul className="mt-5 space-y-3">
+
                 {navLinks.map((link) => (
                   <li key={link.path}>
+
                     <Link
                       to={link.path}
                       className="group/link inline-flex items-center gap-2 text-sm text-gray-400 transition-colors duration-200 hover:text-brand-lime"
                     >
                       <span className="h-px w-0 bg-brand-lime transition-all duration-300 group-hover/link:w-3" />
+
                       {link.label}
                     </Link>
+
                   </li>
                 ))}
+
               </ul>
+
             </div>
 
-            {/* Institute */}
+            {/* =====================================================
+          INSTITUTE DESK
+      ===================================================== */}
             <div className="md:col-span-4">
+
               <h4 className="font-heading text-xs font-bold uppercase tracking-[0.2em] text-white">
                 Institute Desk
               </h4>
 
               <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+
                 <p className="text-sm font-semibold text-white">
                   NEETVIDYA COACHING CENTER
                 </p>
 
                 <div className="mt-4 space-y-2.5 text-sm leading-6 text-gray-400">
+
                   <p>
                     Karimpur Main Road,
                     <br />
@@ -435,6 +489,7 @@ export default function PublicLayout() {
                     </span>{" "}
                     neetvidya720@gmail.com
                   </p>
+
                 </div>
 
                 <Link
@@ -442,14 +497,21 @@ export default function PublicLayout() {
                   className="group mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-lime"
                 >
                   Contact Institute
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+
+                  <ArrowRight
+                    className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+                  />
                 </Link>
+
               </div>
+
             </div>
 
           </div>
 
-          {/* Bottom */}
+          {/* =====================================================
+        BOTTOM
+    ===================================================== */}
           <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-7 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
 
             <p>

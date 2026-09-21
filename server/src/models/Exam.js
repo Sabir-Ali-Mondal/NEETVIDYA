@@ -10,9 +10,20 @@ const examSchema = new mongoose.Schema(
       required: true,
     },
     testSeries: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries" },
+    // The course an exam belongs to. For an exam covering ALL batches of a course
+    // (examScope = COURSE) this is the only target; for a single-batch exam
+    // (examScope = BATCH) it is derived from the selected batch.
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-    // Exam is ALWAYS batch-specific (Batch === Course in this platform)
-    batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch", required: true },
+    // What the exam is assigned to:
+    //   BATCH  → the single batch in `batch`
+    //   COURSE → every active batch that belongs to `course`
+    examScope: {
+      type: String,
+      enum: ["BATCH", "COURSE"],
+      default: "BATCH",
+    },
+    // Specific batch. Required only when examScope === "BATCH".
+    batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch" },
     // Every exam carries its OWN fixed question set. Drafts can be created before
     // the questions are attached; a non-empty question set is required before publishing.
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
@@ -68,6 +79,7 @@ const examSchema = new mongoose.Schema(
 );
 
 examSchema.index({ batch: 1, status: 1 });
+examSchema.index({ course: 1, status: 1 });
 examSchema.index({ isArchived: 1, studyVisible: 1 });
 
 module.exports = mongoose.model("Exam", examSchema);

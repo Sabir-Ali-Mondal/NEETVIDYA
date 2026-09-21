@@ -15,9 +15,23 @@ import {
   Save,
   CheckCircle2,
   Layers,
+  ImageIcon,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
+
+// Uploads a picked banner file and returns { url, publicId }.
+const uploadBanner = async (file) => {
+  const fd = new FormData();
+  fd.append("image", file);
+  fd.append("folder", "neetvidya/courses");
+  const { data } = await api.post("/upload/image", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return { url: data.data?.url || "", publicId: data.data?.publicId || "" };
+};
 
 export default function AdminCourses() {
   const navigate = useNavigate();
@@ -40,6 +54,11 @@ export default function AdminCourses() {
     features: "",
   });
 
+  // Banner upload state (edit modal). Only the freshly picked file lives here;
+  // the displayed banner otherwise comes from editingCourse.coverImageUrl.
+  const [editBannerFile, setEditBannerFile] = useState(null);
+  const [editBannerFileUrl, setEditBannerFileUrl] = useState("");
+
   const fetchCourses = async () => {
     try {
       const { data } = await api.get("/courses");
@@ -55,11 +74,21 @@ export default function AdminCourses() {
     fetchCourses();
   }, []);
 
+  const emptyCreateForm = () => ({
+    name: "",
+    description: "",
+    targetClass: "",
+    duration: "",
+    feeAmount: "",
+    features: "",
+  });
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setCreating(true);
 
     try {
+      // The banner is uploaded later, from the edit modal — create without one.
       const payload = {
         ...form,
         feeAmount: Number(form.feeAmount || 0),
@@ -74,15 +103,7 @@ export default function AdminCourses() {
       alertSuccess("Course created successfully");
 
       setShowCreate(false);
-
-      setForm({
-        name: "",
-        description: "",
-        targetClass: "",
-        duration: "",
-        feeAmount: "",
-        features: "",
-      });
+      setForm(emptyCreateForm());
 
       fetchCourses();
     } catch (err) {
@@ -103,6 +124,16 @@ export default function AdminCourses() {
     setSavingEdit(true);
 
     try {
+      let coverImageUrl = editingCourse.coverImageUrl || "";
+      let coverImagePublicId = editingCourse.coverImagePublicId || "";
+
+      // A newly picked banner is uploaded first; its URL replaces the old one.
+      if (editBannerFile) {
+        const uploaded = await uploadBanner(editBannerFile);
+        coverImageUrl = uploaded.url;
+        coverImagePublicId = uploaded.publicId;
+      }
+
       const payload = {
         name: editingCourse.name,
         description: editingCourse.description,
@@ -110,6 +141,8 @@ export default function AdminCourses() {
         duration: editingCourse.duration,
         feeAmount: Number(editingCourse.feeAmount || 0),
         isActive: editingCourse.isActive,
+        coverImageUrl,
+        coverImagePublicId,
         features: Array.isArray(editingCourse.features)
           ? editingCourse.features
           : String(editingCourse.features || "")
@@ -123,6 +156,8 @@ export default function AdminCourses() {
       alertSuccess("Course updated successfully");
 
       setEditingCourse(null);
+      setEditBannerFile(null);
+      setEditBannerFileUrl("");
       fetchCourses();
     } catch (err) {
       alertError(
@@ -167,6 +202,35 @@ export default function AdminCourses() {
       ...course,
       features: course.features?.join(", ") || "",
     });
+    // Freshly picked file only — the shown banner otherwise comes from editingCourse.
+    setEditBannerFile(null);
+    setEditBannerFileUrl("");
+  };
+
+  // The banner shown in the edit modal: a freshly picked file if any, else the
+  // saved banner on the course being edited. Derived from those two sources only,
+  // so it can never leak from one course to another.
+  const editBannerDisplay = editBannerFileUrl || editingCourse?.coverImageUrl || "";
+
+  const handleEditBannerPick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alertError("Please choose an image file");
+      return;
+    }
+    setEditBannerFile(file);
+    setEditBannerFileUrl(URL.createObjectURL(file));
+  };
+
+  const handleEditBannerRemove = () => {
+    setEditBannerFile(null);
+    setEditBannerFileUrl("");
+    setEditingCourse((prev) => ({
+      ...prev,
+      coverImageUrl: "",
+      coverImagePublicId: "",
+    }));
   };
 
   const inputCls =
@@ -290,6 +354,15 @@ export default function AdminCourses() {
             >
               {/* COLOR BAR */}
               <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-emerald-400" />
+
+              {/* Banner */}
+              {course.coverImageUrl && (
+                <img
+                  src={course.coverImageUrl}
+                  alt={`${course.name} banner`}
+                  className="h-36 w-full object-cover"
+                />
+              )}
 
               <div className="p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
@@ -796,6 +869,8 @@ export default function AdminCourses() {
                       features:
                         c.features?.join(", ") || "",
                     });
+                    setEditBannerFile(null);
+                    setEditBannerFileUrl("");
                   }}
                   className="min-h-11 rounded-xl bg-brand-green px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-green-700 sm:col-start-2"
                 >
@@ -994,6 +1069,57 @@ export default function AdminCourses() {
                   </p>
                 </div>
               </div>
+
+                {/* Course banner */}
+                <div className="rounded-2xl border-slate-200 bg-slate-50/70 p-4">
+                  <label className={labelCls}>Course Banner</label>
+
+                  <div className="mt-1 overflow-hidden rounded-xl border-slate-200 bg-white">
+                    {editBannerDisplay ? (
+                      <img
+                        src={editBannerDisplay}
+                        alt="Edit banner preview"
+                        className="block h-40 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-40 w-full items-center justify-center gap-2 text-slate-300">
+                        <ImageIcon className="h-7 w-7" />
+                        <span className="text-xs font-medium">
+                          No banner uploaded
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex-wrap gap-2">
+                    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border-slate-200 bg-white px-3.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50">
+                      {savingEdit ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      {editBannerDisplay ? "Replace Banner" : "Upload Banner"}
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditBannerPick}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {editBannerDisplay && (
+                      <button
+                        type="button"
+                        onClick={handleEditBannerRemove}
+                        className="inline-flex min-h-10 items-center gap-2 rounded-xl border-red-200 bg-red-50 px-3.5 text-xs font-bold text-red-600 transition hover:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
 
               {/* ACTIONS */}
               <div className="mt-6 grid grid-cols-1 gap-2.5 pb-6 sm:grid-cols-2">

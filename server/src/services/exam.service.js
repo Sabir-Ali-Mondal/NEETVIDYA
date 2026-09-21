@@ -3,6 +3,7 @@ const Attempt = require("../models/Attempt");
 const Question = require("../models/Question");
 const Result = require("../models/Result");
 const ExamPermission = require("../models/ExamPermission");
+const Batch = require("../models/Batch");
 const { shuffleArray, generateOptionOrder } = require("../utils/shuffle");
 const ApiError = require("../utils/apiError");
 const { notifyBatch } = require("./notification.service");
@@ -16,10 +17,25 @@ const generateShareSlug = () => crypto.randomBytes(6).toString("hex");
  * Question Bank = archive of finished exams (the exam paper IS the question set).
  */
 
+// Resolves which batches an exam targets.
+//   examScope = "BATCH"  → just exam.batch
+//   examScope = "COURSE" → every batch belonging to exam.course
+// Returns an array of batch id strings.
+const resolveExamBatchIds = async (exam) => {
+  if (!exam) return [];
+  if (exam.examScope === "COURSE" && exam.course) {
+    const courseId = exam.course?._id || exam.course;
+    const batches = await Batch.find({ course: courseId }).select("_id");
+    return batches.map((b) => b._id.toString());
+  }
+  const batchId = exam.batch?._id || exam.batch;
+  return batchId ? [batchId.toString()] : [];
+};
+
 // ── Access rule ───────────────────
 // Draft/secret exams are NEVER visible to students.
 // A student may access an exam only when it is released (PUBLISHED/LIVE)
-// AND ( they belong to the exam's batch  OR  an active ExamPermission exists ).
+// AND ( they belong to one of the exam's target batches  OR  an active ExamPermission exists ).
 const canAccessExam = async (user, exam) => {
   if (!user) return false;
   if (user.role === "admin" || user.role === "teacher") return true;
@@ -27,8 +43,10 @@ const canAccessExam = async (user, exam) => {
 
   const Student = require("../models/Student");
   const student = await Student.findOne({ user: user._id });
-  const batchId = exam.batch?._id || exam.batch;
-  const studentHasBatch = student?.batches?.some((b) => b.toString() === batchId?.toString());
+  const targetBatchIds = await resolveExamBatchIds(exam);
+  const studentHasBatch = student?.batches?.some((b) =>
+    targetBatchIds.includes(b.toString())
+  );
   const explicitPermission = await ExamPermission.findOne({
     student: user._id,
     exam: exam._id || exam.id,
@@ -62,9 +80,9 @@ const checkExamAccess = async (user, examId) => {
 
   const Student = require("../models/Student");
   const student = await Student.findOne({ user: user._id });
-  const batchId = exam.batch?._id || exam.batch;
-  const hasBatchAccess = !!student?.batches?.some(
-    (b) => b.toString() === batchId?.toString()
+  const targetBatchIds = await resolveExamBatchIds(exam);
+  const hasBatchAccess = !!student?.batches?.some((b) =>
+    targetBatchIds.includes(b.toString())
   );
   const explicitPermission = await ExamPermission.findOne({
     student: user._id,
@@ -94,7 +112,23 @@ const createExam = async (data, userId) => {
     batch,
   } = data;
 
-  if (!batch) throw new ApiError(400, "A batch must be selected for every exam");
+  const examScope = data.examScope === "COURSE" ? "COURSE" : "BATCH";
+
+  if (examScope === "BATCH" && !batch) {
+    throw new ApiError(400, "Select a batch, or choose to apply the exam to a whole course");
+  }
+
+  // Derive the course from the batch when a specific batch is targeted.
+  let courseId = data.course;
+  if (batch) {
+    const targetBatch = await Batch.findById(batch).select("course");
+    if (!targetBatch) throw new ApiError(404, "Batch not found");
+    courseId = courseId || targetBatch.course || undefined;
+  }
+  if (examScope === "COURSE" && !courseId) {
+    throw new ApiError(400, "A course must be selected for a course-wide exam");
+  }
+
   if (!Array.isArray(questions)) {
     throw new ApiError(400, "Questions must be provided as an array");
   }
@@ -110,6 +144,10 @@ const createExam = async (data, userId) => {
 
   const exam = await Exam.create({
     ...data,
+    examScope,
+    course: courseId || undefined,
+    // A course-wide exam is not tied to a single batch.
+    batch: examScope === "BATCH" ? batch : undefined,
     questions,
     totalQuestions: data.totalQuestions || questions.length,
     createdBy: userId,
@@ -177,9 +215,15 @@ const getStudentExams = async (user, { page = 1, limit = 20 } = {}) => {
   const perms = await ExamPermission.find({ student: user._id, isActive: true }).select("exam");
   const permittedExamIds = perms.map((p) => p.exam);
 
+  // Course-wide exams target every batch belonging to their course — resolve the
+  // student's batches back to the courses they belong to.
+  const studentBatches = await Batch.find({ _id: { $in: batchIds } }).select("course");
+  const courseIds = studentBatches.map((b) => b.course).filter(Boolean);
+
   const filter = {
     $or: [
       { batch: { $in: batchIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+      { examScope: "COURSE", course: { $in: courseIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
       { _id: { $in: permittedExamIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
       { status: { $in: ["CLOSED", "ARCHIVED"] }, isArchived: true, studyVisible: true },
     ],
@@ -189,6 +233,7 @@ const getStudentExams = async (user, { page = 1, limit = 20 } = {}) => {
   const [exams, total] = await Promise.all([
     Exam.find(filter)
       .populate("batch", "name code")
+      .populate("course", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
@@ -224,13 +269,16 @@ const publishExam = async (id) => {
   if (!exam.shareSlug) exam.shareSlug = generateShareSlug();
   await exam.save();
 
-  // Notify only the students of this exam's batch.
-  await notifyBatch(exam.batch, {
-    title: "New exam published",
-    message: `${exam.title} is now live for your batch.`,
-    type: "TEST",
-    createdBy: exam.createdBy,
-  });
+  // Notify the students of every batch this exam targets (single batch or whole course).
+  const targetBatchIds = await resolveExamBatchIds(exam);
+  for (const batchId of targetBatchIds) {
+    await notifyBatch(batchId, {
+      title: "New exam published",
+      message: `${exam.title} is now live for your batch.`,
+      type: "TEST",
+      createdBy: exam.createdBy,
+    });
+  }
 
   return exam;
 };
@@ -357,12 +405,15 @@ const publishResults = async (id, { publish = true } = {}) => {
   );
 
   if (publish) {
-    await notifyBatch(exam.batch, {
-      title: "Results published",
-      message: `Results for ${exam.title} are now available.`,
-      type: "RESULT",
-      createdBy: exam.createdBy,
-    });
+    const targetBatchIds = await resolveExamBatchIds(exam);
+    for (const batchId of targetBatchIds) {
+      await notifyBatch(batchId, {
+        title: "Results published",
+        message: `Results for ${exam.title} are now available.`,
+        type: "RESULT",
+        createdBy: exam.createdBy,
+      });
+    }
   }
 
   return exam;
@@ -519,6 +570,7 @@ module.exports = {
   canAccessExam,
   assertExamAccess,
   checkExamAccess,
+  resolveExamBatchIds,
   createExam,
   getPublicExamBySlug,
   getExams,

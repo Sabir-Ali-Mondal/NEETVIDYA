@@ -16,6 +16,7 @@ router.get("/my", protect, authorize("student", "admin"), async (req, res, next)
     if (isStudent) filter.isPublished = true;
     const results = await Result.find(filter)
       .populate("exam", "title testType duration totalMarks")
+      .populate("subjectBreakdown.subject", "name")
       .sort({ createdAt: -1 });
     return apiResponse(res, 200, "Results retrieved", { results });
   } catch (error) {

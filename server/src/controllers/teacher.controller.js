@@ -2,6 +2,7 @@ const Teacher = require("../models/Teacher");
 const User = require("../models/User");
 const apiResponse = require("../utils/apiResponse");
 const ApiError = require("../utils/apiError");
+const { deleteFile } = require("../services/cloudinary.service");
 
 const getTeachers = async (req, res, next) => {
   try {
@@ -86,6 +87,22 @@ const updateTeacher = async (req, res, next) => {
     if (bio !== undefined) teacher.bio = bio;
     if (subject !== undefined) teacher.subject = subject || null;
 
+    // Faculty image shown in the public faculty area. The admin uploads a
+    // Cloudinary image and sends back its URL + public id, or an empty string
+    // to clear the image and fall back to the default placeholder.
+    if (req.body.photoUrl !== undefined) {
+      const nextUrl = req.body.photoUrl || undefined;
+      const nextPublicId = req.body.photoPublicId || undefined;
+
+      // Drop the previously uploaded asset so replaced images don't pile up.
+      if (teacher.photoPublicId && teacher.photoPublicId !== nextPublicId) {
+        await deleteFile(teacher.photoPublicId);
+      }
+
+      teacher.photoUrl = nextUrl;
+      teacher.photoPublicId = nextPublicId;
+    }
+
     await teacher.save();
     const updated = await Teacher.findById(teacher._id).populate("user", "name email phone isActive avatar");
     return apiResponse(res, 200, "Teacher updated successfully", { teacher: updated });
@@ -94,4 +111,34 @@ const updateTeacher = async (req, res, next) => {
   }
 };
 
-module.exports = { getTeachers, getPublicTeachers, getMyProfile, updatePermissions, deactivateTeacher, updateTeacher };
+const deleteTeacher = async (req, res, next) => {
+  try {
+    const teacher = await Teacher.findById(req.params.id);
+    if (!teacher) throw new ApiError(404, "Teacher not found");
+
+    // Remove the uploaded faculty image from Cloudinary (best-effort).
+    if (teacher.photoPublicId) {
+      await deleteFile(teacher.photoPublicId);
+    }
+
+    // Cascade: the login account is owned by the faculty profile.
+    if (teacher.user) {
+      await User.findByIdAndDelete(teacher.user);
+    }
+
+    await Teacher.findByIdAndDelete(req.params.id);
+    return apiResponse(res, 200, "Teacher deleted successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getTeachers,
+  getPublicTeachers,
+  getMyProfile,
+  updatePermissions,
+  deactivateTeacher,
+  updateTeacher,
+  deleteTeacher,
+};

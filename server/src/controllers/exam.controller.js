@@ -373,7 +373,7 @@ const getExamResults = async (req, res, next) => {
 
       const group = groupedByStudent.get(studentKey);
       group.attempts.push({
-        ...result.toObject ? result.toObject() : result,
+        ...(typeof result.toObject === "function" ? result.toObject() : result),
         studentId: studentProfile?.studentId || "—",
         studentName: result.student?.name || "Student",
       });

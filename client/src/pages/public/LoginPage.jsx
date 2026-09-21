@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import HomeButton from "../../components/shared/HomeButton";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -45,22 +46,37 @@ export default function LoginPage() {
 
   return (
     <main className="relative h-screen overflow-hidden bg-brand-soft">
-      {/* Background decoration */}
+      {/* =========================
+          PAGE BACKGROUND
+      ========================= */}
       <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-brand-green/10 blur-3xl" />
+
       <div className="pointer-events-none absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-200/20 blur-3xl" />
 
       <div className="relative flex h-full items-center justify-center p-3 sm:p-5 lg:p-6">
         <div className="grid h-full max-h-[760px] w-full max-w-[1250px] overflow-hidden rounded-[1.75rem] border border-white bg-white shadow-[0_25px_80px_-30px_rgba(15,23,42,0.3)] lg:grid-cols-2">
 
-          {/* =========================
-              LEFT PANEL
-          ========================= */}
+          {/* =====================================================
+              LEFT PANEL — DESKTOP
+          ===================================================== */}
           <section className="relative hidden overflow-hidden bg-brand-black lg:flex">
+
+            {/* Background gradients */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(34,197,94,0.2),_transparent_40%),radial-gradient(circle_at_bottom_left,_rgba(163,230,53,0.1),_transparent_35%)]" />
 
+            {/* Decorative glow */}
             <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-brand-green/15 blur-3xl" />
+
             <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-brand-lime/10 blur-3xl" />
 
+            {/* =========================
+                BACK TO HOME — DESKTOP
+            ========================= */}
+            <div className="absolute left-7 top-7 z-20 xl:left-9 xl:top-9">
+              <HomeButton />
+            </div>
+
+            {/* LEFT CONTENT */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -72,13 +88,16 @@ export default function LoginPage() {
             >
               <div className="w-full max-w-md">
 
+                {/* Badge */}
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-green/25 bg-brand-green/10 px-3 py-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-brand-lime" />
+
                   <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-brand-lime">
                     Student Portal
                   </span>
                 </div>
 
+                {/* Heading */}
                 <h2 className="font-heading text-4xl font-extrabold leading-[1.05] tracking-tight text-white xl:text-[3.2rem]">
                   Your NEET Journey
                   <span className="block text-brand-lime">
@@ -86,13 +105,16 @@ export default function LoginPage() {
                   </span>
                 </h2>
 
+                {/* Description */}
                 <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
                   Access your study materials, practice tests, performance
                   insights, and learning resources from one place.
                 </p>
 
+                {/* Divider */}
                 <div className="my-7 h-px w-14 bg-brand-green/50" />
 
+                {/* Features */}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                   {[
                     "Practice Papers",
@@ -117,18 +139,21 @@ export default function LoginPage() {
                   ))}
                 </div>
 
+                {/* Bottom message */}
                 <div className="mt-8 flex items-center gap-2 text-[10px] text-gray-500">
                   <Sparkles className="h-3.5 w-3.5 text-brand-lime" />
+
                   Structured preparation for medical aspirants.
                 </div>
               </div>
             </motion.div>
           </section>
 
-          {/* =========================
-              RIGHT LOGIN FORM
-          ========================= */}
+          {/* =====================================================
+              RIGHT PANEL — LOGIN FORM
+          ===================================================== */}
           <section className="flex min-h-0 items-center overflow-y-auto px-5 py-5 sm:px-8 lg:px-10 xl:px-14">
+
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,10 +165,20 @@ export default function LoginPage() {
               className="mx-auto w-full max-w-md"
             >
 
-              {/* HEADER */}
+              {/* =========================
+                  BACK TO HOME — MOBILE
+              ========================= */}
+              <div className="mb-3 flex justify-end lg:hidden">
+                <HomeButton variant="light" />
+              </div>
+
+              {/* =========================
+                  HEADER
+              ========================= */}
               <div className="mb-7">
                 <div className="inline-flex items-center gap-2 rounded-full border border-brand-green/15 bg-brand-green/5 px-3 py-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+
                   <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-green">
                     Welcome Back
                   </span>
@@ -159,7 +194,9 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* FORM */}
+              {/* =========================
+                  LOGIN FORM
+              ========================= */}
               <form onSubmit={handleSubmit} className="space-y-4">
 
                 {/* IDENTIFIER */}
@@ -256,7 +293,9 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              {/* REGISTER */}
+              {/* =========================
+                  REGISTER
+              ========================= */}
               <div className="mt-7 border-t border-slate-100 pt-6 text-center">
                 <p className="text-xs text-slate-500">
                   New student?{" "}
@@ -265,21 +304,28 @@ export default function LoginPage() {
                     className="inline-flex items-center gap-1 font-semibold text-brand-green transition-colors hover:text-brand-dark"
                   >
                     Create an account
+
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </p>
               </div>
 
-              {/* DECORATIVE LINE */}
+              {/* =========================
+                  DECORATIVE LINE
+              ========================= */}
               <div className="mt-6 flex items-center justify-center gap-3">
                 <span className="h-px w-8 bg-brand-green/30" />
+
                 <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+
                 <span className="h-px w-8 bg-brand-green/30" />
               </div>
 
+              {/* FOOTER */}
               <p className="mt-3 text-center text-[9px] uppercase tracking-[0.16em] text-slate-400">
                 NEET-focused learning environment
               </p>
+
             </motion.div>
           </section>
         </div>

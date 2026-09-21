@@ -428,8 +428,15 @@ export default function ExamPage() {
                           {String.fromCharCode(65 + idx)}
                         </span>
 
-                        <span className="min-w-0 break-words leading-6">
+                        <span className="min-w-0 flex-1 break-words leading-6">
                           {opt.text}
+                          {opt.imageUrl && (
+                            <img
+                              src={opt.imageUrl}
+                              alt={`Option ${String.fromCharCode(65 + idx)}`}
+                              className="mt-2 max-h-40 rounded-lg border-slate-200 bg-white object-contain"
+                            />
+                          )}
                         </span>
                       </button>
                     );

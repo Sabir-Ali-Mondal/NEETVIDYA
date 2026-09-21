@@ -39,6 +39,43 @@ export default function PerformancePage() {
           }))
       : [];
 
+  // ── Real aggregates (no placeholders) ──────────────────────────────
+  const hasData = results.length > 0;
+
+  const overallAccuracy = hasData
+    ? Math.round(
+        results.reduce((sum, r) => sum + (r.accuracy || 0), 0) / results.length
+      )
+    : null;
+
+  // Strongest subject — from each result's subjectBreakdown.
+  const subjectAgg = {};
+  results.forEach((r) => {
+    (r.subjectBreakdown || []).forEach((s) => {
+      const key = s.subject?.name || s.subject;
+      if (!key) return;
+      if (!subjectAgg[key]) subjectAgg[key] = { correct: 0, attempted: 0 };
+      subjectAgg[key].correct += s.correct || 0;
+      subjectAgg[key].attempted += (s.correct || 0) + (s.wrong || 0);
+    });
+  });
+  const strongest = Object.entries(subjectAgg)
+    .filter(([, v]) => v.attempted > 0)
+    .map(([name, v]) => ({
+      name,
+      accuracy: Math.round((v.correct / v.attempted) * 100),
+    }))
+    .sort((a, b) => b.accuracy - a.accuracy)[0] || null;
+
+  // Average seconds per attempted question across all tests.
+  const totalTime = results.reduce((sum, r) => sum + (r.timeTaken || 0), 0);
+  const totalAttempted = results.reduce(
+    (sum, r) => sum + (r.correctCount || 0) + (r.wrongCount || 0),
+    0
+  );
+  const avgSpeed =
+    totalAttempted > 0 ? Math.round(totalTime / totalAttempted) : null;
+
   return (
     <div className="relative min-h-full overflow-hidden bg-brand-soft">
       {/* Decorative background */}
@@ -98,7 +135,7 @@ export default function PerformancePage() {
             </div>
 
             <p className="mt-5 font-heading text-3xl font-extrabold tracking-tight text-brand-dark">
-              84.2%
+              {overallAccuracy !== null ? `${overallAccuracy}%` : "—"}
             </p>
 
             <p className="mt-1 text-xs leading-5 text-slate-400">
@@ -114,16 +151,16 @@ export default function PerformancePage() {
               </div>
 
               <span className="min-w-0 truncate text-[10px] font-extrabold uppercase tracking-[0.12em] text-blue-600">
-                Accuracy in Biology
+                {strongest ? `Accuracy in ${strongest.name}` : "Best Subject"}
               </span>
             </div>
 
             <p className="mt-5 font-heading text-3xl font-extrabold tracking-tight text-brand-dark">
-              91.0%
+              {strongest ? `${strongest.accuracy}%` : "—"}
             </p>
 
             <p className="mt-1 text-xs leading-5 text-slate-400">
-              Strongest subject area
+              Your strongest subject area
             </p>
           </div>
 
@@ -140,11 +177,11 @@ export default function PerformancePage() {
             </div>
 
             <p className="mt-5 font-heading text-3xl font-extrabold tracking-tight text-brand-dark">
-              48 Sec
+              {avgSpeed !== null ? `${avgSpeed} Sec` : "—"}
             </p>
 
             <p className="mt-1 text-xs leading-5 text-slate-400">
-              Target is below 55 sec for NEET
+              Average time per attempted question
             </p>
           </div>
         </div>

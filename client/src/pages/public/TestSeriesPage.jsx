@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import api from "../../config/api";
 import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
 import images from "../../config/images";
+import WhatsAppLink from "../../components/shared/WhatsAppLink";
+import useContactSettings from "../../hooks/useContactSettings";
 import {
   ClipboardList,
   CheckCircle2,
@@ -11,6 +13,7 @@ import {
 } from "lucide-react";
 
 export default function TestSeriesPage() {
+  const { settings } = useContactSettings();
   const [exams, setExams] = useState([]);
 
   useEffect(() => {
@@ -225,7 +228,7 @@ export default function TestSeriesPage() {
                   </div>
 
                   {/* Action */}
-                  <div className="mt-auto pt-5">
+                  <div className="mt-auto space-y-2 pt-5">
                     <Link
                       to="/register"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-md shadow-brand-green/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-green/25"
@@ -233,6 +236,13 @@ export default function TestSeriesPage() {
                       Register for Access
                       <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </Link>
+
+                    <WhatsAppLink
+                      number={settings.whatsappNumber}
+                      message={`Hello NEETVIDYA!\n\nI am interested in this exam and would like to request access:\n- Exam: ${exam.title}\n- Type: ${exam.testType?.replace(/_/g, " ") || "Exam"}\n\nPlease grant me permission to attempt it. Thank you!`}
+                      label="Request exam access"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-emerald-200 bg-emerald-50 px-5 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
+                    />
                   </div>
                 </div>
               </article>

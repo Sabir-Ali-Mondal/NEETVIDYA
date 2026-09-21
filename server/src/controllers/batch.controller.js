@@ -4,6 +4,7 @@ const ApiError = require("../utils/apiError");
 const {
   createBatch: createBatchService,
   getBatches: getBatchesService,
+  getPublicBatches: getPublicBatchesService,
   getBatchById,
   updateBatch: updateBatchService,
   deleteBatch: deleteBatchService,
@@ -20,6 +21,20 @@ const getBatches = async (req, res, next) => {
     if (course) filter.course = course;
     const batches = await getBatchesService(filter, req.user);
     return apiResponse(res, 200, "Batches retrieved", { batches });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Unauthenticated catalogue for the public /courses page.
+const getPublicBatches = async (req, res, next) => {
+  try {
+    const { course, type } = req.query;
+    const filter = {};
+    if (course) filter.course = course;
+    if (type) filter.batchType = type;
+    const batches = await getPublicBatchesService(filter);
+    return apiResponse(res, 200, "Public batches retrieved", { batches });
   } catch (error) {
     next(error);
   }
@@ -103,6 +118,7 @@ const getBatchStudents = async (req, res, next) => {
 
 module.exports = {
   getBatches,
+  getPublicBatches,
   createBatch,
   updateBatch,
   deleteBatch,
