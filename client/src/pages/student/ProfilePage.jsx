@@ -430,7 +430,7 @@ export default function ProfilePage() {
                 {/* Phone */}
                 <div>
                   <label className="mb-2 block text-[9px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
-                    Phone Number
+                    WhatsApp Number
                   </label>
 
                   <div className="group relative">
@@ -448,6 +448,11 @@ export default function ProfilePage() {
                       className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50/60 pl-11 pr-4 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-green focus:bg-white focus:ring-4 focus:ring-brand-green/10"
                     />
                   </div>
+
+                  <p className="mt-2 text-[10px] leading-4 text-slate-400">
+                    Please use the number that is active on WhatsApp so the
+                    institute can reach you with important updates.
+                  </p>
                 </div>
               </div>
 

@@ -24,6 +24,17 @@ const getPublicExamBySlug = async (req, res, next) => {
   }
 };
 
+// Public list of released exams (no auth) for the marketing / test-series area.
+const getPublicExams = async (req, res, next) => {
+  try {
+    const { testType, batch, limit } = req.query;
+    const exams = await svc.getPublicExams({ testType, batch, limit });
+    return apiResponse(res, 200, "Public exams retrieved", { exams });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getExams = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -444,6 +455,7 @@ module.exports = {
   downloadExam,
   getQuestionBank,
   getPublicExamBySlug,
+  getPublicExams,
   publishResults,
   grantPermission,
   revokePermission,

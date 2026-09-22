@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext, useMemo } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { alertError } from "../../utils/alert";
 import {
@@ -18,6 +18,55 @@ import {
 import HomeButton from "../../components/shared/HomeButton";
 
 export default function RegisterPage() {
+  const location = useLocation();
+
+  // Capture where this signup came from so the admin can later see it.
+  // Priority: explicit query params (course/batch/campaign/utm) → referrer.
+  const registrationSource = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const get = (k) => params.get(k) || undefined;
+
+    const referrer =
+      get("ref") ||
+      get("source") ||
+      (typeof document !== "undefined" && document.referrer) ||
+      undefined;
+
+    const utm = {};
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"].forEach((k) => {
+      const v = params.get(k);
+      if (v) utm[k] = v;
+    });
+
+    const courseName = get("courseName") || get("course");
+    const batchName = get("batchName") || get("batch");
+    const campaign = get("campaign") || utm.utm_campaign || undefined;
+
+    // Human-readable label describing the entry point.
+    const parts = [];
+    if (courseName) parts.push(`Course: ${courseName}`);
+    if (batchName) parts.push(`Batch: ${batchName}`);
+    if (campaign) parts.push(`Campaign: ${campaign}`);
+
+    const label =
+      parts.length > 0
+        ? parts.join(" • ")
+        : referrer
+          ? `Direct link • ${referrer}`
+          : get("page") || location.pathname;
+
+    return {
+      type: campaign ? "CAMPAIGN" : "WEBSITE",
+      label,
+      page: get("page") || location.pathname + location.search,
+      referrer: typeof referrer === "string" ? referrer.slice(0, 300) : undefined,
+      campaign,
+      courseName,
+      batchName,
+      utm,
+    };
+  }, [location.pathname, location.search]);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -58,7 +107,8 @@ export default function RegisterPage() {
         form.name,
         form.email,
         form.password,
-        form.phone
+        form.phone,
+        registrationSource
       );
 
       setRegistered(true);
@@ -391,7 +441,7 @@ export default function RegisterPage() {
                     htmlFor="phone"
                     className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500"
                   >
-                    Phone Number
+                    WhatsApp Number
                   </label>
 
                   <input
@@ -404,6 +454,11 @@ export default function RegisterPage() {
                     autoComplete="tel"
                     className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm text-brand-dark outline-none transition-all placeholder:text-slate-400 focus:border-brand-green focus:bg-white focus:ring-4 focus:ring-brand-green/10"
                   />
+
+                  <p className="mt-1.5 text-[10px] leading-4 text-slate-400">
+                    Please enter a number that is on WhatsApp — we use it to send
+                    you important updates and admission details.
+                  </p>
                 </div>
 
                 {/* PASSWORD */}

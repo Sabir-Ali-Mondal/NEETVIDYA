@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../../config/api";
 import {
   Users,
@@ -18,9 +19,14 @@ import {
   X,
   GraduationCap,
   MapPin,
+  AlertTriangle,
+  MessageCircle,
+  Globe,
 } from "lucide-react";
 import { alertSuccess, alertError } from "../../utils/alert";
 import ConfirmModal from "../../components/shared/ConfirmModal";
+import useContactSettings from "../../hooks/useContactSettings";
+import { buildStudentWhatsAppLink } from "../../utils/studentFollowUp";
 
 const typeColors = {
   REGULAR_OFFLINE: "bg-green-50 text-green-700 border-green-200",
@@ -42,7 +48,21 @@ const getInitial = (name) =>
 const getTypeLabel = (type) =>
   type?.replace(/_/g, " ") || "—";
 
+const sourceLabelFor = (student) => {
+  const src = student?.registrationSource || {};
+  return (
+    src.label ||
+    src.courseName ||
+    src.batchName ||
+    src.page ||
+    src.referrer ||
+    ""
+  );
+};
+
 export default function AdminStudents() {
+  const { settings } = useContactSettings();
+  const location = useLocation();
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +78,8 @@ export default function AdminStudents() {
   const [grantableExams, setGrantableExams] = useState([]);
   const [examToPermit, setExamToPermit] = useState("");
   const [grantingAccess, setGrantingAccess] = useState(false);
+  const [studentDetail, setStudentDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -72,6 +94,14 @@ export default function AdminStudents() {
   });
 
   const limit = 15;
+
+  // Allow deep-linking into a specific student, e.g. from the dashboard
+  // "Needs Attention" panel (?search=<email>).
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("search");
+    if (q) setSearch(q);
+  }, [location.search]);
 
   const loadGrantableExams = async () => {
     try {
@@ -168,6 +198,16 @@ export default function AdminStudents() {
     fetchStudents();
     fetchBatches();
   }, [page, search]);
+
+  // Deep link from the Admin Dashboard "View Details" button — open the
+  // requested student's detail modal once the list is available.
+  const focusStudentId = location.state?.focusStudentId;
+  useEffect(() => {
+    if (!focusStudentId || loading) return;
+    const target = students.find((s) => s._id === focusStudentId);
+    if (target) openStudent(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusStudentId, loading]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -280,10 +320,30 @@ export default function AdminStudents() {
     }
   };
 
-  const openStudent = (student) => {
+  const openStudent = async (student) => {
     setViewingStudent(student);
     setExamToPermit("");
+    setStudentDetail(null);
     loadGrantableExams();
+
+    // Fetch the enriched detail (enrollments, active permissions, attention
+    // reasons, registration source) for the red-dot action flow.
+    const studentId = student?._id;
+    if (!studentId) return;
+    setDetailLoading(true);
+    try {
+      const { data } = await api.get(`/students/${studentId}`);
+      const detail = data.data;
+      setStudentDetail(detail);
+      // Merge the resolved attention flag back onto the list item being viewed.
+      if (detail?.student) {
+        setViewingStudent((prev) => ({ ...prev, ...detail.student }));
+      }
+    } catch {
+      setStudentDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const openEdit = (student) => {
@@ -396,8 +456,26 @@ export default function AdminStudents() {
                 >
                   {/* Student heading */}
                   <div className="flex min-w-0 items-start gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 text-lg font-extrabold text-white shadow-md shadow-green-600/15">
-                      {getInitial(name)}
+                    <div className="relative shrink-0">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 text-lg font-extrabold text-white shadow-md shadow-green-600/15">
+                        {getInitial(name)}
+                      </div>
+
+                      {s.needsAttention && (
+                        <button
+                          type="button"
+                          onClick={() => openStudent(s)}
+                          title={`Needs attention: ${(s.attentionReasons || []).join(", ")}`}
+                          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center"
+                          aria-label="Needs attention"
+                        >
+                          <span
+                            className={`h-3.5 w-3.5 animate-pulse rounded-full border-2 border-white shadow ${
+                              s.attentionLevel === "yellow" ? "bg-amber-400" : "bg-red-500"
+                            }`}
+                          />
+                        </button>
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -446,6 +524,29 @@ export default function AdminStudents() {
                           {s.currentClass || "—"}
                         </span>
                       </div>
+
+                      {s.needsAttention && (
+                        <div
+                          className={`mt-2 flex min-w-0 items-start gap-1.5 rounded-lg border px-2 py-1.5 ${
+                            s.attentionLevel === "yellow"
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-red-100 bg-red-50"
+                          }`}
+                        >
+                          <AlertTriangle
+                            className={`mt-0.5 h-3 w-3 shrink-0 ${
+                              s.attentionLevel === "yellow" ? "text-amber-500" : "text-red-500"
+                            }`}
+                          />
+                          <span
+                            className={`min-w-0 text-[10px] font-semibold leading-4 ${
+                              s.attentionLevel === "yellow" ? "text-amber-700" : "text-red-600"
+                            }`}
+                          >
+                            {(s.attentionReasons || []).join(" • ")}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -590,26 +691,64 @@ export default function AdminStudents() {
                   {students.map((s) => (
                     <tr
                       key={s._id}
-                      className="group transition hover:bg-slate-50/60"
+                      onClick={() => openStudent(s)}
+                      className={`group cursor-pointer transition hover:bg-slate-50/60 ${
+                        s.needsAttention
+                          ? s.attentionLevel === "yellow"
+                            ? "bg-amber-50/40"
+                            : "bg-red-50/30"
+                          : ""
+                      }`}
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 text-sm font-extrabold text-white shadow-sm">
-                            {getInitial(
-                              s.user?.name
+                          <div className="relative shrink-0">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 text-sm font-extrabold text-white shadow-sm">
+                              {getInitial(
+                                s.user?.name
+                              )}
+                            </div>
+
+                            {s.needsAttention && (
+                              <span
+                                title={`Needs attention: ${(s.attentionReasons || []).join(", ")}`}
+                                className={`absolute -right-1 -top-1 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-white shadow ${
+                                  s.attentionLevel === "yellow" ? "bg-amber-400" : "bg-red-500"
+                                }`}
+                              />
                             )}
                           </div>
 
                           <div className="min-w-0">
-                            <div className="max-w-[220px] truncate font-bold text-slate-800">
-                              {s.user?.name ||
-                                "Unnamed Student"}
+                            <div className="flex items-center gap-1.5">
+                              <div className="max-w-[220px] truncate font-bold text-slate-800">
+                                {s.user?.name ||
+                                  "Unnamed Student"}
+                              </div>
+
+                              {s.needsAttention && (
+                                <AlertTriangle
+                                  className={`h-3.5 w-3.5 shrink-0 ${
+                                    s.attentionLevel === "yellow" ? "text-amber-500" : "text-red-500"
+                                  }`}
+                                />
+                              )}
                             </div>
 
                             <div className="mt-0.5 max-w-[240px] truncate text-xs text-slate-400">
                               {s.user?.email ||
                                 "No email"}
                             </div>
+
+                            {s.needsAttention && (
+                              <div
+                                className={`mt-0.5 max-w-[240px] truncate text-[10px] font-semibold ${
+                                  s.attentionLevel === "yellow" ? "text-amber-600" : "text-red-500"
+                                }`}
+                              >
+                                {(s.attentionReasons || []).join(" • ")}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -671,9 +810,10 @@ export default function AdminStudents() {
                       <td className="px-5 py-4">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() =>
-                              openStudent(s)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openStudent(s);
+                            }}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                             title="View Details"
                           >
@@ -681,9 +821,10 @@ export default function AdminStudents() {
                           </button>
 
                           <button
-                            onClick={() =>
-                              openEdit(s)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEdit(s);
+                            }}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
                             title="Edit Student"
                           >
@@ -691,12 +832,10 @@ export default function AdminStudents() {
                           </button>
 
                           <button
-                            onClick={() =>
-                              toggleActive(
-                                s._id,
-                                s.isActive
-                              )
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleActive(s._id, s.isActive);
+                            }}
                             className={`rounded-lg p-2 transition ${
                               s.isActive
                                 ? "text-red-400 hover:bg-red-50 hover:text-red-600"
@@ -716,9 +855,10 @@ export default function AdminStudents() {
                           </button>
 
                           <button
-                            onClick={() =>
-                              setStudentToDelete(s)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStudentToDelete(s);
+                            }}
                             className="rounded-lg p-2 text-red-400 transition hover:bg-red-50 hover:text-red-600"
                             title="Delete Student"
                           >
@@ -834,7 +974,7 @@ export default function AdminStudents() {
 
                   <div>
                     <label className={labelClass}>
-                      Phone
+                      WhatsApp Number
                     </label>
                     <input
                       value={form.phone}
@@ -847,6 +987,10 @@ export default function AdminStudents() {
                       className={inputClass}
                       placeholder="+91 XXXXX XXXXX"
                     />
+                    <p className="mt-1 text-[10px] leading-4 text-slate-400">
+                      Enter the student's WhatsApp number — follow-up messages
+                      are sent here.
+                    </p>
                   </div>
 
                   <div>
@@ -1060,9 +1204,23 @@ export default function AdminStudents() {
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between border-b border-slate-100 p-5 sm:p-6">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 text-xl font-extrabold text-white shadow-md">
-                  {getInitial(
-                    viewingStudent.user?.name
+                <div className="relative shrink-0">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 text-xl font-extrabold text-white shadow-md">
+                    {getInitial(
+                      viewingStudent.user?.name
+                    )}
+                  </div>
+
+                  {(viewingStudent.needsAttention ||
+                    studentDetail?.student?.needsAttention) && (
+                    <span
+                      className={`absolute -right-1 -top-1 h-3.5 w-3.5 animate-pulse rounded-full border-2 border-white shadow ${
+                        (studentDetail?.student?.attentionLevel ||
+                          viewingStudent.attentionLevel) === "yellow"
+                          ? "bg-amber-400"
+                          : "bg-red-500"
+                      }`}
+                    />
                   )}
                 </div>
 
@@ -1093,6 +1251,61 @@ export default function AdminStudents() {
             {/* Body */}
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <div className="space-y-5 p-5 sm:p-6">
+                {/* Attention banner — why this student has the red/yellow dot */}
+                {(viewingStudent.needsAttention ||
+                  studentDetail?.student?.needsAttention) &&
+                  (() => {
+                    const level =
+                      studentDetail?.student?.attentionLevel ||
+                      viewingStudent.attentionLevel ||
+                      "red";
+                    const isYellow = level === "yellow";
+
+                    return (
+                      <div
+                        className={`rounded-2xl border p-4 ${
+                          isYellow ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                              isYellow ? "bg-amber-100 text-amber-600" : "bg-red-100 text-red-600"
+                            }`}
+                          >
+                            <AlertTriangle className="h-4 w-4" />
+                          </div>
+
+                          <div className="min-w-0">
+                            <p
+                              className={`text-xs font-extrabold ${
+                                isYellow ? "text-amber-800" : "text-red-800"
+                              }`}
+                            >
+                              {isYellow ? "Partial setup" : "Needs attention"}
+                            </p>
+                            <ul className="mt-1 space-y-0.5">
+                              {(
+                                viewingStudent.attentionReasons ||
+                                studentDetail?.student?.attentionReasons ||
+                                []
+                              ).map((reason) => (
+                                <li
+                                  key={reason}
+                                  className={`text-[11px] leading-5 ${
+                                    isYellow ? "text-amber-700" : "text-red-700"
+                                  }`}
+                                >
+                                  • {reason}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 {/* Basic info */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3.5">
@@ -1184,6 +1397,54 @@ export default function AdminStudents() {
                   </div>
                 </div>
 
+                {/* Enrollment & exam access status */}
+                <div className="border-t border-slate-100 pt-5">
+                  <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                    Enrollment & Exam Access
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-slate-100 bg-white p-3.5">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                        Batches
+                      </div>
+                      <div className="mt-1 font-bold text-slate-800">
+                        {viewingStudent.batches?.length || 0}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-100 bg-white p-3.5">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                        Exam Permissions
+                      </div>
+                      <div className="mt-1 font-bold text-slate-800">
+                        {detailLoading
+                          ? "..."
+                          : studentDetail?.activePermissions
+                                ?.length ??
+                            viewingStudent.examPermissions
+                              ?.length ??
+                            0}
+                      </div>
+                    </div>
+                  </div>
+
+                  {Array.isArray(studentDetail?.enrollments) &&
+                    studentDetail.enrollments.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {studentDetail.enrollments.map((en) => (
+                          <span
+                            key={en._id}
+                            className="max-w-full truncate rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700"
+                          >
+                            {en.course?.name || "Course"}
+                            {en.status ? ` • ${en.status}` : ""}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                </div>
+
                 {/* Batches */}
                 <div className="border-t border-slate-100 pt-5">
                   <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
@@ -1209,6 +1470,79 @@ export default function AdminStudents() {
                   ) : (
                     <p className="text-xs text-slate-400">
                       No batch assigned currently.
+                    </p>
+                  )}
+                </div>
+
+                {/* Registration source / how they reached us */}
+                <div className="border-t border-slate-100 pt-5">
+                  <div className="mb-2 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                    <Globe className="h-3.5 w-3.5" />
+                    Registration Source
+                  </div>
+
+                  {sourceLabelFor(viewingStudent) ||
+                  viewingStudent.registrationSource ? (
+                    <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      {(() => {
+                        const src = viewingStudent.registrationSource || {};
+                        const items = [
+                          src.label && ["Source", src.label],
+                          src.courseName && ["Interested course", src.courseName],
+                          src.batchName && ["Interested batch", src.batchName],
+                          src.type && src.type !== "WEBSITE" && ["Type", src.type],
+                          src.campaign && ["Campaign", src.campaign],
+                          src.page && ["Page", src.page],
+                          src.referrer && ["Referrer", src.referrer],
+                          src.utm?.utm_source && ["UTM source", src.utm.utm_source],
+                          src.utm?.utm_medium && ["UTM medium", src.utm.utm_medium],
+                        ].filter(Boolean);
+
+                        if (items.length === 0) {
+                          return (
+                            <p className="text-xs text-slate-400">
+                              No source captured.
+                            </p>
+                          );
+                        }
+
+                        return items.map(([k, v]) => (
+                          <div key={k} className="flex min-w-0 items-start justify-between gap-3 text-xs">
+                            <span className="shrink-0 font-bold uppercase tracking-wide text-slate-400">
+                              {k}
+                            </span>
+                            <span className="min-w-0 break-words text-right font-semibold text-slate-700">
+                              {String(v)}
+                            </span>
+                          </div>
+                        ));
+                      })()}
+
+                      {viewingStudent.user?.createdAt && (
+                        <div className="flex items-center justify-between gap-3 border-t border-slate-200/70 pt-2 text-xs">
+                          <span className="shrink-0 font-bold uppercase tracking-wide text-slate-400">
+                            Registered
+                          </span>
+                          <span className="font-semibold text-slate-700">
+                            {new Date(viewingStudent.user.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+
+                      {viewingStudent.user?.lastLogin && (
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <span className="shrink-0 font-bold uppercase tracking-wide text-slate-400">
+                            Last login
+                          </span>
+                          <span className="font-semibold text-slate-700">
+                            {new Date(viewingStudent.user.lastLogin).toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">
+                      No registration source captured for this student.
                     </p>
                   )}
                 </div>
@@ -1305,6 +1639,34 @@ export default function AdminStudents() {
 
             {/* Actions */}
             <div className="shrink-0 border-t border-slate-100 p-5 sm:p-6">
+              {(() => {
+                const waTarget = studentDetail?.student || viewingStudent;
+                const wa = buildStudentWhatsAppLink(waTarget, settings);
+
+                return (
+                  <>
+                    <a
+                      href={wa.href || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mb-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/15 transition hover:bg-emerald-700"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      {wa.isStudentNumber
+                        ? "Send WhatsApp to Student"
+                        : "Send WhatsApp Message"}
+                    </a>
+
+                    {!wa.isStudentNumber && (
+                      <p className="mb-3 -mt-1 text-center text-[11px] font-medium text-amber-600">
+                        No student phone on record — add a WhatsApp number so this
+                        message reaches the student directly.
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
+
               <div className="flex gap-3">
                 <button
                   onClick={() =>
@@ -1403,7 +1765,7 @@ export default function AdminStudents() {
 
                   <div>
                     <label className={labelClass}>
-                      Phone
+                      WhatsApp Number
                     </label>
 
                     <input
@@ -1420,6 +1782,10 @@ export default function AdminStudents() {
                       }
                       className={inputClass}
                     />
+                    <p className="mt-1 text-[10px] leading-4 text-slate-400">
+                      Used for WhatsApp follow-up. Include country code for best
+                      results.
+                    </p>
                   </div>
 
                   <div>

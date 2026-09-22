@@ -21,9 +21,73 @@ const generateStudentId = async () => {
   return `${prefix}${String(lastNum + 1).padStart(4, "0")}`;
 };
 
-const register = async (name, email, password, phone) => {
+// Sanitises the optional registration-context blob sent by the public site into
+// the shape stored on Student.registrationSource. Returns a plain object (or
+// undefined when nothing useful was provided).
+const normalizeRegistrationSource = (source) => {
+  if (!source || typeof source !== "object") return undefined;
+
+  const clean = (v) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 300) : undefined);
+
+  const normalized = {
+    type: clean(source.type) || "WEBSITE",
+    label: clean(source.label),
+    page: clean(source.page),
+    referrer: clean(source.referrer),
+    campaign: clean(source.campaign),
+    course: source.course || undefined,
+    courseName: clean(source.courseName),
+    batch: source.batch || undefined,
+    batchName: clean(source.batchName),
+    utm: source.utm && typeof source.utm === "object" ? source.utm : {},
+  };
+
+  // Nothing meaningful captured → don't store an empty shell.
+  const hasData = ["label", "page", "referrer", "campaign", "courseName", "batchName"]
+    .some((k) => normalized[k]);
+  return hasData ? normalized : undefined;
+};
+
+const register = async (name, email, password, phone, source = null) => {
   const existing = await User.findOne({ email });
-  if (existing) throw new ApiError(400, "Email already registered");
+  if (existing) {
+    // If the previous attempt created the account but the person never
+    // verified it (e.g. the email never arrived), let them complete
+    // registration instead of dead-ending on "Email already registered".
+    if (!existing.emailVerified) {
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
+
+      existing.name = name || existing.name;
+      existing.phone = phone || existing.phone;
+      existing.password = password;
+      existing.emailVerificationToken = hashedToken;
+      existing.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await existing.save();
+
+      // Refresh the captured registration source on a retried signup, but never
+      // wipe a previously stored one with empty data.
+      const refreshedSource = normalizeRegistrationSource(source);
+      if (refreshedSource && (refreshedSource.label || refreshedSource.course || refreshedSource.batch)) {
+        await Student.findOneAndUpdate(
+          { user: existing._id },
+          { registrationSource: refreshedSource }
+        );
+      }
+
+      sendVerificationEmail(existing, verificationToken).catch((err) => {
+        console.error("Verification email failed for", existing.email, err.message);
+      });
+
+      return {
+        userId: existing._id,
+        email: existing.email,
+        message: "Please check your email to verify your account.",
+      };
+    }
+
+    throw new ApiError(400, "Email already registered. Please log in or verify your email.");
+  }
 
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const hashedToken = crypto.createHash("sha256").update(verificationToken).digest("hex");
@@ -40,10 +104,20 @@ const register = async (name, email, password, phone) => {
   });
 
   const studentId = await generateStudentId();
-  await Student.create({ user: user._id, studentId, enrollmentDate: new Date() });
+  await Student.create({
+    user: user._id,
+    studentId,
+    enrollmentDate: new Date(),
+    registrationSource: normalizeRegistrationSource(source),
+  });
 
-  // Send verification email (non-blocking)
-  await sendVerificationEmail(user, verificationToken);
+  // Send the verification email WITHOUT blocking the response. A slow or
+  // unreachable SMTP server must never hold the registration request open
+  // (the client would sit on "Creating Account..." forever). Errors are
+  // logged so an admin can resend later.
+  sendVerificationEmail(user, verificationToken).catch((err) => {
+    console.error("Verification email failed for", user.email, err.message);
+  });
 
   return { userId: user._id, email: user.email, message: "Please check your email to verify your account." };
 };
@@ -90,7 +164,10 @@ const resendVerification = async (email) => {
   user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save({ validateBeforeSave: false });
 
-  await sendVerificationEmail(user, verificationToken);
+  // Non-blocking: don't hold the request open on a slow SMTP server.
+  sendVerificationEmail(user, verificationToken).catch((err) => {
+    console.error("Verification email resend failed for", user.email, err.message);
+  });
   return { message: "Verification email has been resent." };
 };
 
@@ -150,7 +227,10 @@ const forgotPassword = async (email) => {
   user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
   await user.save({ validateBeforeSave: false });
 
-  await sendPasswordResetEmail(user, resetToken);
+  // Non-blocking: don't hold the request open on a slow SMTP server.
+  sendPasswordResetEmail(user, resetToken).catch((err) => {
+    console.error("Password reset email failed for", user.email, err.message);
+  });
   return { message: "If an account exists with that email, a reset link has been sent." };
 };
 

@@ -188,6 +188,29 @@ const getPublicExamBySlug = async (slug) => {
   };
 };
 
+// Public list of released exams for the marketing / test-series area.
+// Returns ONLY released (PUBLISHED/LIVE) exams and a safe field set — no
+// questions, answers, or student data. Anonymous visitors can call this.
+const getPublicExams = async ({ testType, batch, limit = 12 } = {}) => {
+  const filter = {
+    status: { $in: ["PUBLISHED", "LIVE"] },
+    isArchived: { $ne: true },
+  };
+  if (testType) filter.testType = testType;
+  if (batch) filter.batch = batch;
+
+  const exams = await Exam.find(filter)
+    .populate("batch", "name code batchType")
+    .populate("course", "name")
+    .sort({ publishedAt: -1, createdAt: -1 })
+    .limit(parseInt(limit) || 12)
+    .select(
+      "title description testType duration totalQuestions totalMarks marksPerCorrect negativePerWrong startTime endTime status publishedAt batch course"
+    );
+
+  return exams;
+};
+
 // ── Read ─────────────────
 const getExams = async (filter = {}, { page = 1, limit = 20 } = {}) => {
   const skip = (page - 1) * limit;
@@ -268,6 +291,12 @@ const publishExam = async (id) => {
   exam.publishedAt = new Date();
   if (!exam.shareSlug) exam.shareSlug = generateShareSlug();
   await exam.save();
+
+  // Auto-permit every student enrolled in a targeted batch (single batch or
+  // every batch under the exam's course).
+  await syncBatchExamPermissions(exam).catch((err) =>
+    console.error("Auto exam permission sync failed:", err.message)
+  );
 
   // Notify the students of every batch this exam targets (single batch or whole course).
   const targetBatchIds = await resolveExamBatchIds(exam);
@@ -461,6 +490,48 @@ const revokeExamPermission = async ({ studentId, examId }) => {
   return { revoked: true };
 };
 
+// Auto-permit students who are enrolled in a batch this exam targets.
+// Targeted batches = the exam's own batch (BATCH scope) OR every batch under
+// the exam's course (COURSE scope) — resolved by resolveExamBatchIds().
+// This keeps batch members and exam permissions in sync without an admin
+// having to grant access manually. Existing manual grants are left untouched.
+const syncBatchExamPermissions = async (examOrId) => {
+  const Student = require("../models/Student");
+  const exam = examOrId && examOrId.examScope
+    ? examOrId
+    : await Exam.findById(examOrId);
+  if (!exam) return { granted: 0 };
+
+  const targetBatchIds = await resolveExamBatchIds(exam);
+  if (targetBatchIds.length === 0) return { granted: 0 };
+
+  // Student docs (with their user ids) enrolled in any target batch.
+  const students = await Student.find({ batches: { $in: targetBatchIds } }).select("user");
+  const userIds = students.map((s) => s.user).filter(Boolean);
+  if (userIds.length === 0) return { granted: 0 };
+
+  // Upsert one active permission per (student, exam) — idempotent.
+  const ops = userIds.map((studentUserId) => ({
+    updateOne: {
+      filter: { student: studentUserId, exam: exam._id },
+      update: {
+        $set: { isActive: true, reason: "Auto-granted via batch enrollment" },
+        $setOnInsert: { student: studentUserId, exam: exam._id },
+      },
+      upsert: true,
+    },
+  }));
+  await ExamPermission.bulkWrite(ops, { ordered: false });
+
+  // Mirror on the Student docs for fast dashboard display.
+  await Student.updateMany(
+    { user: { $in: userIds } },
+    { $addToSet: { examPermissions: exam._id } }
+  );
+
+  return { granted: userIds.length };
+};
+
 const listExamPermissions = async (examId) => {
   return ExamPermission.find({ exam: examId, isActive: true }).populate(
     "student",
@@ -573,6 +644,7 @@ module.exports = {
   resolveExamBatchIds,
   createExam,
   getPublicExamBySlug,
+  getPublicExams,
   getExams,
   getStudentExams,
   getExamById,
@@ -588,6 +660,7 @@ module.exports = {
   publishScheduledResults,
   grantExamPermission,
   revokeExamPermission,
+  syncBatchExamPermissions,
   listExamPermissions,
   startAttempt,
 };

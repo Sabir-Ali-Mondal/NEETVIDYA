@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ChevronRight,
   ArrowUpRight,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -73,6 +74,16 @@ export default function AdminDashboard() {
       path: "/admin/exams",
       description: "Student attempts",
     },
+    {
+      label: "Need Attention",
+      value: data?.attentionCount ?? 0,
+      icon: AlertTriangle,
+      color: "text-red-600",
+      bg: "bg-red-50",
+      border: "border-red-100",
+      path: "/admin/students",
+      description: "Follow-up required",
+    },
   ];
 
   return (
@@ -129,7 +140,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-5">
           {loading
             ? Array.from({ length: 4 }).map((_, index) => (
                 <div
@@ -196,42 +207,6 @@ export default function AdminDashboard() {
               })}
         </div>
       </section>
-
-      {/* QUICK ADMIN AREA */}
-      {!loading && (
-        <section className="relative overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-green-50 blur-3xl" />
-
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-brand-green">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-
-              <div>
-                <h2 className="text-sm font-extrabold text-slate-800 sm:text-base">
-                  Administration Overview
-                </h2>
-
-                <p className="mt-1 max-w-xl text-xs leading-5 text-slate-500">
-                  Use the navigation panel to manage students,
-                  faculty, courses, batches and examination
-                  activity.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/admin/students")}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100"
-            >
-              Manage Students
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

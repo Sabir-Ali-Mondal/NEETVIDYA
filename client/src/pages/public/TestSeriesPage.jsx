@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../config/api";
-import { Reveal, FadeInCard } from "../../components/shared/MotionReveal";
+import { Reveal } from "../../components/shared/MotionReveal";
 import images from "../../config/images";
 import WhatsAppLink from "../../components/shared/WhatsAppLink";
 import useContactSettings from "../../hooks/useContactSettings";
@@ -15,12 +15,17 @@ import {
 export default function TestSeriesPage() {
   const { settings } = useContactSettings();
   const [exams, setExams] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Public, unauthenticated list of released (LIVE/PUBLISHED) exams. In NEETVIDYA
+  // every published exam IS a test series offering, so this single list powers
+  // the "Current test series" section.
   useEffect(() => {
     api
-      .get("/exams")
+      .get("/exams/public")
       .then(({ data }) => setExams(data.data?.exams || []))
-      .catch(() => {});
+      .catch(() => setExams([]))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -150,120 +155,124 @@ export default function TestSeriesPage() {
           </div>
         </div>
 
-        {/* Test cards */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {exams.length > 0 ? (
-            exams.map((exam) => (
+        {/* Current test series — every published exam is a test-series offering */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-green border-t-transparent" />
+          </div>
+        ) : exams.length > 0 ? (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {exams.map((exam) => (
               <article
                 key={exam._id}
-                className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
-              >
-                {/* Top accent */}
-                <div className="h-2 rounded-full bg-brand-green" />
+                  className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white p-3 shadow-[0_12px_50px_-20px_rgba(15,23,42,0.18)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-20px_rgba(15,23,42,0.25)]"
+                >
+                  {/* Accent */}
+                  <div className="h-2 rounded-full bg-brand-green" />
 
-                <div className="flex flex-1 flex-col px-4 pb-4 pt-6 sm:px-5 sm:pb-5">
-                  {/* Labels */}
-                  <div className="mb-4 flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-slate-200 bg-brand-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-dark">
-                      {exam.testType || "NEET Test"}
-                    </span>
+                  <div className="flex flex-1 flex-col px-4 pb-4 pt-6 sm:px-5 sm:pb-5">
+                    {/* Labels */}
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                      <span className="max-w-[60%] truncate rounded-full border border-slate-200 bg-brand-soft px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-dark">
+                        {exam.testType?.replace(/_/g, " ") || "NEET Test"}
+                      </span>
 
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-brand-green">
-                      <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
-                      Active Test
-                    </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-brand-green">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
+                        {exam.status === "LIVE" ? "Live" : "Available"}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark">
+                      {exam.title}
+                    </h3>
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
+                      {exam.description ||
+                        "Comprehensive test based on the NEET syllabus."}
+                    </p>
+
+                    {/* Exam information */}
+                    <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-slate-100 py-5">
+                      <div>
+                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Questions
+                        </span>
+
+                        <span className="text-sm font-bold text-brand-dark">
+                          {exam.totalQuestions} MCQs
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Duration
+                        </span>
+
+                        <span className="text-sm font-bold text-brand-dark">
+                          {exam.duration} min
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Total Marks
+                        </span>
+
+                        <span className="text-sm font-bold text-brand-dark">
+                          {exam.totalMarks}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                          Marking
+                        </span>
+
+                        <span className="text-sm font-bold text-brand-dark">
+                          +{exam.marksPerCorrect} / -{exam.negativePerWrong}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <div className="mt-auto space-y-2 pt-5">
+                      <Link
+                        to="/register"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-md shadow-brand-green/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-green/25"
+                      >
+                        Register for Access
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </Link>
+
+                      <WhatsAppLink
+                        number={settings.whatsappNumber}
+                        message={`Hello NEETVIDYA!\n\nI am interested in this test and would like to request access:\n- Test: ${exam.title}\n- Type: ${exam.testType?.replace(/_/g, " ") || "Exam"}\n\nPlease grant me permission to attempt it. Thank you!`}
+                        label="Request access"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-emerald-200 bg-emerald-50 px-5 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
+                      />
+                    </div>
                   </div>
-
-                  {/* Title */}
-                  <h3 className="font-heading text-2xl font-extrabold leading-tight text-brand-dark">
-                    {exam.title}
-                  </h3>
-
-                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
-                    {exam.description ||
-                      "Comprehensive test based on the NEET syllabus."}
-                  </p>
-
-                  {/* Exam information */}
-                  <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-slate-100 py-5">
-                    <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        Questions
-                      </span>
-
-                      <span className="text-sm font-bold text-brand-dark">
-                        {exam.totalQuestions} MCQs
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        Duration
-                      </span>
-
-                      <span className="text-sm font-bold text-brand-dark">
-                        {exam.duration} min
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        Total Marks
-                      </span>
-
-                      <span className="text-sm font-bold text-brand-dark">
-                        {exam.totalMarks}
-                      </span>
-                    </div>
-
-                    <div>
-                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                        Marking
-                      </span>
-
-                      <span className="text-sm font-bold text-brand-dark">
-                        +{exam.marksPerCorrect} / -{exam.negativePerWrong}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <div className="mt-auto space-y-2 pt-5">
-                    <Link
-                      to="/register"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white shadow-md shadow-brand-green/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-green/25"
-                    >
-                      Register for Access
-                      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                    </Link>
-
-                    <WhatsAppLink
-                      number={settings.whatsappNumber}
-                      message={`Hello NEETVIDYA!\n\nI am interested in this exam and would like to request access:\n- Exam: ${exam.title}\n- Type: ${exam.testType?.replace(/_/g, " ") || "Exam"}\n\nPlease grant me permission to attempt it. Thank you!`}
-                      label="Request exam access"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-emerald-200 bg-emerald-50 px-5 py-2.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-800"
-                    />
-                  </div>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="col-span-full mx-auto w-full max-w-2xl rounded-[2rem] border border-dashed border-brand-green/30 bg-white/80 p-8 text-center shadow-[0_12px_50px_-20px_rgba(15,23,42,0.15)] backdrop-blur-sm sm:p-12">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-green text-white shadow-lg shadow-brand-green/20">
-                <CheckCircle2 className="h-8 w-8" />
-              </div>
-
-              <h3 className="font-heading text-2xl font-extrabold text-brand-dark sm:text-3xl">
-                More tests are coming soon
-              </h3>
-
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
-                New assessment modules will appear here as they are published
-                by the academic team.
-              </p>
+                </article>
+              ))}
+          </div>
+        ) : (
+          <div className="mx-auto w-full max-w-2xl rounded-[2rem] border border-dashed border-brand-green/30 bg-white/80 p-8 text-center shadow-[0_12px_50px_-20px_rgba(15,23,42,0.15)] backdrop-blur-sm sm:p-12">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-green text-white shadow-lg shadow-brand-green/20">
+              <CheckCircle2 className="h-8 w-8" />
             </div>
-          )}
-        </div>
+
+            <h3 className="font-heading text-2xl font-extrabold text-brand-dark sm:text-3xl">
+              Tests are coming soon
+            </h3>
+
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
+              New tests will appear here as they are published by the academic
+              team.
+            </p>
+          </div>
+        )}
 
         {/* Bottom message */}
         <div className="mx-auto mt-16 max-w-2xl text-center sm:mt-20">

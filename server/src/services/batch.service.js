@@ -1,5 +1,6 @@
 const Batch = require("../models/Batch");
 const Student = require("../models/Student");
+const Exam = require("../models/Exam");
 const ApiError = require("../utils/apiError");
 
 const resolveBatchStudentUserIds = (batchStudentIds = [], studentRecords = []) => {
@@ -117,7 +118,33 @@ const addStudentsToBatch = async (batchId, studentUserIds) => {
     { $addToSet: { batches: batchId } }
   );
 
+  // Auto-permit these students for every already-released exam that targets
+  // this batch (its own batch exams + all exams of the batch's course).
+  await syncBatchExamPermissionsForBatch(batchId).catch((err) =>
+    console.error("Auto exam permission sync failed for batch:", err.message)
+  );
+
   return batch;
+};
+
+// Grants batch-enrolled students access to every released exam targeting the
+// batch (BATCH-scope exams) or its course (COURSE-scope exams).
+const syncBatchExamPermissionsForBatch = async (batchId) => {
+  const { syncBatchExamPermissions } = require("./exam.service");
+  const batch = await Batch.findById(batchId).select("course");
+  if (!batch) return;
+
+  const targeted = await Exam.find({
+    status: { $in: ["PUBLISHED", "LIVE"] },
+    $or: [
+      { examScope: "BATCH", batch: batchId },
+      ...(batch.course ? [{ examScope: "COURSE", course: batch.course }] : []),
+    ],
+  }).select("examScope batch course");
+
+  for (const exam of targeted) {
+    await syncBatchExamPermissions(exam);
+  }
 };
 
 const removeStudentFromBatch = async (batchId, studentUserId) => {
@@ -148,4 +175,5 @@ module.exports = {
   removeStudentFromBatch,
   resolveBatchStudentUserIds,
   buildAccessibleBatchFilter,
+  syncBatchExamPermissionsForBatch,
 };

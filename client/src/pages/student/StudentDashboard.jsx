@@ -406,7 +406,9 @@ export default function StudentDashboard() {
                 </div>
 
                 <p className="mt-3 text-sm font-semibold text-slate-400">
-                  No materials uploaded yet.
+                  {batch
+                    ? "No materials uploaded yet."
+                    : "Study materials unlock once you are added to a batch."}
                 </p>
               </div>
             )}

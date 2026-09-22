@@ -23,6 +23,20 @@ const studentSchema = new mongoose.Schema(
     // Mirror of active ExamPermission grants for fast dashboard display
     examPermissions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exam" }],
     avatarBase64: { type: String },
+    // Where/how this student registered (captured from the public site).
+    // Kept free-form so a course, batch, campaign or page can all be recorded.
+    registrationSource: {
+      type: { type: String, default: "WEBSITE" },
+      label: { type: String },        // human label e.g. "Courses page → Crash Course"
+      page: { type: String },         // path/route the signup came from
+      referrer: { type: String },     // document.referrer or utm_source
+      campaign: { type: String },     // utm_campaign
+      course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+      courseName: { type: String },   // snapshot so it survives course deletion
+      batch: { type: mongoose.Schema.Types.ObjectId, ref: "Batch" },
+      batchName: { type: String },
+      utm: { type: Object, default: {} },
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

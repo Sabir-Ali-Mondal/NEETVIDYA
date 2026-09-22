@@ -85,26 +85,29 @@ export default function PublicLayout() {
       {/* =========================================================
           TOP INFORMATION BAR
       ========================================================= */}
-      <div className="hidden border-b border-white/10 bg-brand-black text-xs text-gray-300 sm:block">
+      <div className="hidden border-b border-brand-green/15 bg-[#071a12] text-xs text-emerald-100/70 sm:block">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6 lg:px-8">
 
           <div className="flex items-center gap-4">
+
             <span className="flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5 text-brand-lime" />
+              <Phone className="h-3.5 w-3.5 text-brand-green" />
               +91 74396 85658
             </span>
 
-            <span className="hidden text-white/15 sm:inline">
+            <span className="hidden text-brand-green/20 sm:inline">
               |
             </span>
 
             <span className="hidden items-center gap-1.5 lg:inline-flex">
-              <Sparkles className="h-3.5 w-3.5 text-brand-lime" />
+              <Sparkles className="h-3.5 w-3.5 text-brand-green" />
               Admissions Open for NEET 2026 Batches
             </span>
+
           </div>
 
           <div className="flex items-center gap-4">
+
             <TelegramLink
               url={settings.telegramChannelLink}
               label="Telegram Channel"
@@ -115,24 +118,33 @@ export default function PublicLayout() {
               number={settings.whatsappNumber}
               message={settings.whatsappDefaultMessage}
               label="Admissions Desk"
-              className="text-xs text-emerald-400 transition-colors hover:text-emerald-300"
+              className="text-xs text-brand-green transition-colors hover:text-emerald-300"
             />
+
           </div>
+
         </div>
       </div>
 
+
       {/* =========================================================
-    MAIN HEADER
-========================================================= */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-brand-black/90 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+          MAIN HEADER
+      ========================================================= */}
+      <header className="sticky top-0 z-50 border-b border-brand-green/15 bg-[#071a12]/95 shadow-[0_8px_30px_-12px_rgba(6,78,43,0.45)] backdrop-blur-xl">
+
+        {/* subtle green glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-green/40 to-transparent"
+        />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
           <div className="flex h-16 items-center justify-between sm:h-[4.5rem]">
 
             {/* =====================================================
-          LOGO
-      ===================================================== */}
+                LOGO
+            ===================================================== */}
             <Link
               to="/"
               className="group flex h-full items-center"
@@ -145,9 +157,10 @@ export default function PublicLayout() {
               />
             </Link>
 
+
             {/* =====================================================
-          DESKTOP NAVIGATION
-      ===================================================== */}
+                DESKTOP NAVIGATION
+            ===================================================== */}
             <nav className="hidden items-center gap-1 md:flex lg:gap-1.5">
 
               {navLinks.map((link) => {
@@ -157,17 +170,18 @@ export default function PublicLayout() {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`relative rounded-xl px-3 py-2 text-sm transition-all duration-200 lg:px-3.5 ${active
-                        ? "font-semibold text-brand-lime"
-                        : "font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                      }`}
+                    className={`relative rounded-xl px-3 py-2 text-sm transition-all duration-200 lg:px-3.5 ${
+                      active
+                        ? "font-semibold text-brand-green"
+                        : "font-medium text-emerald-100/70 hover:bg-brand-green/5 hover:text-white"
+                    }`}
                   >
                     {link.label}
 
                     {active && (
                       <motion.span
                         layoutId="nav-underline"
-                        className="absolute bottom-0.5 left-3 right-3 h-0.5 rounded-full bg-brand-lime"
+                        className="absolute bottom-0.5 left-3 right-3 h-0.5 rounded-full bg-brand-green shadow-[0_0_10px_rgba(34,197,94,0.45)]"
                         transition={{
                           type: "spring",
                           stiffness: 400,
@@ -181,21 +195,22 @@ export default function PublicLayout() {
 
             </nav>
 
+
             {/* =====================================================
-          DESKTOP ACTIONS
-      ===================================================== */}
+                DESKTOP ACTIONS
+            ===================================================== */}
             <div className="hidden items-center gap-2.5 md:flex">
 
               <Link
                 to="/login"
-                className="rounded-xl px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                className="rounded-xl px-3 py-2 text-sm font-medium text-emerald-100/70 transition-colors hover:bg-brand-green/5 hover:text-white"
               >
                 Portal Login
               </Link>
 
               <Link
                 to="/register"
-                className="btn-primary group !rounded-xl !px-5 !py-2.5 text-sm shadow-glow-green"
+                className="btn-primary group !rounded-xl !px-5 !py-2.5 text-sm shadow-[0_8px_25px_-10px_rgba(34,197,94,0.7)]"
               >
                 Join NEETVIDYA
 
@@ -204,12 +219,13 @@ export default function PublicLayout() {
 
             </div>
 
+
             {/* =====================================================
-          MOBILE MENU BUTTON
-      ===================================================== */}
+                MOBILE MENU BUTTON
+            ===================================================== */}
             <button
               type="button"
-              className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-gray-300 transition-all hover:bg-white/10 hover:text-white md:hidden"
+              className="rounded-xl border border-brand-green/20 bg-brand-green/5 p-2.5 text-emerald-100/80 transition-all hover:border-brand-green/40 hover:bg-brand-green/10 hover:text-white md:hidden"
               onClick={() => setMobileOpen((open) => !open)}
               aria-label={
                 mobileOpen
@@ -228,9 +244,10 @@ export default function PublicLayout() {
           </div>
         </div>
 
+
         {/* =========================================================
-      MOBILE NAVIGATION
-  ========================================================= */}
+            MOBILE NAVIGATION
+        ========================================================= */}
         <AnimatePresence initial={false}>
           {mobileOpen && (
             <motion.div
@@ -251,12 +268,12 @@ export default function PublicLayout() {
                 duration: 0.25,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="overflow-hidden border-t border-white/10 md:hidden"
+              className="overflow-hidden border-t border-brand-green/15 bg-[#071a12] md:hidden"
             >
 
               <div className="px-4 pb-5 pt-3 sm:px-6">
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3">
+                <div className="rounded-[1.5rem] border border-brand-green/15 bg-[#0b2418] p-3">
 
                   {/* Mobile Links */}
                   <nav className="space-y-1">
@@ -269,15 +286,16 @@ export default function PublicLayout() {
                           key={link.path}
                           to={link.path}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${active
-                              ? "bg-brand-green/10 font-semibold text-brand-lime"
-                              : "font-medium text-gray-300 hover:bg-white/5 hover:text-white"
-                            }`}
+                          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
+                            active
+                              ? "bg-brand-green/10 font-semibold text-brand-green"
+                              : "font-medium text-emerald-100/70 hover:bg-brand-green/5 hover:text-white"
+                          }`}
                         >
                           <span>{link.label}</span>
 
                           {active && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-brand-lime" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-brand-green shadow-[0_0_8px_rgba(34,197,94,0.7)]" />
                           )}
                         </Link>
                       );
@@ -285,13 +303,14 @@ export default function PublicLayout() {
 
                   </nav>
 
+
                   {/* Mobile Actions */}
-                  <div className="mt-3 grid gap-2 border-t border-white/10 pt-3">
+                  <div className="mt-3 grid gap-2 border-t border-brand-green/10 pt-3">
 
                     <Link
                       to="/login"
                       onClick={() => setMobileOpen(false)}
-                      className="rounded-xl border border-white/10 px-4 py-3 text-center text-sm font-semibold text-gray-200 transition-colors hover:bg-white/5"
+                      className="rounded-xl border border-brand-green/15 px-4 py-3 text-center text-sm font-semibold text-emerald-100/80 transition-colors hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-white"
                     >
                       Portal Login
                     </Link>
@@ -315,6 +334,8 @@ export default function PublicLayout() {
         </AnimatePresence>
 
       </header>
+
+
       {/* =========================================================
           PAGE CONTENT
       ========================================================= */}
@@ -338,10 +359,11 @@ export default function PublicLayout() {
         </motion.div>
       </main>
 
+
       {/* =========================================================
           FOOTER
       ========================================================= */}
-      <footer className="relative overflow-hidden border-t border-white/10 bg-brand-black py-16 text-gray-400">
+      <footer className="relative overflow-hidden border-t border-brand-green/15 bg-[#071a12] py-16 text-emerald-100/60">
 
         {/* Background Glow */}
         <div
@@ -351,7 +373,13 @@ export default function PublicLayout() {
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-brand-lime/10 blur-3xl"
+          className="pointer-events-none absolute -bottom-32 -left-24 h-72 w-72 rounded-full bg-brand-green/5 blur-3xl"
+        />
+
+        {/* subtle center glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green/5 blur-3xl"
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -359,9 +387,9 @@ export default function PublicLayout() {
           <div className="grid gap-12 md:grid-cols-12 lg:gap-16">
 
             {/* =====================================================
-          BRAND
-      ===================================================== */}
-            <div className="md:col-span-5 flex flex-col items-center text-center">
+                BRAND
+            ===================================================== */}
+            <div className="flex flex-col items-center text-center md:col-span-5">
 
               {/* Large Logo */}
               <Link
@@ -371,15 +399,17 @@ export default function PublicLayout() {
                 <img
                   src={images.logo}
                   alt="NEETVIDYA"
-                  className="h-20 w-auto object-contain sm:h-24 lg:h-28"
+                  className="h-20 w-auto object-contain transition-transform duration-300 hover:scale-[1.03] sm:h-24 lg:h-28"
                 />
               </Link>
 
+
               {/* Short Description */}
-              <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
+              <p className="mt-4 max-w-sm text-sm leading-6 text-emerald-100/55">
                 Concept-based NEET preparation with focused learning,
                 regular practice, and NCERT mastery.
               </p>
+
 
               {/* Contact Buttons */}
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
@@ -387,17 +417,18 @@ export default function PublicLayout() {
                 <TelegramLink
                   url={settings.telegramChannelLink}
                   label="Telegram Channel"
-                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-sky-400 transition-colors hover:border-sky-400/30 hover:bg-white/10"
+                  className="rounded-lg border border-brand-green/15 bg-brand-green/5 px-3 py-2 text-xs text-sky-400 transition-colors hover:border-sky-400/30 hover:bg-sky-400/5"
                 />
 
                 <WhatsAppLink
                   number={settings.whatsappNumber}
                   message={settings.whatsappDefaultMessage}
                   label="Admissions Helpline"
-                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-emerald-400 transition-colors hover:border-emerald-400/30 hover:bg-white/10"
+                  className="rounded-lg border border-brand-green/15 bg-brand-green/5 px-3 py-2 text-xs text-brand-green transition-colors hover:border-brand-green/40 hover:bg-brand-green/10"
                 />
 
               </div>
+
 
               {/* Social Links */}
               {socialLinks.length > 0 && (
@@ -409,7 +440,7 @@ export default function PublicLayout() {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-all duration-300 hover:border-brand-lime/40 hover:bg-brand-lime/10 hover:text-brand-lime"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-green/15 bg-brand-green/5 text-emerald-100/50 transition-all duration-300 hover:border-brand-green/40 hover:bg-brand-green/10 hover:text-brand-green"
                       aria-label={label}
                     >
                       <Icon className="h-4 w-4" />
@@ -421,9 +452,10 @@ export default function PublicLayout() {
 
             </div>
 
+
             {/* =====================================================
-          EXPLORE
-      ===================================================== */}
+                EXPLORE
+            ===================================================== */}
             <div className="md:col-span-3">
 
               <h4 className="font-heading text-xs font-bold uppercase tracking-[0.2em] text-white">
@@ -437,9 +469,9 @@ export default function PublicLayout() {
 
                     <Link
                       to={link.path}
-                      className="group/link inline-flex items-center gap-2 text-sm text-gray-400 transition-colors duration-200 hover:text-brand-lime"
+                      className="group/link inline-flex items-center gap-2 text-sm text-emerald-100/55 transition-colors duration-200 hover:text-brand-green"
                     >
-                      <span className="h-px w-0 bg-brand-lime transition-all duration-300 group-hover/link:w-3" />
+                      <span className="h-px w-0 bg-brand-green transition-all duration-300 group-hover/link:w-3" />
 
                       {link.label}
                     </Link>
@@ -451,22 +483,23 @@ export default function PublicLayout() {
 
             </div>
 
+
             {/* =====================================================
-          INSTITUTE DESK
-      ===================================================== */}
+                INSTITUTE DESK
+            ===================================================== */}
             <div className="md:col-span-4">
 
               <h4 className="font-heading text-xs font-bold uppercase tracking-[0.2em] text-white">
                 Institute Desk
               </h4>
 
-              <div className="mt-5 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+              <div className="mt-5 rounded-[1.5rem] border border-brand-green/15 bg-[#0b2418] p-5 shadow-[0_20px_50px_-30px_rgba(34,197,94,0.45)]">
 
                 <p className="text-sm font-semibold text-white">
                   NEETVIDYA COACHING CENTER
                 </p>
 
-                <div className="mt-4 space-y-2.5 text-sm leading-6 text-gray-400">
+                <div className="mt-4 space-y-2.5 text-sm leading-6 text-emerald-100/55">
 
                   <p>
                     Karimpur Main Road,
@@ -475,7 +508,7 @@ export default function PublicLayout() {
                   </p>
 
                   <p>
-                    <span className="text-gray-300">
+                    <span className="text-emerald-100/80">
                       Helpline:
                     </span>{" "}
                     +91 74396 85658
@@ -484,7 +517,7 @@ export default function PublicLayout() {
                   </p>
 
                   <p>
-                    <span className="text-gray-300">
+                    <span className="text-emerald-100/80">
                       Email:
                     </span>{" "}
                     neetvidya720@gmail.com
@@ -494,7 +527,7 @@ export default function PublicLayout() {
 
                 <Link
                   to="/contact"
-                  className="group mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-lime"
+                  className="group mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-green"
                 >
                   Contact Institute
 
@@ -509,24 +542,38 @@ export default function PublicLayout() {
 
           </div>
 
+
           {/* =====================================================
-        BOTTOM
-    ===================================================== */}
-          <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-7 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+              BOTTOM
+          ===================================================== */}
+          <div className="mt-12 flex flex-col gap-4 border-t border-brand-green/10 pt-7 text-xs text-emerald-100/35 sm:flex-row sm:items-center sm:justify-between">
 
             <p>
               © {new Date().getFullYear()} NEETVIDYA Education Pvt Ltd.
               All rights reserved.
             </p>
 
-            <p>
-              Designed for Medical Aspirants across India.
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>Designed for Medical Aspirants across India.</span>
+              <span className="hidden text-brand-green/20 sm:inline">|</span>
+              <span>
+                Developed by{" "}
+                <a
+                  href="https://github.com/Sabir-Ali-Mondal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-emerald-100/55 transition-colors hover:text-brand-green"
+                >
+                  Sabir Ali Mondal
+                </a>
+              </span>
             </p>
 
           </div>
 
         </div>
       </footer>
+
     </div>
   );
 }

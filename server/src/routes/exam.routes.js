@@ -17,6 +17,7 @@ const {
   downloadExam,
   getQuestionBank,
   getPublicExamBySlug,
+  getPublicExams,
   publishResults,
   grantPermission,
   revokePermission,
@@ -36,6 +37,9 @@ router.get("/bank", protect, authorize("admin", "teacher"), getQuestionBank);
 
 // Public exam preview by share slug — no auth, no questions exposed.
 router.get("/public/:slug", getPublicExamBySlug);
+
+// Public list of released exams (no auth) for the marketing / test-series area.
+router.get("/public", getPublicExams);
 
 // Access check for a student — decides Start Exam vs WhatsApp request CTA.
 router.get("/:id/access-check", protect, checkExamAccess);

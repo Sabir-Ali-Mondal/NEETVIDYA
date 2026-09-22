@@ -3,8 +3,8 @@ const apiResponse = require("../utils/apiResponse");
 
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone } = req.body;
-    const result = await authService.register(name, email, password, phone);
+    const { name, email, password, phone, source } = req.body;
+    const result = await authService.register(name, email, password, phone, source);
     return apiResponse(res, 201, result.message, { userId: result.userId, email: result.email });
   } catch (error) {
     next(error);

@@ -1,10 +1,17 @@
 # NEETVIDYA — How to Run
 > Full architecture, database and API reference: see [`TECHNICAL.md`](./TECHNICAL.md).
+>
+> **Version 1.0.0 (first release).** This guide covers installing, seeding and
+> running the platform locally, plus deploying it to Vercel + Render.
 
 ### 1. Prerequisites
 - Node.js (v18+) installed
-- MongoDB running locally or Atlas URI ready
+- MongoDB running locally or an Atlas URI ready
 - (Optional) Cloudinary account for uploads, SMTP account for emails
+
+> The backend needs **only** `MONGODB_URI` (and, ideally, `JWT_SECRET`) to boot.
+> Cloudinary falls back to dummy credentials and email falls back to an Ethereal
+> test inbox in development, so the platform runs end-to-end without either.
 ### 2. Setup Environment
 1. Copy `server/.env.example` to `server/.env` and fill in details (MongoDB, JWT, and optionally Cloudinary/SMTP).
 2. The client needs no `.env` file for local development - it defaults to the `/api` proxy configured in `client/vite.config.js`. Optionally create `client/.env` with `VITE_API_BASE_URL` to point the frontend at a different API host.
@@ -53,6 +60,9 @@ What the seed does:
 - Creates **one admin** using `ADMIN_EMAIL` / `ADMIN_PASSWORD` (or the defaults below).
 - **Idempotent:** if an admin with that email already exists, it does nothing and exits — it never deletes or overwrites data.
 
+> Running `npm run seed` on the root folder also works if you prefer
+> (`npm run seed` is defined on the server package; run it from `server/`).
+
 Default admin credentials (if not overridden in `server/.env`):
 
 | Role  | Email                    | Password         |
@@ -83,8 +93,10 @@ Create the actual batch records from **Admin → Batches**. *The seed no longer 
 - **Teachers see all batches** — no per-teacher batch assignment; every teacher can access every active batch.
 - **Password model** — admin-created accounts use the constant default password (`Neetvidya@123`) and change it on first login; self-registered users set their own. Credential emails are no longer sent.
 - **Batch-scoped notifications** — students only receive notifications for their batches (plus direct/admin-wide ones), never global floods.
-- **Exam access** — students in the exam's batch start directly; non-members see a prefilled **“Request permission on WhatsApp”** button and need an admin `ExamPermission` grant.
-- **Shareable exam links** — published exams get a `/e/:slug` public preview (no questions exposed); copy it from the exam list.
+- **Exam access** — students in the exam's batch start directly; non-members see a prefilled **“Request permission on WhatsApp”** button and need an admin `ExamPermission` grant. When an exam is published, students already in a targeted batch are **auto-granted** permission (and again whenever students are added to that batch).
+- **Shareable exam links** — published exams get a `/e/:slug` public preview (no questions exposed); copy it from the exam list. A public, question-free list of released exams is also served at `GET /api/exams/public`.
+- **Result publishing gate** — `Exam.resultPublishMode` controls when students see a result: `IMMEDIATE`, `MANUAL` (admin/teacher publishes), or `SCHEDULED` (auto-released once `resultPublishAt` passes). Until then students only see “submitted”.
+- **Registration tracking** — student sign-ups capture a `registrationSource` blob (page, referrer, campaign, interested course/batch, UTM), surfaced on the admin students screen with a one-click WhatsApp follow-up (`client/src/utils/studentFollowUp.js`).
 
 ### 7. Access
 - **Frontend:** [http://localhost:5173](http://localhost:5173)

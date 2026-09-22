@@ -69,6 +69,7 @@ Core capabilities:
 | Charts | recharts |
 | HTTP | axios (interceptors for JWT + refresh) |
 | PDF | jspdf + jspdf-autotable |
+| Forms | react-hook-form (installed; most forms use local state) |
 | Toasts/modals | sweetalert2 |
 | State | React Context (`AuthContext`) + local hooks |
 | Backend | Node.js + Express 4 |
@@ -117,7 +118,7 @@ NEETVIDYA/
 │       │   ├── teacher/         # (3)
 │       │   ├── admin/           # (11)
 │       │   └── errors/          # NotFound, Unauthorized (2)
-│       ├── utils/               # alert.js, csv.js, examResultPdf.js
+│       ├── utils/               # alert.js, csv.js, examResultPdf.js, studentFollowUp.js
 │       ├── assets/images/placeholders/   # .jpg / .png assets (36)
 │       └── assets/video/        # background mp4s (2)
 └── server/                      # Express + Mongoose backend
@@ -446,9 +447,12 @@ Index: `role`. Hooks: `pre('save')` hashes password; `comparePassword()`.
 Also exports a `Counter` model used for student-ID sequencing.
 
 **Student** — profile for `role=student`. `user→User (unique)`, `studentId`
-(unique, e.g. `NV-2026-0001`), `studentType`, `batches[]→Batch`, `enrollmentDate`,
-parent/school/class/address/city/whatsapp fields, `tags[]`, `notes`,
-`examPermissions[]→Exam` (mirror for dashboards), `avatarBase64`, `isActive`.
+(unique, **sparse**, e.g. `NV-2026-0001`), `studentType`, `batches[]→Batch`,
+`enrollmentDate`, parent/school/class/address/city/whatsapp fields, `tags[]`,
+`notes`, `examPermissions[]→Exam` (mirror for dashboards), `avatarBase64`,
+`registrationSource{ type, label, page, referrer, campaign, course, courseName,
+ batch, batchName, utm }` (how/where the student signed up, captured from the
+public site), `isActive`.
 
 **Teacher** — profile for `role=teacher`. `user→User (unique)`, `subject→Subject`,
 `subjectName`, qualification/experience/specialisation/bio, photo fields,
@@ -463,9 +467,9 @@ manageStudents, accessWebsiteSettings), `isActive`.
   assignedTeachers[] {teacher,subject}, schedule, telegramGroupLink,
   groups[] {label,type,url,description}, color, isActive, createdBy`.
 - **Course** — admin catalogue: `name, slug, description, targetClass,
-  subjects[]→Subject, duration, features[], cover, feeAmount/Currency, isActive,
-  displayOrder, createdBy`. (Note: public site + batch creation actually use the
-  **fixed** catalogue in `client/src/config/courses.js`.)
+  subjects[]→Subject, duration, features[], coverImageUrl/coverImagePublicId,
+  feeAmount/feeCurrency, isActive, displayOrder, createdBy`. (Note: public site +
+  batch creation actually use the **fixed** catalogue in `client/src/config/courses.js`.)
 - **Subject** → **Unit** → **Chapter** → **Topic** — the 5-level taxonomy.
   `Subject.course` optional; `isCustom` marks teacher-created subjects.
   Unit/Chapter/Topic carry `isActive` + `displayOrder`.
@@ -484,8 +488,8 @@ manageStudents, accessWebsiteSettings), `isActive`.
 - **CourseResource** — external reference links for a course: `course, subject,
   chapter, title, description, resourceType, url, icon, thumbnail, displayOrder,
   isPublic, isActive, addedBy`.
-- **TestSeries** — `title, description, course, subjects[], cover, totalTests,
-  exams[]→Exam, isActive, createdBy`.
+- **TestSeries** — `title, description, course, subjects[],
+  coverImageUrl/coverImagePublicId, totalTests, exams[]→Exam, isActive, createdBy`.
 
 ### Exams & results
 
@@ -532,7 +536,12 @@ manageStudents, accessWebsiteSettings), `isActive`.
   telegramChannelLink, whatsappGroupLink/Number/DefaultMessage, socials,
   officeHours, mapEmbedUrl. Ships with sensible defaults for the institute.
 - **Testimonial / Achievement / Enquiry / ActivityLog** — see diagram; fields
-  there mirror the schemas exactly.
+there mirror the schemas exactly.
+  - **Achievement** also carries `description`, `studentName`, `studentBatch`,
+    `studentPhotoUrl/PublicId`, `imageUrl/PublicId`, `score`, and `year`.
+  - **Enquiry** carries `name, email, phone, course, message,
+    source (WEBSITE|TELEGRAM|WHATSAPP), status (PENDING|CONTACTED|RESOLVED),
+    handledBy→User, notes`.
 
 > The announcement bar is not a separate collection — it lives on
 > `WebsiteContent` (`section: "ANNOUNCEMENT_BAR"`).
@@ -588,6 +597,10 @@ restrict access.
   `ExamPermission`.
 - `GET /exams/:id/access-check` returns `{ hasBatchAccess, needsPermission }` so
   the UI can show **Start Exam** vs a prefilled **“Request permission on WhatsApp”** CTA.
+- **Auto-permission sync.** On `publishExam` (and when students are added to a
+  batch) `syncBatchExamPermissions()` upserts an active `ExamPermission` for every
+  student already enrolled in a targeted batch — so batch members always start
+  directly, and the manual grant path is only needed for true outsiders.
 
 ---
 
@@ -738,6 +751,7 @@ role column = `authorize(...)` gate; `—` = public.
 | | POST `/test-series` | admin,teacher | create |
 | | PUT `/test-series/:id` | admin | edit |
 | exams | GET `/exams` | protect | list (role-aware) |
+| | GET `/exams/public` | — | public list of released exams (no questions/students) |
 | | GET `/exams/public/:slug` | — | public preview (no questions) |
 | | GET `/exams/bank` | admin,teacher | archived papers |
 | | GET `/exams/:id`, `/:id/access-check` | protect | detail / access |
@@ -885,10 +899,11 @@ This section is the outcome of a full audit. **Nothing here is left implicit.**
 | `config/env.js → validateEnv()` | **Unused** | Exported but never called from `server.js`/`app.js`. |
 | `middleware/upload.middleware.js` | **Used** | `uploadImage` / `uploadPDF` are used by `upload.routes.js`. Keep. |
 | `client/src/config/constants.js → ROLES, TEST_TYPES, BATCH_TYPES, STUDENT_TYPES, EXAM_STATUS, RESOURCE_TYPES` | **Unused exports** | Only `BATCH_BADGE_CONFIG` is imported (by `StudentBadge.jsx`). The other enums are declared but not referenced. |
+| `client/src/config/images.js` | **Used** | Central map of placeholder assets, imported by the public pages + `courses.js`. Keep. |
 | `models/Notification.js → isRead` (field) | **Legacy** | Kept for back-compat; read tracking now uses `readBy[]`. |
 | `models/Attempt.js → isFullScreen` (field) | **Legacy** | Stored but not enforced server-side. |
 | `Exam → eligibleBatches[]`, `eligibleStudentTypes[]` | **Legacy fields** | Marked "legacy compatibility" in the model; superseded by `examScope` + `permittedStudents`. |
-| `client/src/utils/alert.js`, `csv.js`, `examResultPdf.js` | **Used** | alert = sweetalert2 wrappers; csv = enquiry/export; examResultPdf = PDF result sheet. Keep. |
+| `client/src/utils/alert.js`, `csv.js`, `examResultPdf.js`, `studentFollowUp.js` | **Used** | alert = sweetalert2 wrappers; csv = enquiry/export; examResultPdf = PDF result sheet; studentFollowUp = builds the prefilled WhatsApp follow-up message + link used by `AdminStudents.jsx`. Keep. |
 
 ### 12.3 Overlap worth consolidating (not dead — both routed)
 | Item | Notes |
@@ -927,5 +942,6 @@ later without a schema rebuild.
 ---
 
 *End of document. Every path and field above was verified against the source tree
-at the time of writing (25 models · 24 route files · 17 controllers · 12 services ·
-39 client pages).*
+at the time of writing: 25 models · 24 route files (23 resources + `index.js`) ·
+17 controllers · 12 services · 5 middleware · 10 enum catalogues · 39 client pages ·
+12 shared components · 5 layouts · 4 client utils.*

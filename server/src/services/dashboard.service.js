@@ -8,8 +8,11 @@ const Batch = require("../models/Batch");
 const Material = require("../models/Material");
 const Enquiry = require("../models/Enquiry");
 const Result = require("../models/Result");
+const ExamPermission = require("../models/ExamPermission");
 
 const getAdminDashboard = async () => {
+  const ExamPermission = require("../models/ExamPermission");
+
   const [
     studentCount,
     teacherCount,
@@ -46,6 +49,10 @@ const getAdminDashboard = async () => {
     .sort({ createdAt: -1 })
     .limit(5);
 
+  // Students who need admin follow-up: not in any batch OR no exam permission.
+  const attentionStudents = await getAttentionStudents(12);
+  const attentionCount = await countAttentionStudents();
+
   return {
     studentCount,
     teacherCount,
@@ -59,7 +66,72 @@ const getAdminDashboard = async () => {
     enquiryCount,
     recentAttempts,
     recentStudents,
+    attentionStudents,
+    attentionCount,
   };
+};
+
+// Shared: students missing a batch or any exam permission.
+const findAttentionStudentDocs = async (limit = 0) => {
+  const ExamPermission = require("../models/ExamPermission");
+
+  // Students with at least one active exam permission (excluded from attention).
+  const permittedIds = await ExamPermission.find({ isActive: true }).distinct("student");
+
+  const query = Student.find({
+    isActive: true,
+    $or: [
+      // no batch at all — either the field is missing or the array is empty
+      { batches: { $exists: false } },
+      { batches: { $size: 0 } },
+      // or no exam permission
+      { user: { $nin: permittedIds } },
+    ],
+  })
+    .populate("user", "name email phone isActive lastLogin createdAt")
+    .populate("batches", "name code")
+    .populate("registrationSource.course", "name")
+    .populate("registrationSource.batch", "name code")
+    .sort({ createdAt: -1 });
+
+  if (limit) query.limit(limit);
+  return query;
+};
+
+const getAttentionStudents = async (limit = 12) => {
+  const ExamPermission = require("../models/ExamPermission");
+  const students = await findAttentionStudentDocs(limit);
+
+  const userIds = students.map((s) => s.user?._id).filter(Boolean);
+  const permittedUserIds = new Set(
+    (await ExamPermission.find({ student: { $in: userIds }, isActive: true }).distinct("student"))
+      .map((id) => id.toString())
+  );
+
+  return students.map((s) => {
+    const obj = s.toObject();
+    const batchCount = obj.batches?.length || 0;
+    const hasExamPermission = s.user?._id ? permittedUserIds.has(s.user._id.toString()) : false;
+    const reasons = [];
+    if (batchCount === 0) reasons.push("Not enrolled in any batch");
+    if (!hasExamPermission) reasons.push("Not permitted for any exam");
+    // Yellow when only the batch is missing (exam access exists); red otherwise.
+    const attentionLevel = batchCount === 0 && hasExamPermission ? "yellow" : "red";
+    return { ...obj, needsAttention: true, attentionReasons: reasons, attentionLevel };
+  });
+};
+
+const countAttentionStudents = async () => {
+  const ExamPermission = require("../models/ExamPermission");
+  const permittedIds = await ExamPermission.find({ isActive: true }).distinct("student");
+  return Student.countDocuments({
+    isActive: true,
+    $or: [
+      { batches: { $exists: false } },
+      { batches: { $size: 0 } },
+      { user: { $nin: permittedIds } },
+    ],
+  });
 };
 
 const getStudentDashboard = async (studentUserId) => {
@@ -70,27 +142,41 @@ const getStudentDashboard = async (studentUserId) => {
   await publishScheduledResults().catch(() => {});
   const student = await Student.findOne({ user: studentUserId }).populate(
     "batches",
-    "name code batchType startDate endDate schedule"
+    "name code batchType startDate endDate schedule course"
   );
   const batchIds = (student?.batches || []).map((b) => b._id || b);
   const perms = await ExamPermission.find({ student: studentUserId, isActive: true }).select("exam");
   const permittedExamIds = perms.map((p) => p.exam);
 
-  // Only released exams for the student's batch (or permitted exams).
+  // Course-wide exams (examScope = COURSE) target every batch under their course
+  // rather than a single `batch`, so resolve the student's batches back to their
+  // courses — otherwise those tests would never appear on the dashboard.
+  const studentCourseIds = [
+    ...new Set(
+      (student?.batches || [])
+        .map((b) => (b?.course ? (b.course._id || b.course) : null))
+        .filter(Boolean)
+        .map((c) => c.toString())
+    ),
+  ];
+
+  // Only released exams for the student's batch, their course, or explicitly permitted.
   const upcomingTests = await Exam.find({
     $or: [
       { batch: { $in: batchIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
+      { examScope: "COURSE", course: { $in: studentCourseIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
       { _id: { $in: permittedExamIds }, status: { $in: ["PUBLISHED", "LIVE"] } },
     ],
     endTime: { $gt: new Date() },
   })
     .limit(5)
-    .select("title testType duration totalQuestions totalMarks startTime endTime batch");
+    .select("title testType duration totalQuestions totalMarks startTime endTime batch course");
 
-  // Materials are batch-scoped (Batch = Course).
+  // Materials are batch-scoped (Batch = Course). A student with no batch must
+  // see NOTHING here — never fall through to an unfiltered query.
   const recentMaterials = await Material.find({
     isActive: true,
-    ...(batchIds.length ? { batch: { $in: batchIds } } : {}),
+    batch: { $in: batchIds },
   })
     .populate("subject", "name")
     .populate("unit", "name")

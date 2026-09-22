@@ -17,6 +17,10 @@ const createTransporter = async () => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Fail fast instead of hanging on an unreachable SMTP server.
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
   }
 
@@ -28,6 +32,9 @@ const createTransporter = async () => {
       port: testAccount.smtp.port,
       secure: testAccount.smtp.secure,
       auth: { user: testAccount.user, pass: testAccount.pass },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     });
   }
   return cachedDevTransporter;
