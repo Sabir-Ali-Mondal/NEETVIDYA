@@ -11,8 +11,9 @@
 
 > The backend needs **only** `MONGODB_URI` (and, ideally, `JWT_SECRET`) to boot.
 > Cloudinary falls back to dummy credentials. Signup does not send verification
-> emails and activates accounts immediately; configure Resend if you want password
-> reset emails to be delivered.
+> emails and activates accounts immediately. Email delivery is disabled for now,
+> including password-reset emails; users who need help changing a password should
+> contact an administrator. The mail service code is retained for later re-enabling.
 ### 2. Setup Environment
 1. Copy `server/.env.example` to `server/.env` and fill in details (MongoDB, JWT, and optionally Cloudinary/Resend).
 2. The client needs no `.env` file for local development - it defaults to the `/api` proxy configured in `client/vite.config.js`. Optionally create `client/.env` with `VITE_API_BASE_URL` to point the frontend at a different API host.

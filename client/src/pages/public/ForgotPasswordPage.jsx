@@ -16,16 +16,18 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await api.post("/auth/forgot-password", { email });
+      const { data } = await api.post("/auth/forgot-password", { email });
+      setNotice(data.message);
       setSubmitted(true);
     } catch {
-      // Always show success to prevent email enumeration
+      setNotice("Password reset by email is temporarily unavailable. Please contact an administrator.");
       setSubmitted(true);
     } finally {
       setLoading(false);
@@ -88,8 +90,8 @@ export default function ForgotPasswordPage() {
                 </h2>
 
                 <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">
-                  Forgot your password? We'll help you securely recover
-                  access to your NEETVIDYA student portal.
+                  Email-based password recovery is temporarily unavailable.
+                  Please contact an administrator for help.
                 </p>
 
                 <div className="my-7 h-px w-14 bg-brand-green/50" />
@@ -98,11 +100,11 @@ export default function ForgotPasswordPage() {
                   {[
                     {
                       title: "Secure Reset",
-                      text: "Receive a protected password reset link.",
+                      text: "Password reset emails are currently paused.",
                     },
                     {
                       title: "Email Verification",
-                      text: "Only your registered email can request access.",
+                      text: "Email delivery is temporarily disabled.",
                     },
                     {
                       title: "Quick Recovery",
@@ -167,8 +169,8 @@ export default function ForgotPasswordPage() {
                     </h1>
 
                     <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500">
-                      Enter your registered email address and we'll send
-                      you a secure password reset link.
+                      Email password recovery is temporarily unavailable.
+                      Contact an administrator to reset your password.
                     </p>
                   </div>
 
@@ -211,8 +213,8 @@ export default function ForgotPasswordPage() {
                       <SendHorizonal className="h-4 w-4" />
 
                       {loading
-                        ? "Sending Reset Link..."
-                        : "Send Reset Link"}
+                        ? "Checking Availability..."
+                        : "Check Recovery Status"}
 
                       {!loading && (
                         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -240,11 +242,11 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     <h1 className="mt-5 font-heading text-2xl font-extrabold tracking-tight text-brand-dark sm:text-3xl">
-                      Check Your Email
+                      Email Reset Unavailable
                     </h1>
 
                     <p className="mt-2 text-sm leading-6 text-slate-500">
-                      We've processed your password reset request.
+                      {notice}
                     </p>
                   </div>
 
@@ -255,35 +257,13 @@ export default function ForgotPasswordPage() {
                       </div>
 
                       <p className="text-left text-sm leading-6 text-slate-600">
-                        If an account exists for{" "}
-                        <strong className="text-brand-dark">
-                          {email}
-                        </strong>
-                        , we've sent a password reset link.
-                        The link expires in{" "}
-                        <strong className="text-brand-dark">
-                          1 hour
-                        </strong>
-                        .
+                        No reset email was sent. Please contact an
+                        administrator for help accessing your account.
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-5 text-center">
-                    <p className="text-xs leading-5 text-slate-500">
-                      Didn't receive it? Check your spam folder or{" "}
-                      <button
-                        type="button"
-                        onClick={() => setSubmitted(false)}
-                        className="font-semibold text-brand-green transition-colors hover:text-brand-dark hover:underline"
-                      >
-                        try again
-                      </button>
-                      .
-                    </p>
-                  </div>
-
-                  <Link
+                    <Link
                     to="/login"
                     className="group mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:border-brand-green/30 hover:bg-brand-green/5 hover:text-brand-dark"
                   >

@@ -3,7 +3,7 @@ const Student = require("../models/Student");
 const Teacher = require("../models/Teacher");
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("../utils/jwt");
 const ApiError = require("../utils/apiError");
-const { sendVerificationEmail, sendPasswordResetEmail } = require("./email.service");
+// const { sendVerificationEmail, sendPasswordResetEmail } = require("./email.service");
 const { DEFAULT_PASSWORD } = require("../config/constants");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
@@ -158,6 +158,7 @@ const verifyEmail = async (token) => {
 };
 
 const resendVerification = async (email) => {
+  /*
   const user = await User.findOne({ email }).select("+emailVerificationToken +emailVerificationExpires");
   if (!user) throw new ApiError(404, "No account found with this email.");
   if (user.emailVerified) throw new ApiError(400, "Email is already verified.");
@@ -169,15 +170,15 @@ const resendVerification = async (email) => {
   user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save({ validateBeforeSave: false });
 
-  // Delivery is awaited so the response reflects reality (see register()).
   const emailResult = await sendVerificationEmail(user, verificationToken);
-
   return {
     message: emailResult.ok
       ? "Verification email has been resent."
       : "We could not send the verification email right now. Please try again shortly.",
     emailSent: emailResult.ok,
   };
+  */
+  return { message: "Email delivery is temporarily disabled.", emailSent: false };
 };
 
 const login = async (email, password) => {
@@ -224,7 +225,8 @@ const refreshToken = async (token) => {
   return { accessToken };
 };
 
-const forgotPassword = async (email) => {
+const forgotPassword = async () => {
+  /*
   const user = await User.findOne({ email });
   // Always return same message to prevent email enumeration
   if (!user) return { message: "If an account exists with that email, a reset link has been sent." };
@@ -236,11 +238,14 @@ const forgotPassword = async (email) => {
   user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
   await user.save({ validateBeforeSave: false });
 
-  // Non-blocking: don't hold the request open on a slow SMTP server.
   sendPasswordResetEmail(user, resetToken).catch((err) => {
     console.error("Password reset email failed for", user.email, err.message);
   });
   return { message: "If an account exists with that email, a reset link has been sent." };
+  */
+  return {
+    message: "Password reset by email is temporarily unavailable. Please contact an administrator.",
+  };
 };
 
 const resetPassword = async (token, newPassword) => {

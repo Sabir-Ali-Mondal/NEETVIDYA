@@ -560,10 +560,12 @@ tokens and redirects to `/login`. `GET /auth/me` rehydrates the session on load
 **Login identifiers.** `POST /auth/login` accepts an **email OR a student ID**
 (any value starting with `NV-` is looked up via the `Student` profile).
 
-**Email verification.** Self-registration activates accounts immediately and
-login does not require email verification. Verification endpoints and service
-logic remain available for a future re-enable; account deactivation still blocks
-login.
+**Email delivery.** Outbound email is disabled for now. Self-registration
+activates accounts immediately; verification resend and password-reset requests
+do not send emails, and the UI directs users to contact an administrator for
+password help. Email templates and delivery implementation remain in
+`services/email.service.js` for future re-enabling. Account deactivation still
+blocks login.
 
 **Password model.**
 - Self-registered users choose their own password.
@@ -697,11 +699,11 @@ role column = `authorize(...)` gate; `—` = public.
 |---|---|
 | health | GET `/api/health` | — | liveness |
 | auth | POST `/auth/register` | — (rate-limited) | self-register (student; immediately active) |
-| | GET `/auth/verify-email` | — | legacy verify via token |
-| | POST `/auth/resend-verification` | — (rate-limited) | legacy resend verify email |
+| | GET `/auth/verify-email` | — | verify via token (legacy) |
+| | POST `/auth/resend-verification` | — (rate-limited) | email delivery disabled |
 | | POST `/auth/login` | — (rate-limited) | login by email **or** studentId |
 | | POST `/auth/refresh` | — | rotate access token |
-| | POST `/auth/forgot-password` | — (rate-limited) | send reset link |
+| | POST `/auth/forgot-password` | — (rate-limited) | reports email reset is unavailable |
 | | POST `/auth/reset-password` | — (rate-limited) | reset with token |
 | | GET `/auth/me` | protect | current user |
 | | PUT `/auth/profile` | protect | update own profile |
@@ -829,8 +831,8 @@ Without it, the client uses the `/api` dev proxy from `client/vite.config.js`.
 
 > `config/env.js` only *warns* if `JWT_SECRET` is missing (dev fallbacks live in
 > `utils/jwt.js`). `config/cloudinary.js` uses dummy credentials when the env vars
-> are absent. `email.service.js` sends through the **Resend HTTPS API**; signup
-> verification email calls are currently commented out.
+> are absent. `email.service.js` retains the **Resend HTTPS API** templates and
+> delivery implementation, but email send calls are currently disabled.
 
 ### Server constants (`server/src/config/constants.js`)
 - `DEFAULT_PASSWORD = "Neetvidya@123"` — constant password for admin-created accounts.
