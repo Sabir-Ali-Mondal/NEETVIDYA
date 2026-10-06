@@ -7,7 +7,6 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
-  CheckCircle,
   MailCheck,
   BadgeCheck,
   ShieldCheck,
@@ -150,43 +149,30 @@ export default function RegisterPage() {
 
           {/* Success icon */}
           <div className="mx-auto mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-green/10">
-            <MailCheck className="h-7 w-7 text-brand-green" />
+            <BadgeCheck className="h-7 w-7 text-brand-green" />
           </div>
 
           {/* Heading */}
           <h1 className="mt-5 font-heading text-2xl font-extrabold text-brand-dark">
-            Check Your Email
+            Account Active
           </h1>
 
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Your account has been created. Verify your email to activate
-            your NEETVIDYA account.
+            Your NEETVIDYA account is ready. You can sign in now.
           </p>
 
-          {/* Email information */}
           <div className="mt-5 rounded-xl border border-brand-green/15 bg-brand-green/5 p-4 text-left">
             <div className="flex items-start gap-3">
-              <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
-
+              <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand-green" />
               <p className="text-sm leading-5 text-slate-600">
-                Verification email sent to{" "}
-                <strong className="text-brand-dark">
-                  {form.email}
-                </strong>
+                Sign in with <strong className="text-brand-dark">{form.email}</strong>.
               </p>
             </div>
           </div>
 
           {/* Help text */}
           <p className="mt-5 text-xs text-slate-400">
-            Didn't receive it? Check your spam folder or{" "}
-            <Link
-              to="/login"
-              className="font-semibold text-brand-green hover:text-brand-dark"
-            >
-              try logging in
-            </Link>
-            .
+            Go to the sign-in page to access your account.
           </p>
 
           {/* Login */}

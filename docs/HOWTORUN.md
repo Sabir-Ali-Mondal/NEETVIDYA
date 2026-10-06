@@ -7,13 +7,14 @@
 ### 1. Prerequisites
 - Node.js (v18+) installed
 - MongoDB running locally or an Atlas URI ready
-- (Optional) Cloudinary account for uploads, SMTP account for emails
+- (Optional) Cloudinary account for uploads, Resend API key for emails
 
 > The backend needs **only** `MONGODB_URI` (and, ideally, `JWT_SECRET`) to boot.
-> Cloudinary falls back to dummy credentials and email falls back to an Ethereal
-> test inbox in development, so the platform runs end-to-end without either.
+> Cloudinary falls back to dummy credentials. Signup does not send verification
+> emails and activates accounts immediately; configure Resend if you want password
+> reset emails to be delivered.
 ### 2. Setup Environment
-1. Copy `server/.env.example` to `server/.env` and fill in details (MongoDB, JWT, and optionally Cloudinary/SMTP).
+1. Copy `server/.env.example` to `server/.env` and fill in details (MongoDB, JWT, and optionally Cloudinary/Resend).
 2. The client needs no `.env` file for local development - it defaults to the `/api` proxy configured in `client/vite.config.js`. Optionally create `client/.env` with `VITE_API_BASE_URL` to point the frontend at a different API host.
 
 ### 3. Install & Start

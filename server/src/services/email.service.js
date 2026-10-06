@@ -1,51 +1,109 @@
-const nodemailer = require("nodemailer");
+// Email delivery via the Resend HTTPS API.
+//
+// Why not SMTP: Nodemailer needs outbound SMTP ports, which are commonly
+// blocked or throttled from PaaS containers (Render free tier) — the exact
+// "Connection timeout" failure. Resend is a plain HTTPS POST on port 443, so
+// it works from any host that can reach the internet.
 
-// In development without real SMTP credentials we spin up a throwaway
-// Ethereal inbox so verification / reset links are actually deliverable
-// and a preview URL is printed to the console.
-let cachedDevTransporter = null;
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const SEND_TIMEOUT_MS = 15000;
 
-const createTransporter = async () => {
-  const hasRealCreds = process.env.SMTP_USER && process.env.SMTP_PASS;
+const isPlaceholder = (value) => !value || /^(your_|change_?me|xxx)/i.test(value.trim());
 
-  if (process.env.NODE_ENV === "production" || hasRealCreds) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      // Fail fast instead of hanging on an unreachable SMTP server.
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    });
-  }
-
-  // Development with no credentials: use an ephemeral Ethereal test account.
-  if (!cachedDevTransporter) {
-    const testAccount = await nodemailer.createTestAccount();
-    cachedDevTransporter = nodemailer.createTransport({
-      host: testAccount.smtp.host,
-      port: testAccount.smtp.port,
-      secure: testAccount.smtp.secure,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-    });
-  }
-  return cachedDevTransporter;
+// Placeholders copied from .env.example are treated as "not configured" so a
+// half-filled environment can never look healthy.
+const apiKey = () => {
+  const key = (process.env.RESEND_API_KEY || "").trim();
+  return isPlaceholder(key) ? "" : key;
 };
 
-const logSendResult = (label, info) => {
-  const preview = nodemailer.getTestMessageUrl(info);
-  if (preview) {
-    console.log(`📧 ${label} sent. Preview: ${preview}`);
-  } else {
-    console.log(`📧 ${label} sent to ${[].concat(info.accepted || []).join(", ") || "recipient"}`);
+// Resend rejects a From address whose domain you have not verified, so fall
+// back to the sandbox sender in that case (very useful for local dev).
+const fromAddress = () => {
+  const configured = (process.env.EMAIL_FROM || "").trim();
+  if (configured && !isPlaceholder(configured) && configured.includes("@")) return configured;
+  return "NEETVIDYA <onboarding@resend.dev>";
+};
+
+/**
+ * Send one email through Resend.
+ *
+ * Resolves only when Resend has ACCEPTED the message. On any failure —
+ * missing key, non-2xx response, network error, timeout — it logs the real
+ * reason and returns `{ ok: false }` instead of throwing, so a dead mailer
+ * never masks the registration itself. Callers must inspect the result
+ * before telling the user an email was sent.
+ */
+const deliver = async ({ label, to, subject, html, replyTo }) => {
+  const key = apiKey();
+
+  if (!key) {
+    console.error(
+      `${label} NOT sent to ${to}: RESEND_API_KEY is missing (or still a placeholder). Set it in the environment.`
+    );
+    return { ok: false, reason: "email_not_configured" };
+  }
+
+  // Hard timeout: never let a hung request hold a serverless/container request open.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: fromAddress(),
+        to: [to],
+        subject,
+        html,
+        ...(replyTo ? { reply_to: replyTo } : {}),
+      }),
+      signal: controller.signal,
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const detail = payload.message || payload.error || JSON.stringify(payload);
+      console.error(`${label} FAILED for ${to}: [HTTP ${response.status}] ${detail}`);
+      logResendHint(response.status, detail);
+      return { ok: false, reason: `resend_http_${response.status}`, status: response.status };
+    }
+
+    console.log(`${label} accepted by Resend for ${to} (id: ${payload.id || "unknown"})`);
+    return { ok: true, id: payload.id };
+  } catch (err) {
+    const aborted = err.name === "AbortError";
+    console.error(
+      `${label} FAILED for ${to}: ${aborted ? `timed out after ${SEND_TIMEOUT_MS}ms` : err.message}`
+    );
+    if (!aborted) {
+      console.error("   Could not reach https://api.resend.com. Check the host's outbound network access.");
+    }
+    return { ok: false, reason: aborted ? "resend_timeout" : "resend_network_error" };
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const logResendHint = (status, detail) => {
+  if (status === 401) {
+    console.error("   RESEND_API_KEY is invalid or revoked. Create a new key at resend.com/api-keys.");
+  }
+  if (status === 403 || /domain|not verified|verify/i.test(detail || "")) {
+    console.error(
+      "   The From domain is not verified in Resend. Verify neetvidya.com (DNS records) or use EMAIL_FROM=NEETVIDYA <onboarding@resend.dev> for testing."
+    );
+  }
+  if (status === 422) {
+    console.error("   Resend rejected the message payload (usually the From or To address).");
+  }
+  if (status === 429) {
+    console.error("   Resend rate limit or daily quota reached.");
   }
 };
 
@@ -98,7 +156,6 @@ const baseTemplate = (content) => `
 `;
 
 const sendVerificationEmail = async (user, verificationToken) => {
-  const transporter = await createTransporter();
   const verifyUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/verify-email?token=${encodeURIComponent(verificationToken)}`;
 
   const content = `
@@ -107,70 +164,64 @@ const sendVerificationEmail = async (user, verificationToken) => {
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin:0 0 28px;">
       <p style="color:#64748b;font-size:13px;margin:0 0 16px;">Click the button below to verify your email address. This link expires in <strong>24 hours</strong>.</p>
       <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
-        ✓ Verify Email Address
+        Verify Email Address
       </a>
     </div>
     <p style="color:#94a3b8;font-size:12px;">Or copy and paste this link:<br/><span style="color:#22c55e;word-break:break-all;">${verifyUrl}</span></p>
   `;
 
   const mailOptions = {
-    from: `"NEETVIDYA" <${process.env.SMTP_USER || "noreply@neetvidya.com"}>`,
     to: user.email,
     subject: "Verify your NEETVIDYA account",
     html: baseTemplate(content),
   };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    logSendResult("Verification email", info);
-    return info;
-  } catch (err) {
-    console.error("Email send error:", err.message);
-    // Don't throw - log and continue. Admin can resend.
-  }
+  // Never throws — the caller decides what to tell the user.
+  return deliver({
+    label: "Verification email",
+    to: user.email,
+    subject: mailOptions.subject,
+    html: mailOptions.html,
+  });
 };
 
 const sendPasswordResetEmail = async (user, resetToken) => {
-  const transporter = await createTransporter();
   const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
   const content = `
     <h2 style="color:#0f172a;font-size:24px;font-weight:800;margin:0 0 8px;">Reset Your Password</h2>
     <p style="color:#475569;font-size:15px;margin:0 0 24px;">Hi <strong>${user.name}</strong>, we received a request to reset your NEETVIDYA account password.</p>
     <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:24px;margin:0 0 28px;">
-      <p style="color:#9a3412;font-size:13px;font-weight:600;margin:0 0 4px;">⚠️ Security Notice</p>
+      <p style="color:#9a3412;font-size:13px;font-weight:600;margin:0 0 4px;">Security Notice</p>
       <p style="color:#9a3412;font-size:13px;margin:0 0 16px;">This link expires in <strong>1 hour</strong>. If you didn't request this, your account is safe — just ignore this email.</p>
       <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
-        🔑 Reset Password
+        Reset Password
       </a>
     </div>
     <p style="color:#94a3b8;font-size:12px;">Or copy and paste this link:<br/><span style="color:#f97316;word-break:break-all;">${resetUrl}</span></p>
   `;
 
   const mailOptions = {
-    from: `"NEETVIDYA Security" <${process.env.SMTP_USER || "noreply@neetvidya.com"}>`,
     to: user.email,
     subject: "Password Reset Request - NEETVIDYA",
     html: baseTemplate(content),
   };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    logSendResult("Password reset email", info);
-    return info;
-  } catch (err) {
-    console.error("Email send error:", err.message);
-  }
+  return deliver({
+    label: "Password reset email",
+    to: user.email,
+    subject: mailOptions.subject,
+    html: mailOptions.html,
+  });
 };
 
 const sendWelcomeEmail = async (user, tempPassword = null) => {
-  const transporter = await createTransporter();
   const loginUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/login`;
 
   const credSection = tempPassword
     ? `
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin:0 0 24px;">
-      <p style="color:#166534;font-size:13px;font-weight:600;margin:0 0 12px;">🎓 Your Login Credentials</p>
+      <p style="color:#166534;font-size:13px;font-weight:600;margin:0 0 12px;">Your Login Credentials</p>
       <table cellpadding="0" cellspacing="0">
         <tr><td style="color:#4b5563;font-size:13px;padding:4px 0;min-width:100px;">Email</td><td style="color:#0f172a;font-size:13px;font-weight:600;">${user.email}</td></tr>
         <tr><td style="color:#4b5563;font-size:13px;padding:4px 0;">Password</td><td style="color:#0f172a;font-size:13px;font-weight:600;font-family:monospace;">${tempPassword}</td></tr>
@@ -181,27 +232,31 @@ const sendWelcomeEmail = async (user, tempPassword = null) => {
     : "";
 
   const content = `
-    <h2 style="color:#0f172a;font-size:24px;font-weight:800;margin:0 0 8px;">Welcome to NEETVIDYA! 🎉</h2>
+    <h2 style="color:#0f172a;font-size:24px;font-weight:800;margin:0 0 8px;">Welcome to NEETVIDYA!</h2>
     <p style="color:#475569;font-size:15px;margin:0 0 24px;">Hi <strong>${user.name}</strong>, your account has been successfully created. You're now part of the NEETVIDYA family!</p>
     ${credSection}
     <a href="${loginUrl}" style="display:inline-block;background:linear-gradient(135deg,#22c55e,#16a34a);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
-      → Login to Your Dashboard
+      Login to Your Dashboard
     </a>
   `;
 
   const mailOptions = {
-    from: `"NEETVIDYA" <${process.env.SMTP_USER || "noreply@neetvidya.com"}>`,
     to: user.email,
     subject: "Welcome to NEETVIDYA — Your Account is Ready",
     html: baseTemplate(content),
   };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    logSendResult("Welcome email", info);
-  } catch (err) {
-    console.error("Email send error:", err.message);
-  }
+  return deliver({
+    label: "Welcome email",
+    to: user.email,
+    subject: mailOptions.subject,
+    html: mailOptions.html,
+  });
 };
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail };
+module.exports = {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+  isEmailConfigured: () => Boolean(apiKey()),
+};

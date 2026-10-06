@@ -5,7 +5,13 @@ const register = async (req, res, next) => {
   try {
     const { name, email, password, phone, source } = req.body;
     const result = await authService.register(name, email, password, phone, source);
-    return apiResponse(res, 201, result.message, { userId: result.userId, email: result.email });
+    // `emailSent` lets the client show "check your email" only when a mail was
+    // actually accepted by the provider.
+    return apiResponse(res, 201, result.message, {
+      userId: result.userId,
+      email: result.email,
+      emailSent: result.emailSent !== false,
+    });
   } catch (error) {
     next(error);
   }
@@ -26,7 +32,7 @@ const resendVerification = async (req, res, next) => {
   try {
     const { email } = req.body;
     const result = await authService.resendVerification(email);
-    return apiResponse(res, 200, result.message);
+    return apiResponse(res, 200, result.message, { emailSent: result.emailSent !== false });
   } catch (error) {
     next(error);
   }

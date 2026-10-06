@@ -76,7 +76,7 @@ Core capabilities:
 | Database | MongoDB + Mongoose 8 |
 | Auth | JWT (access + refresh), bcryptjs |
 | File storage | Cloudinary (via multer memory upload) |
-| Email | nodemailer (SMTP; Ethereal fallback in dev) |
+| Email | Resend HTTPS API (`RESEND_API_KEY`) |
 | Validation | express-validator (installed; not wired into routes) |
 | Security | helmet, express-rate-limit, CORS, compression, morgan (dev) |
 
@@ -204,7 +204,7 @@ End-to-end view: clients → CDN/hosting → API → data stores → external se
 │                                                                                             │
 │  EXTERNAL INTEGRATIONS                                                                      │
 │   • Cloudinary  ← upload.service (images/PDFs), profile photos, covers                      │
-│   • SMTP mail   ← email.service (verification, password reset)  [welcome email deprecated]  │
+│   • Resend API  ← email.service (password reset; verification code retained) [welcome email deprecated] │
 │   • WhatsApp    ← link/deep-link only (no API): permission requests, contact CTAs           │
 │   • Telegram    ← link only (channel / batch group links)                                    │
 └──────────────────────────┘
@@ -560,6 +560,11 @@ tokens and redirects to `/login`. `GET /auth/me` rehydrates the session on load
 **Login identifiers.** `POST /auth/login` accepts an **email OR a student ID**
 (any value starting with `NV-` is looked up via the `Student` profile).
 
+**Email verification.** Self-registration activates accounts immediately and
+login does not require email verification. Verification endpoints and service
+logic remain available for a future re-enable; account deactivation still blocks
+login.
+
 **Password model.**
 - Self-registered users choose their own password.
 - Admin-created teacher/student accounts get the **constant default password**
@@ -691,9 +696,9 @@ role column = `authorize(...)` gate; `—` = public.
 | Base | Method & Path | Auth / Role | Purpose |
 |---|---|
 | health | GET `/api/health` | — | liveness |
-| auth | POST `/auth/register` | — (rate-limited) | self-register (student) |
-| | GET `/auth/verify-email` | — | verify via token |
-| | POST `/auth/resend-verification` | — (rate-limited) | resend verify email |
+| auth | POST `/auth/register` | — (rate-limited) | self-register (student; immediately active) |
+| | GET `/auth/verify-email` | — | legacy verify via token |
+| | POST `/auth/resend-verification` | — (rate-limited) | legacy resend verify email |
 | | POST `/auth/login` | — (rate-limited) | login by email **or** studentId |
 | | POST `/auth/refresh` | — | rotate access token |
 | | POST `/auth/forgot-password` | — (rate-limited) | send reset link |
@@ -805,8 +810,8 @@ CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 CLIENT_URL=http://localhost:5173
-SMTP_HOST=... SMTP_PORT=587 SMTP_SECURE=false
-SMTP_USER=... SMTP_PASS=... EMAIL_FROM=noreply@neetvidya.com
+RESEND_API_KEY=re_...
+EMAIL_FROM=NEETVIDYA <noreply@yourdomain.com>
 
 # Optional seed overrides (used by `npm run seed`)
 ADMIN_NAME=NEETVIDYA Admin
@@ -824,8 +829,8 @@ Without it, the client uses the `/api` dev proxy from `client/vite.config.js`.
 
 > `config/env.js` only *warns* if `JWT_SECRET` is missing (dev fallbacks live in
 > `utils/jwt.js`). `config/cloudinary.js` uses dummy credentials when the env vars
-> are absent. `email.service.js` falls back to an **Ethereal test inbox** when
-> `NODE_ENV !== production` and no SMTP creds are set, printing a preview URL.
+> are absent. `email.service.js` sends through the **Resend HTTPS API**; signup
+> verification email calls are currently commented out.
 
 ### Server constants (`server/src/config/constants.js`)
 - `DEFAULT_PASSWORD = "Neetvidya@123"` — constant password for admin-created accounts.
@@ -858,15 +863,15 @@ Without it, the client uses the `/api` dev proxy from `client/vite.config.js`.
   it at build time. `client/vercel.json` rewrites all non-`assets/` paths to
   `index.html` so client-side routing works.
 - **Backend → Render** (root `server/`). Set `MONGODB_URI`, `JWT_SECRET`,
-  `JWT_REFRESH_SECRET`, Cloudinary vars, SMTP vars, and
+  `JWT_REFRESH_SECRET`, Cloudinary vars, `RESEND_API_KEY`, `EMAIL_FROM`, and
   `CLIENT_URL=https://neetvidya.vercel.app`.
-- **Database → MongoDB Atlas. Files → Cloudinary. Email → SMTP provider.**
+- **Database → MongoDB Atlas. Files → Cloudinary. Email → Resend (HTTPS, not SMTP).**
 
 ```
 GitHub push
    ├── Vercel  → client/  → vite build → CDN
    ├── Render  → server/  → npm install → start (src/server.js)
-   └── Render  ──► MongoDB Atlas + Cloudinary + SMTP
+   └── Render  ──► MongoDB Atlas + Cloudinary + Resend
 ```
 
 Root scripts (`package.json`):
