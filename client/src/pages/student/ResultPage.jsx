@@ -461,7 +461,7 @@ export default function ResultPage() {
                               {isCorrect ? (
                                 <CheckCircle className="h-3 w-3" />
                               ) : isUnattempted ? (
-                                <CircleAlert className="h-3 w-3" />
+                                <AlertCircle className="h-3 w-3" />
                               ) : (
                                 <XCircle className="h-3 w-3" />
                               )}
